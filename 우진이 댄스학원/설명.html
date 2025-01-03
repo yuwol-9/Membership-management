@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>웹페이지 설명</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      background-color: #f9faff;
+      color: #333;
+    }
+    .section {
+      padding: 40px 20px;
+      margin: 20px auto;
+      max-width: 1200px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .section h1, .section h2 {
+      color: #3b5bdb;
+      margin-bottom: 20px;
+    }
+    .section p {
+      font-size: 16px;
+      color: #555;
+    }
+    .highlight {
+      color: #3b5bdb;
+      font-weight: bold;
+    }
+    .chart-container {
+      margin: 20px 0;
+      text-align: center;
+    }
+    .chart-container canvas {
+      max-width: 100%;
+    }
+    .image-preview {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .image-preview img {
+      max-width: 100%;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+      background-color: #f5f7fa;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <!-- 홈페이지 섹션 -->
+  <div class="section">
+    <h1>홈페이지</h1>
+    <p>홈페이지는 학원 전체 기능에 빠르게 접근할 수 있는 <span class="highlight">대시보드</span> 역할을 합니다.</p>
+    <p>메인 화면에서는 현재 회원 수, 진행 중인 수업 정보, 이번 달 매출 등 핵심 데이터를 한눈에 확인할 수 있습니다.</p>
+    <div class="image-preview">
+      <img src="your-homepage-preview.png" alt="홈페이지 프리뷰">
+    </div>
+  </div>
+
+  <!-- 회원관리 섹션 -->
+  <div class="section">
+    <h1>회원관리</h1>
+    <p>회원 관리 페이지에서는 학원에 등록된 모든 회원의 정보를 관리할 수 있습니다.</p>
+    <p>회원별 <span class="highlight">연락처, 수업 진행 상황</span>, 결제 상태를 빠르게 확인할 수 있으며, 필요 시 필터를 적용해 검색할 수 있습니다.</p>
+    <div class="image-preview">
+      <img src="your-member-management-preview.png" alt="회원관리 프리뷰">
+    </div>
+  </div>
+
+  <!-- 회원등록 섹션 -->
+  <div class="section">
+    <h1>회원등록</h1>
+    <p>새로운 회원을 등록하는 페이지입니다. 직관적인 입력 필드로 간단히 회원 정보를 추가할 수 있습니다.</p>
+    <p>구독 기간, 수업 종류 등 상세 정보를 설정하여 <span class="highlight">맞춤형 관리</span>가 가능합니다.</p>
+    <div class="image-preview">
+      <img src="your-member-registration-preview.png" alt="회원등록 프리뷰">
+    </div>
+  </div>
+
+  <!-- 매출 섹션 -->
+  <div class="section">
+    <h1>매출 관리</h1>
+    <p>매출 페이지에서는 기간별 매출 데이터와 서비스별 매출 정보를 시각화된 그래프로 확인할 수 있습니다.</p>
+    <div class="chart-container">
+      <h2>월별 매출 그래프</h2>
+      <canvas id="salesChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h2>서비스별 매출</h2>
+      <canvas id="serviceChart"></canvas>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="footer">
+    © 2025 Toss Style Web. All Rights Reserved.
+  </div>
+
+  <script>
+    // 월별 매출 그래프
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    new Chart(salesCtx, {
+      type: 'line',
+      data: {
+        labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
+        datasets: [{
+          label: '매출 (원)',
+          data: [1000000, 1500000, 1200000, 1800000, 2000000, 1700000],
+          borderColor: '#3b5bdb',
+          borderWidth: 2,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+        }
+      }
+    });
+
+    // 서비스별 매출 그래프
+    const serviceCtx = document.getElementById('serviceChart').getContext('2d');
+    new Chart(serviceCtx, {
+      type: 'bar',
+      data: {
+        labels: ['PT', '댄스 클래스', '요가', '헬스'],
+        datasets: [{
+          label: '매출 (원)',
+          data: [500000, 400000, 300000, 200000],
+          backgroundColor: ['#3b5bdb', '#4dabf7', '#74c0fc', '#a5d8ff']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+        }
+      }
+    });
+  </script>
+</body>
+</html>
