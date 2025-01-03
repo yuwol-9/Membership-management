@@ -269,153 +269,148 @@
 </div>
 </div>
 
-  <script>
-    const members = ["이호승", "서주은", "조은솔", "신우진"];
-    const totalDays = 30;  // 총 출석 가능한 일수 (예: 한 달 30일)
-    let checkedAttendance = {}; // 출석 상태를 저장할 객체
+<script>
+  const members = ["이호승", "서주은", "조은솔", "신우진"];
+  const totalDays = 30; // 기본 출석 가능한 일수
+  let checkedAttendance = {}; // 출석 상태 저장 객체
 
-    // 2025년의 공휴일 (공휴일을 추가하고 싶으면 여기 추가 가능)
-    const holidays = {
-      "0-1": true,   // 1월 1일: 신정
-    };
+  const holidays = {
+    "0-1": true, // 1월 1일
+  };
 
-    // 요일 이름 배열
-    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
 
-    // 요일 계산을 위한 함수 (0: 일요일, 6: 토요일)
-    function getDayOfWeek(year, month, day) {
-      return new Date(year, month, day).getDay();
+  function getDayOfWeek(year, month, day) {
+    return new Date(year, month, day).getDay();
+  }
+
+  function generateTable() {
+    const tableHead = document.querySelector("#attendance-table thead");
+    const tableBody = document.querySelector("#attendance-table tbody");
+    const yearSelect = document.getElementById("year");
+    const year = parseInt(yearSelect.value);
+    const monthSelect = document.getElementById("month");
+    const month = parseInt(monthSelect.value);
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    tableHead.innerHTML = "<tr><th>회원 이름</th></tr><tr></tr>";
+    tableBody.innerHTML = "";
+
+    const dayRow = tableHead.children[0];
+    const weekdayRow = tableHead.children[1];
+
+    weekdayRow.appendChild(document.createElement("th"));
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const th = document.createElement("th");
+      th.innerText = `${day}일`;
+      dayRow.appendChild(th);
+
+      const dayOfWeek = getDayOfWeek(year, month, day);
+      const weekday = document.createElement("th");
+      weekday.innerText = weekdays[dayOfWeek];
+      weekdayRow.appendChild(weekday);
     }
 
-    function generateTable() {
-      const tableHead = document.querySelector("#attendance-table thead");
-      const tableBody = document.querySelector("#attendance-table tbody");
-      const yearSelect = document.getElementById('year');
-      const year = parseInt(yearSelect.value);
-      const monthSelect = document.getElementById('month');
-      const month = parseInt(monthSelect.value);
+    const thCount = document.createElement("th");
+    thCount.innerText = "출석 횟수";
+    dayRow.appendChild(thCount);
+    const thRemaining = document.createElement("th");
+    thRemaining.innerText = "남은 일수";
+    dayRow.appendChild(thRemaining);
 
-      // 선택한 달에 맞는 날짜 수 계산
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      
-      // 기존 테이블 초기화
-      tableHead.innerHTML = "<tr><th>회원 이름</th></tr><tr></tr>";
-      tableBody.innerHTML = "";
+    members.forEach((member) => {
+      const tr = document.createElement("tr");
+      const tdName = document.createElement("td");
+      tdName.innerText = member;
+      tr.appendChild(tdName);
 
-      // 날짜와 요일 헤더 추가
-      const dayRow = tableHead.children[0];
-      const weekdayRow = tableHead.children[1];
-
-      weekdayRow.appendChild(document.createElement("th"));
-      
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const th = document.createElement("th");
-        th.innerText = `${day}일`; // 날짜 추가
-        dayRow.appendChild(th);
-
-        const dayOfWeek = getDayOfWeek(year, month, day);
-        const weekday = document.createElement("th");
-        weekday.innerText = weekdays[dayOfWeek]; // 요일 추가
-        weekdayRow.appendChild(weekday);
-      }
-
-      // 출석 횟수와 남은 일수 추가
-      const thCount = document.createElement("th");
-      thCount.innerText = "출석 횟수";
-      dayRow.appendChild(thCount);
-      const thRemaining = document.createElement("th");
-      thRemaining.innerText = "남은 일수";
-      dayRow.appendChild(thRemaining);
-
-      // 회원 이름과 체크박스 추가
-      members.forEach(member => {
-        const tr = document.createElement("tr");
-        const tdName = document.createElement("td");
-        tdName.innerText = member;
-        tr.appendChild(tdName);
-
-        let attendanceCount = 0;  // 출석 횟수
-
-        // 날짜별 체크박스 추가
-        for (let day = 1; day <= daysInMonth; day++) {
-          const td = document.createElement("td");
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-
-          // 회원별 날짜 key (예: '서주은-0-1' => 서주은의 1월 1일 출석)
-          const key = `${member}-${month}-${day}`;
-          
-          // 출석 기록이 있으면 체크박스 유지
-          if (checkedAttendance[key]) {
-            checkbox.checked = true;
-            attendanceCount++;  // 출석 카운트 증가
-          }
-
-          // 체크 상태 변경 시 출석 기록 저장
-          checkbox.addEventListener("change", () => {
-            checkedAttendance[key] = checkbox.checked;
-            updateAttendanceCounts(member, month, tr);
-          });
-
-          // 일요일을 회색으로 설정
-          const dayOfWeek = getDayOfWeek(year, month, day);
-          if (dayOfWeek === 0) {
-            td.classList.add("sunday");
-            checkbox.disabled = true; // 일요일은 체크 불가능하도록
-          }
-
-          // 공휴일 처리
-          if (holidays[`${month}-${day}`]) {
-            td.classList.add("holiday");
-          }
-
-          td.appendChild(checkbox);
-          tr.appendChild(td);
-        }
-
-        // 출석 횟수와 남은 일수 칸 추가
-        const tdCount = document.createElement("td");
-        const tdRemaining = document.createElement("td");
-
-        // 각 회원의 출석 횟수와 남은 일수를 업데이트
-        tdCount.innerText = attendanceCount;
-        tdRemaining.innerText = totalDays - attendanceCount;
-
-        tr.appendChild(tdCount);
-        tr.appendChild(tdRemaining);
-
-        // 테이블에 추가
-        tableBody.appendChild(tr);
-
-        // 초기 출석 횟수와 남은 일수 업데이트
-        updateAttendanceCounts(member, month, tr);
-      });
-    }
-
-    // 출석 횟수 및 남은 일수 업데이트 함수
-    function updateAttendanceCounts(member, month, tr) {
       let attendanceCount = 0;
 
-      // 체크된 출석 횟수 계산
-      for (let day = 1; day <= totalDays; day++) {
+      for (let day = 1; day <= daysInMonth; day++) {
+        const td = document.createElement("td");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+
         const key = `${member}-${month}-${day}`;
+
         if (checkedAttendance[key]) {
+          checkbox.checked = true;
           attendanceCount++;
         }
+
+        checkbox.addEventListener("change", () => {
+          checkedAttendance[key] = checkbox.checked;
+          updateAttendanceCounts(member);
+        });
+
+        const dayOfWeek = getDayOfWeek(year, month, day);
+        if (dayOfWeek === 0) {
+          td.classList.add("sunday");
+          checkbox.disabled = true;
+        }
+
+        if (holidays[`${month}-${day}`]) {
+          td.classList.add("holiday");
+        }
+
+        td.appendChild(checkbox);
+        tr.appendChild(td);
       }
 
-      // 출석 횟수 및 남은 일수 업데이트
-      const tdCount = tr.children[tr.children.length - 2];
-      const tdRemaining = tr.children[tr.children.length - 1];
+      const tdCount = document.createElement("td");
+      const tdRemaining = document.createElement("td");
+
       tdCount.innerText = attendanceCount;
-      tdRemaining.innerText = totalDays - attendanceCount;
-    }
+      tdRemaining.innerText = calculateRemainingDays(member);
 
-    // 페이지 로드 시 기본 테이블 생성
-    window.onload = generateTable;
-  </script>
+      tr.appendChild(tdCount);
+      tr.appendChild(tdRemaining);
 
+      tableBody.appendChild(tr);
+
+      updateAttendanceCounts(member);
+    });
+  }
+
+  function calculateRemainingDays(member) {
+    let totalChecked = 0;
+
+    // 모든 달의 출석 상태를 합산
+    Object.keys(checkedAttendance).forEach((key) => {
+      if (key.startsWith(`${member}-`) && checkedAttendance[key]) {
+        totalChecked++;
+      }
+    });
+
+    return totalDays - totalChecked;
+  }
+
+  function updateAttendanceCounts(member) {
+    const rows = document.querySelectorAll("#attendance-table tbody tr");
+
+    rows.forEach((tr) => {
+      if (tr.firstChild.innerText === member) {
+        let attendanceCount = 0;
+
+        // 모든 체크박스를 기준으로 출석 횟수 계산
+        tr.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
+          if (checkbox.checked) {
+            attendanceCount++;
+          }
+        });
+
+        const tdCount = tr.children[tr.children.length - 2];
+        const tdRemaining = tr.children[tr.children.length - 1];
+        tdCount.innerText = attendanceCount;
+        tdRemaining.innerText = calculateRemainingDays(member);
+      }
+    });
+  }
+
+  window.onload = generateTable;
+</script>
 </body>
 </html>
 
