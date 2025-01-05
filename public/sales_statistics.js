@@ -26,6 +26,57 @@ function formatCurrency(amount) {
     return Number(amount || 0).toLocaleString('ko-KR');
 }
 
+function setupEventListeners() {
+    const yearSelect = document.getElementById('yearSelect');
+    const monthSelect = document.getElementById('monthSelect');
+
+    // 연도 드롭다운 옵션 생성
+    const currentYear = new Date().getFullYear();
+    for (let year = 2024; year <= currentYear; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = `${year}년`;
+        yearSelect.appendChild(option);
+    }
+
+    // 초기값 설정
+    yearSelect.value = currentYear;
+    monthSelect.value = new Date().getMonth() + 1;
+
+    yearSelect.addEventListener('change', async () => {
+        try {
+            await loadFilteredData();
+        } catch (error) {
+            console.error('필터링 실패:', error);
+            API.handleApiError(error);
+        }
+    });
+
+    monthSelect.addEventListener('change', async () => {
+        try {
+            await loadFilteredData();
+        } catch (error) {
+            console.error('필터링 실패:', error);
+            API.handleApiError(error);
+        }
+    });
+}
+
+async function loadFilteredData() {
+    const year = document.getElementById('yearSelect').value;
+    const month = document.getElementById('monthSelect').value;
+    
+    const monthlyStats = await API.getMonthlyStats();
+    const filtered = monthlyStats.filter(stat => {
+        const statDate = new Date(stat.month);
+        return statDate.getFullYear().toString() === year &&
+               (statDate.getMonth() + 1).toString() === month;
+    });
+    
+    updateSalesTable(filtered);
+    updateMonthlyChart(monthlyStats); // 전체 데이터로 차트 업데이트
+}
+
 function updateSalesTable(data) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
@@ -44,7 +95,6 @@ function updateSalesTable(data) {
         }
 
         tr.innerHTML = `
-            <td>${stat.program_name || '-'}</td>
             <td>${formatCurrency(revenue)}원</td>
             <td>${stat.month}</td>
             <td>${stat.payment_status === 'paid' ? '완납' : '미납'}</td>
@@ -180,46 +230,4 @@ function updateProgramChart(data) {
             }
         }
     });
-}
-
-function setupEventListeners() {
-    const filterSelect = document.querySelector('.filters select');
-    const dateInput = document.querySelector('.filters input[type="date"]');
-
-    if (filterSelect) {
-        filterSelect.addEventListener('change', async () => {
-            try {
-                const monthlyStats = await API.getMonthlyStats();
-                const filtered = filterSelect.value === 'all' 
-                    ? monthlyStats 
-                    : monthlyStats.filter(stat => stat.payment_status === filterSelect.value);
-                
-                updateSalesTable(filtered);
-                updateMonthlyChart(filtered);
-            } catch (error) {
-                console.error('필터링 실패:', error);
-                API.handleApiError(error);
-            }
-        });
-    }
-
-    if (dateInput) {
-        dateInput.addEventListener('change', async () => {
-            try {
-                const selectedDate = new Date(dateInput.value);
-                const monthlyStats = await API.getMonthlyStats();
-                const filtered = monthlyStats.filter(stat => {
-                    const statDate = new Date(stat.month);
-                    return statDate.getMonth() === selectedDate.getMonth() &&
-                           statDate.getFullYear() === selectedDate.getFullYear();
-                });
-                
-                updateSalesTable(filtered);
-                updateMonthlyChart(filtered);
-            } catch (error) {
-                console.error('날짜 필터링 실패:', error);
-                API.handleApiError(error);
-            }
-        });
-    }
 }

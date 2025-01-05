@@ -140,11 +140,11 @@ app.post('/api/members', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { name, gender, age, address, phone, duration_months, payment_status, program_id } = req.body;
+        const { name, gender, age, birthdate, address, phone, duration_months, payment_status, program_id } = req.body;
 
         const [memberResult] = await connection.execute(
-            'INSERT INTO members (name, gender, age, address, phone) VALUES (?, ?, ?, ?, ?)',
-            [name, gender, age, address, phone]
+            'INSERT INTO members (name, gender, age, birthdate, address, phone) VALUES (?, ?, ?, ?, ?, ?)',
+            [name, gender, age, birthdate, address, phone]
         );
 
         const [enrollmentResult] = await connection.execute(
@@ -195,12 +195,12 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { name, gender, age, address, phone, program_id, duration_months, payment_status } = req.body;
+        const { name, gender, age, birthdate, address, phone, program_id, duration_months, payment_status } = req.body;
         const memberId = req.params.id;
 
         await connection.execute(
-            'UPDATE members SET name = ?, gender = ?, age = ?, address = ?, phone = ? WHERE id = ?',
-            [name, gender, age, address, phone, memberId]
+            'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
+            [name, gender, age, birthdate, address, phone, memberId]
         );
 
         const [existingEnrollment] = await connection.execute(
@@ -421,7 +421,6 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
             FROM enrollments e
             JOIN programs p ON e.program_id = p.id
             WHERE MONTH(e.start_date) = MONTH(CURRENT_DATE())
-            AND e.payment_status = 'paid'
         `);
 
         res.json({

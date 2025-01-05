@@ -27,7 +27,11 @@ function updateDashboardCards(stats) {
                 valueElement.textContent = `${stats.totalClasses}개 클래스`;
                 break;
             case '이번 달 매출':
-                valueElement.textContent = `₩${stats.monthlyRevenue?.toLocaleString() || 0}`;
+                const totalRevenue = stats.monthlyRevenue || 0;
+                valueElement.textContent = new Intl.NumberFormat('ko-KR', {
+                    style: 'currency',
+                    currency: 'KRW'
+                }).format(totalRevenue);
                 break;
             case '오늘 스케줄':
                 valueElement.textContent = `${stats.todayAttendance}회 수업`;

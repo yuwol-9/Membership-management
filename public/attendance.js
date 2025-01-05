@@ -51,81 +51,49 @@ function updateAttendanceTable(data) {
         for (let day = 1; day <= daysInMonth; day++) {
             const td = document.createElement('td');
             const currentDate = new Date(year, month, day);
-            
-            // 주말인 경우 클래스 추가
-            if (isWeekend(currentDate)) {
-                td.classList.add('weekend');
+            const dayOfWeek = currentDate.getDay(); // 0은 일요일, 6은 토요일
+
+            // 일요일인 경우
+            if (dayOfWeek === 0) {
+                td.classList.add('sunday');
+                // 일요일에는 체크박스 없이 빈 셀로 표시
+                tr.appendChild(td);
+                continue;
             }
 
-            // 체크박스 추가
-            if (!isWeekend(currentDate) && !isFutureDate(currentDate)) {
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = attendance.dates.includes(day);
-                checkbox.disabled = isFutureDate(currentDate);
+            // 일요일이 아닌 모든 날짜에 체크박스 생성
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = attendance.dates.includes(day);
 
-                checkbox.addEventListener('change', async () => {
-                    try {
-                        const token = API.getToken();
-                        if (!token) {
-                            throw new Error('로그인이 필요합니다');
-                        }
-                
-                        const formattedDate = formatDate(currentDate);
-                        
-                        // 요청 데이터 로깅
-                        console.log('Sending attendance data:', {
-                            enrollment_id: attendance.enrollment_id,
-                            attendance_date: formattedDate,
-                            is_present: checkbox.checked
-                        });
-                
-                        const response = await fetch(`${API.API_BASE_URL}/attendance`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify({
-                                enrollment_id: attendance.enrollment_id,
-                                attendance_date: formattedDate,
-                                is_present: checkbox.checked
-                            })
-                        });
-                
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-                        }
-                
-                        const result = await response.json();
-                        console.log('Server response:', result);
-                
-                        // 성공적으로 처리된 경우만 데이터 새로고침
-                        await loadAttendanceData();
-                    } catch (error) {
-                        console.error('출석 체크 실패:', error);
-                        // 체크박스 상태 되돌리기
-                        checkbox.checked = !checkbox.checked;
-                        // 사용자에게 오류 알림
-                        alert(error.message || '출석 처리 중 오류가 발생했습니다');
-                    }
-                });
+            checkbox.addEventListener('change', async () => {
+                try {
+                    await API.checkAttendance({
+                        enrollment_id: attendance.enrollment_id,
+                        attendance_date: formatDate(currentDate),
+                        is_present: checkbox.checked
+                    });
+                    
+                    // 성공적으로 처리된 경우 데이터 새로고침
+                    await loadAttendanceData();
+                } catch (error) {
+                    console.error('출석 체크 실패:', error);
+                    checkbox.checked = !checkbox.checked;
+                    alert(error.message || '출석 처리 중 오류가 발생했습니다');
+                }
+            });
 
-                td.appendChild(checkbox);
-            }
-
+            td.appendChild(checkbox);
             tr.appendChild(td);
         }
 
         // 출석횟수와 남은 일수
         const tdCount = document.createElement('td');
         tdCount.textContent = attendance.dates.length;
+        tr.appendChild(tdCount);
         
         const tdRemaining = document.createElement('td');
         tdRemaining.textContent = attendance.remaining_days || '-';
-        
-        tr.appendChild(tdCount);
         tr.appendChild(tdRemaining);
 
         tableBody.appendChild(tr);
@@ -164,17 +132,6 @@ function groupAttendanceByMember(data) {
         
         return acc;
     }, {});
-}
-
-function isWeekend(date) {
-    const day = date.getDay();
-    return day === 0 || day === 6;
-}
-
-function isFutureDate(date) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date > today;
 }
 
 function formatDate(date) {

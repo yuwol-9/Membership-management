@@ -28,15 +28,16 @@ function updateTable(members) {
     
     members.forEach(member => {
         const tr = document.createElement('tr');
+        const totalPrice = member.price * (member.duration_months || 1);
         tr.innerHTML = `
             <td>${member.NAME || '-'}</td>
             <td>${member.PHONE || '-'}</td>
-            <td>${formatDate(member.CREATED_AT) || '-'}</td>
+            <td>${formatDate(member.birthdate) || '-'}</td>
             <td>${member.AGE || '-'}</td>
             <td>${formatGender(member.GENDER) || '-'}</td>
             <td>${member.ADDRESS || '-'}</td>
             <td>${member.program_name || '-'}</td>
-            <td>${member.price ? formatCurrency(member.price) : '-'}</td>
+            <td>${totalPrice ? formatCurrency(totalPrice) : '-'}</td>
             <td>${member.remaining_days !== undefined ? `${member.remaining_days}일` : '-'}</td>
             <td>${formatPaymentStatus(member.payment_status) || '-'}</td>
         `;
@@ -52,6 +53,7 @@ function formatGender(gender) {
 function formatDate(dateString) {
     if (!dateString) return '-';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: '2-digit',
@@ -151,24 +153,6 @@ function setupMemberEditButton() {
             window.location.href = '회원정보수정.html';
         });
     }
-}
-
-function formatDate(dateString) {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
-}
-
-function formatCurrency(amount) {
-    return amount.toLocaleString('ko-KR') + '원';
-}
-
-function formatPaymentStatus(status) {
-    return status === 'paid' ? '완납' : '미납';
 }
 
 function showErrorMessage(message) {
