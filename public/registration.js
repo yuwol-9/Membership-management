@@ -5,9 +5,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selectedDuration = null;
     let selectedStatus = null;
 
-    // 생년월일 입력 필드의 최대 날짜를 오늘로 제한
+    const startDateInput = document.getElementById('start_date');
+    const today = new Date();
+    const oneMonthLater = new Date(today);
+    oneMonthLater.setMonth(today.getMonth() + 1);
+    
+    startDateInput.value = today.toISOString().split('T')[0];
+    startDateInput.min = today.toISOString().split('T')[0];
+    startDateInput.max = oneMonthLater.toISOString().split('T')[0];
+
     const birthdateInput = document.getElementById('birthdate');
-    const today = new Date().toISOString().split('T')[0];
     birthdateInput.max = today;
 
     // 구독 기간 버튼 이벤트 리스너
@@ -94,6 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const age = calculateAge(form.birthdate.value);
+            const startDate = form.start_date.value || new Date().toISOString().split('T')[0];
 
             const memberData = {
                 name: form.name.value.trim(),
@@ -104,7 +112,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 phone: form.phone.value.trim(),
                 duration_months: selectedDuration,
                 payment_status: selectedStatus,
-                program_id: parseInt(programSelect.value)
+                program_id: parseInt(programSelect.value),
+                start_date: startDate
             };
 
             // API를 통해 회원 등록

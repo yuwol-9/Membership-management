@@ -122,8 +122,8 @@ const API = {
         return API.apiCall('/statistics/monthly');
     },
 
-    getProgramStats: async () => {
-        return API.apiCall('/statistics/program');
+    getProgramStats: async (year) => {
+    return API.apiCall(`/statistics/program?year=${year}`);
     },
 
     // Programs APIs

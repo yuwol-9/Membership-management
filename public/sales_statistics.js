@@ -1,114 +1,130 @@
+let monthlyChart = null;
+let programChart = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        await loadInitialData();
-        setupEventListeners();
-    } catch (error) {
-        console.error('데이터 로드 실패:', error);
-        API.handleApiError(error);
-    }
+    setupEventListeners();
+    await loadData();
 });
-
-async function loadInitialData() {
-    try {
-        const monthlyStats = await API.getMonthlyStats();
-        const programStats = await API.getProgramStats();
-
-        updateSalesTable(monthlyStats);
-        updateMonthlyChart(monthlyStats);
-        updateProgramChart(programStats);
-    } catch (error) {
-        console.error('통계 데이터 로드 실패:', error);
-        throw error;
-    }
-}
-
-function formatCurrency(amount) {
-    return Number(amount || 0).toLocaleString('ko-KR');
-}
 
 function setupEventListeners() {
     const yearSelect = document.getElementById('yearSelect');
     const monthSelect = document.getElementById('monthSelect');
 
-    // 연도 드롭다운 옵션 생성
-    const currentYear = new Date().getFullYear();
-    for (let year = 2024; year <= currentYear; year++) {
+    yearSelect.innerHTML = '';
+
+    const years = [2024, 2025];
+    years.forEach(year => {
         const option = document.createElement('option');
         option.value = year;
         option.textContent = `${year}년`;
         yearSelect.appendChild(option);
-    }
+    });
 
-    // 초기값 설정
+    const currentYear = new Date().getFullYear();
     yearSelect.value = currentYear;
-    monthSelect.value = new Date().getMonth() + 1;
+    
+    const currentMonth = new Date().getMonth() + 1;
+    monthSelect.value = currentMonth;
 
-    yearSelect.addEventListener('change', async () => {
-        try {
-            await loadFilteredData();
-        } catch (error) {
-            console.error('필터링 실패:', error);
-            API.handleApiError(error);
-        }
+    yearSelect.addEventListener('change', () => {
+        console.log('연도 변경:', yearSelect.value);
+        loadData();
     });
 
-    monthSelect.addEventListener('change', async () => {
-        try {
-            await loadFilteredData();
-        } catch (error) {
-            console.error('필터링 실패:', error);
-            API.handleApiError(error);
+    monthSelect.addEventListener('change', loadData);
+    
+    loadData();
+}
+
+async function loadData() {
+    try {
+        const year = document.getElementById('yearSelect').value;
+        const month = document.getElementById('monthSelect').value;
+
+        const monthlyResponse = await fetch(`http://localhost:8080/api/statistics/monthly?year=${year}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!monthlyResponse.ok) {
+            throw new Error('월별 통계 데이터 로드 실패');
         }
+
+        const monthlyStats = await monthlyResponse.json();
+        const yearlyData = monthlyStats;
+        const monthlyData = yearlyData.filter(item => {
+            const itemMonth = parseInt(item.month.split('-')[1]);
+            return itemMonth === parseInt(month);
+        });
+
+        updateSalesTable(monthlyData);
+        updateMonthlyChart(yearlyData);
+
+    } catch (error) {
+        console.error('데이터 로드 오류:', error);
+        alert('데이터를 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
+function filterDataByYear(data, year) {
+    return data.filter(item => {
+        const itemYear = item.month.split('-')[0];
+        return itemYear === year.toString();
     });
 }
 
-async function loadFilteredData() {
-    const year = document.getElementById('yearSelect').value;
-    const month = document.getElementById('monthSelect').value;
-    
-    const monthlyStats = await API.getMonthlyStats();
-    const filtered = monthlyStats.filter(stat => {
-        const statDate = new Date(stat.month);
-        return statDate.getFullYear().toString() === year &&
-               (statDate.getMonth() + 1).toString() === month;
+function filterDataByMonth(data, month) {
+    return data.filter(item => {
+        const itemMonth = parseInt(item.month.split('-')[1]);
+        return itemMonth === parseInt(month);
     });
-    
-    updateSalesTable(filtered);
-    updateMonthlyChart(monthlyStats); // 전체 데이터로 차트 업데이트
+}
+function formatCurrency(amount) {
+    return Number(amount || 0).toLocaleString('ko-KR');
 }
 
-function updateSalesTable(data) {
+function updateSalesTable(monthlyData) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
 
-    let paidTotal = 0;
-    let unpaidTotal = 0;
+    const data = Array.isArray(monthlyData) ? monthlyData : [monthlyData];
+    
+    let monthlyPaidTotal = 0;
+    let monthlyUnpaidTotal = 0;
 
-    data.forEach(stat => {
-        const tr = document.createElement('tr');
-        const revenue = Number(stat.revenue || 0);
-
-        if (stat.payment_status === 'paid') {
-            paidTotal += revenue;
-        } else {
-            unpaidTotal += revenue;
-        }
-
-        tr.innerHTML = `
-            <td>${formatCurrency(revenue)}원</td>
-            <td>${stat.month}</td>
-            <td>${stat.payment_status === 'paid' ? '완납' : '미납'}</td>
+    // First row for paid amount
+    if (data[0]?.paid_amount > 0) {
+        const trPaid = document.createElement('tr');
+        monthlyPaidTotal = Number(data[0].paid_amount || 0);
+        trPaid.innerHTML = `
+            <td>${formatCurrency(data[0].paid_amount)}원</td>
+            <td>${data[0].month}</td>
+            <td>완납</td>
         `;
-        tbody.appendChild(tr);
-    });
+        tbody.appendChild(trPaid);
+    }
+
+    // Second row for unpaid amount
+    if (data[0]?.unpaid_amount > 0) {
+        const trUnpaid = document.createElement('tr');
+        monthlyUnpaidTotal = Number(data[0].unpaid_amount || 0);
+        trUnpaid.innerHTML = `
+            <td>${formatCurrency(data[0].unpaid_amount)}원</td>
+            <td>${data[0].month}</td>
+            <td>미납</td>
+        `;
+        tbody.appendChild(trUnpaid);
+    }
 
     const summaryElement = document.querySelector('.summary');
+    const monthlyTotalRevenue = monthlyPaidTotal + monthlyUnpaidTotal;
+    
     if (summaryElement) {
-        const totalRevenue = paidTotal + unpaidTotal;
         summaryElement.innerHTML = `
-            완납 금액: ${formatCurrency(paidTotal)}원<br>
-            미납 금액: ${formatCurrency(unpaidTotal)}원<br>
-            총 매출: ${formatCurrency(totalRevenue)}원
+            완납 금액: ${formatCurrency(monthlyPaidTotal)}원<br>
+            미납 금액: ${formatCurrency(monthlyUnpaidTotal)}원<br>
+            총 매출: ${formatCurrency(monthlyTotalRevenue)}원
         `;
     }
 }
@@ -116,28 +132,17 @@ function updateSalesTable(data) {
 function updateMonthlyChart(data) {
     const ctx = document.getElementById('salesChart').getContext('2d');
     
-    if (window.monthlyChart) {
-        window.monthlyChart.destroy();
+    if (monthlyChart) {
+        monthlyChart.destroy();
     }
 
-    const monthlyTotals = {};
-    data.forEach(item => {
-        if (!monthlyTotals[item.month]) {
-            monthlyTotals[item.month] = 0;
-        }
-        monthlyTotals[item.month] += Number(item.revenue || 0);
-    });
-
-    const sortedMonths = Object.keys(monthlyTotals).sort();
-    const revenues = sortedMonths.map(month => monthlyTotals[month]);
-
-    window.monthlyChart = new Chart(ctx, {
+    monthlyChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: sortedMonths,
+            labels: data && data.length > 0 ? Object.keys(groupDataByMonth(data)).sort() : [],
             datasets: [{
                 label: '월별 매출 (원)',
-                data: revenues,
+                data: data && data.length > 0 ? Object.values(groupDataByMonth(data)) : [],
                 borderColor: '#E56736',
                 backgroundColor: 'rgba(229, 103, 54, 0.1)',
                 borderWidth: 2,
@@ -173,27 +178,78 @@ function updateMonthlyChart(data) {
     });
 }
 
+function groupDataByMonth(data) {
+    return data.reduce((acc, item) => {
+        if (!acc[item.month]) {
+            acc[item.month] = 0;
+        }
+        acc[item.month] += Number(item.revenue || 0);
+        return acc;
+    }, {});
+}
+
+async function loadData() {
+    try {
+        const year = document.getElementById('yearSelect').value;
+        const month = document.getElementById('monthSelect').value;
+        console.log('선택된 연도:', year);
+
+        const monthlyResponse = await fetch(`http://localhost:8080/api/statistics/monthly?year=${year}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!monthlyResponse.ok) {
+            throw new Error('월별 통계 데이터 로드 실패');
+        }
+
+        const monthlyStats = await monthlyResponse.json();
+        const yearlyData = monthlyStats;
+        const monthlyData = yearlyData.filter(item => {
+            const itemMonth = parseInt(item.month.split('-')[1]);
+            return itemMonth === parseInt(month);
+        });
+
+        const programResponse = await fetch(`http://localhost:8080/api/statistics/program?year=${year}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!programResponse.ok) {
+            throw new Error('프로그램별 통계 데이터 로드 실패');
+        }
+
+        const programStats = await programResponse.json();
+
+        updateSalesTable(monthlyData);
+        updateMonthlyChart(yearlyData);
+        updateProgramChart(programStats);
+
+    } catch (error) {
+        console.error('데이터 로드 오류:', error);
+        alert('데이터를 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
 function updateProgramChart(data) {
     const ctx = document.getElementById('serviceChart').getContext('2d');
     
-    if (window.programChart) {
-        window.programChart.destroy();
+    if (programChart) {
+        programChart.destroy();
     }
-
-    const programs = data.map(item => item.name);
-    const revenues = data.map(item => Number(item.revenue || 0));
-    const students = data.map(item => Number(item.total_students || 0));
 
     const colors = ['#DF4420', '#C33A20', '#E56736', '#EE8B59'];
 
-    window.programChart = new Chart(ctx, {
+    programChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: programs,
+            labels: data.map(item => item.name || '프로그램명 없음'),
             datasets: [{
                 label: '프로그램별 매출 (원)',
-                data: revenues,
-                backgroundColor: colors.slice(0, programs.length),
+                data: data.map(item => Number(item.revenue || 0)),
+                backgroundColor: colors.slice(0, data.length),
                 borderWidth: 1
             }]
         },
@@ -207,9 +263,9 @@ function updateProgramChart(data) {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            const program = programs[context.dataIndex];
-                            const revenue = revenues[context.dataIndex];
-                            const studentCount = students[context.dataIndex];
+                            if (!data || !data[context.dataIndex]) return [];
+                            const revenue = data[context.dataIndex].revenue;
+                            const studentCount = data[context.dataIndex].total_students;
                             return [
                                 `매출: ${formatCurrency(revenue)}원`,
                                 `수강생: ${studentCount}명`
