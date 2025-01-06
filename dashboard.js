@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // 로그인 상태 확인
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '로그인.html';
+        return;
+    }
+
     try {
+        // 대시보드 데이터 로드
         const stats = await API.getDashboardStats();
         updateDashboardCards(stats);
         
@@ -9,8 +17,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error('대시보드 통계 로드 실패:', error);
+        // 인증 오류인 경우 로그인 페이지로 리다이렉트
+        if (error.message.includes('인증')) {
+            window.location.href = '로그인.html';
+            return;
+        }
     }
-    setupAuthCheck();
+
+    // 로그아웃 버튼 기능 설정
+    setupAuthButtons();
 });
 
 function updateDashboardCards(stats) {
@@ -94,6 +109,27 @@ function setupAuthCheck() {
             });
         } else {
             loginBtn.textContent = '로그인';
+        }
+    }
+}
+
+function setupAuthButtons() {
+    const loginBtn = document.querySelector('.login-btn');
+    if (loginBtn) {
+        const token = localStorage.getItem('token');
+        if (token) {
+            loginBtn.textContent = '로그아웃';
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                window.location.href = '로그인.html';
+            });
+        } else {
+            loginBtn.textContent = '로그인';
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = '로그인.html';
+            });
         }
     }
 }

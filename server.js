@@ -1,4 +1,6 @@
-require('dotenv').config();
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
+require('dotenv').config({ path: envFile });
+
 const express = require('express');
 const app = express();
 const mysql = require('mysql2/promise');
@@ -11,7 +13,7 @@ const path = require('path');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-    origin: 'http://localhost:8080',
+    origin: '*',
     credentials: true
 }));
 
@@ -59,7 +61,9 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: 60000,
+    acquireTimeout: 60000
 });
 
 // Database Connection Test
@@ -70,8 +74,25 @@ pool.getConnection()
     })
     .catch(err => {
         console.error('데이터베이스 연결 실패:', err);
-        process.exit(1);
+        console.log('연결 재시도를 시작합니다...');
+        connectWithRetry();
     });
+
+
+    const connectWithRetry = async () => {
+        try {
+            const connection = await pool.getConnection();
+            console.log('데이터베이스 연결 성공!');
+            connection.release();
+        } catch (err) {
+            console.error('데이터베이스 연결 실패:', err);
+            console.log('10초 후 재시도합니다...');
+            setTimeout(connectWithRetry, 10000);
+        }
+    };
+    
+// 서버 시작 시 연결 시도
+connectWithRetry();
 
 // Authentication Middleware
 const authenticateToken = async (req, res, next) => {
@@ -104,6 +125,7 @@ const authenticateToken = async (req, res, next) => {
 // Login API
 app.post('/api/login', async (req, res) => {
     try {
+        console.log('로그인 요청 수신:', req.body.username);
         const { username, password } = req.body;
         const [rows] = await pool.execute(
             'SELECT * FROM admin WHERE username = ?',
@@ -111,14 +133,16 @@ app.post('/api/login', async (req, res) => {
         );
 
         if (rows.length === 0) {
-            return res.status(401).json({ message: '로그인 실패' });
+            console.log('사용자를 찾을 수 없음');
+            return res.status(401).json({ message: '로그인 실패: 사용자를 찾을 수 없습니다.' });
         }
 
         const user = rows[0];
         const validPassword = await bcrypt.compare(password, user.PASSWORD);
 
         if (!validPassword) {
-            return res.status(401).json({ message: '로그인 실패' });
+            console.log('잘못된 비밀번호');
+            return res.status(401).json({ message: '로그인 실패: 잘못된 비밀번호입니다.' });
         }
 
         const token = jwt.sign(
@@ -127,10 +151,18 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        res.json({ token });
+        console.log('로그인 성공, 토큰 생성');
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user.ID,
+                username: user.USERNAME
+            }
+        });
     } catch (err) {
-        console.error('로그인 에러:', err);
-        res.status(500).json({ message: '서버 오류' });
+        console.error('로그인 처리 중 오류:', err);
+        res.status(500).json({ message: '서버 오류', error: err.message });
     }
 });
 
@@ -495,7 +527,7 @@ app.use((err, req, res, next) => {
 
 // Start Server
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`서버가 포트 ${PORT}에서 실행중입니다.`);
     console.log(`데이터베이스: ${process.env.DB_NAME}`);
     console.log('서버 시작 시간:', new Date().toLocaleString());

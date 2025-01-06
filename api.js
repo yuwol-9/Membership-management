@@ -9,23 +9,30 @@ const API = {
     // API calls with authentication
     apiCall: async (endpoint, options = {}) => {
         const token = API.getToken();
+        
         if (!token && !endpoint.includes('login')) {
             window.location.href = '/로그인.html';
             throw new Error('로그인이 필요합니다.');
         }
 
         try {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` })
+            };
+
+            console.log('API 요청:', endpoint, '헤더:', headers);
+
             const response = await fetch(`${API.API_BASE_URL}${endpoint}`, {
                 ...options,
                 headers: {
-                    'Content-Type': 'application/json',
-                    ...(token && { 'Authorization': `Bearer ${token}` }),
+                    ...headers,
                     ...options.headers
                 }
             });
 
             if (!response.ok) {
-                if (response.status === 401) {
+                if (response.status === 401 || response.status === 403) {
                     API.removeToken();
                     window.location.href = '/로그인.html';
                     throw new Error('인증이 만료되었습니다.');
@@ -43,6 +50,7 @@ const API = {
     // Auth APIs
     login: async (username, password) => {
         try {
+            console.log('로그인 시도:', username);
             const response = await fetch(`${API.API_BASE_URL}/login`, {
                 method: 'POST',
                 headers: {
@@ -50,16 +58,18 @@ const API = {
                 },
                 body: JSON.stringify({ username, password })
             });
-
-            if (!response.ok) {
-                throw new Error('로그인에 실패했습니다');
-            }
-
+    
             const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || '로그인에 실패했습니다');
+            }
+    
+            console.log('로그인 성공, 토큰 수신');
             API.setToken(data.token);
             return data;
         } catch (error) {
-            console.error('로그인 실패:', error);
+            console.error('로그인 처리 중 오류:', error);
             throw error;
         }
     },
