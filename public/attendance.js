@@ -1,5 +1,27 @@
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // 연도 선택 옵션 설정
+        const yearSelect = document.getElementById('year');
+        const currentYear = new Date().getFullYear();
+        
+        // 2024년부터 시작하도록 수정
+        const startYear = 2024;
+        const endYear = 2028;
+        
+        yearSelect.innerHTML = ''; // 기존 옵션 제거
+        
+        for (let year = startYear; year <= endYear; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = `${year}년`;
+            yearSelect.appendChild(option);
+            
+            // 현재 연도를 기본값으로 설정
+            if (year === currentYear) {
+                option.selected = true;
+            }
+        }
+        
         await loadAttendanceData();
         setupEventListeners();
     } catch (error) {
@@ -31,42 +53,45 @@ function updateAttendanceTable(data) {
     const month = document.getElementById('month').value;
     const daysInMonth = new Date(year, parseInt(month) + 1, 0).getDate();
 
-    // 헤더 업데이트
     updateTableHeader(daysInMonth);
-
-    // 데이터 그룹화
     const memberAttendance = groupAttendanceByMember(data);
     tableBody.innerHTML = '';
 
-    // 각 회원별 행 생성
     Object.entries(memberAttendance).forEach(([memberName, attendance]) => {
         const tr = document.createElement('tr');
         
-        // 회원 이름 열
         const tdName = document.createElement('td');
         tdName.textContent = memberName;
         tr.appendChild(tdName);
 
-        // 날짜별 체크박스
         for (let day = 1; day <= daysInMonth; day++) {
             const td = document.createElement('td');
             const currentDate = new Date(year, month, day);
-            const dayOfWeek = currentDate.getDay(); // 0은 일요일, 6은 토요일
+            const dayOfWeek = currentDate.getDay();
 
-            // 일요일인 경우
             if (dayOfWeek === 0) {
                 td.classList.add('sunday');
-                // 일요일에는 체크박스 없이 빈 셀로 표시
                 tr.appendChild(td);
                 continue;
             }
 
-            // 일요일이 아닌 모든 날짜에 체크박스 생성
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = attendance.dates.includes(day);
+            
+            // 남은 일수가 0이면 체크박스 비활성화
+            if (attendance.remaining_days <= 0 && !checkbox.checked) {
+                checkbox.disabled = true;
+            }
 
             checkbox.addEventListener('change', async () => {
+                // 체크 시도할 때 남은 일수 확인
+                if (checkbox.checked && attendance.remaining_days <= 0) {
+                    checkbox.checked = false;
+                    alert('남은 수업 일수가 없습니다.');
+                    return;
+                }
+
                 try {
                     await API.checkAttendance({
                         enrollment_id: attendance.enrollment_id,
@@ -74,7 +99,6 @@ function updateAttendanceTable(data) {
                         is_present: checkbox.checked
                     });
                     
-                    // 성공적으로 처리된 경우 데이터 새로고침
                     await loadAttendanceData();
                 } catch (error) {
                     console.error('출석 체크 실패:', error);
@@ -87,15 +111,21 @@ function updateAttendanceTable(data) {
             tr.appendChild(td);
         }
 
-        // 출석횟수와 남은 일수
         const tdCount = document.createElement('td');
         tdCount.textContent = attendance.dates.length;
         tr.appendChild(tdCount);
         
         const tdRemaining = document.createElement('td');
-        tdRemaining.textContent = attendance.remaining_days || '-';
-        tr.appendChild(tdRemaining);
+        const remainingDays = Math.max(0, attendance.remaining_days); // 음수 방지
+        tdRemaining.textContent = remainingDays;
+        
+        // 남은 일수가 5일 이하면 빨간색으로 표시
+        if (remainingDays <= 5 && remainingDays > 0) {
+            tdRemaining.style.color = '#ff0000';
+            tdRemaining.style.fontWeight = 'bold';
+        }
 
+        tr.appendChild(tdRemaining);
         tableBody.appendChild(tr);
     });
 }
@@ -103,7 +133,6 @@ function updateAttendanceTable(data) {
 function updateTableHeader(daysInMonth) {
     const thead = document.querySelector('.attendance-table thead');
     thead.innerHTML = '';
-
     const headerRow = document.createElement('tr');
     headerRow.innerHTML = `
         <th>회원 이름</th>
@@ -111,7 +140,6 @@ function updateTableHeader(daysInMonth) {
         <th>출석횟수</th>
         <th>남은일수</th>
     `;
-
     thead.appendChild(headerRow);
 }
 

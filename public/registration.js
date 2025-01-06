@@ -6,9 +6,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selectedStatus = null;
 
     const startDateInput = document.getElementById('start_date');
-    const today = new Date().toISOString().split('T')[0];
-    startDateInput.value = today;
-    startDateInput.max = today;
+    const today = new Date();
+    const oneMonthLater = new Date(today);
+    oneMonthLater.setMonth(today.getMonth() + 1);
+    
+    startDateInput.value = today.toISOString().split('T')[0];
+    startDateInput.min = today.toISOString().split('T')[0];
+    startDateInput.max = oneMonthLater.toISOString().split('T')[0];
 
     const birthdateInput = document.getElementById('birthdate');
     birthdateInput.max = today;
