@@ -140,7 +140,7 @@ app.post('/api/members', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { name, gender, age, birthdate, address, phone, duration_months, payment_status, program_id } = req.body;
+        const { name, gender, age, birthdate, address, phone, duration_months, payment_status, program_id, start_date } = req.body;
 
         const [memberResult] = await connection.execute(
             'INSERT INTO members (name, gender, age, birthdate, address, phone) VALUES (?, ?, ?, ?, ?, ?)',
@@ -148,8 +148,8 @@ app.post('/api/members', authenticateToken, async (req, res) => {
         );
 
         const [enrollmentResult] = await connection.execute(
-            'INSERT INTO enrollments (member_id, program_id, duration_months, remaining_days, payment_status, start_date) VALUES (?, ?, ?, ?, ?, CURDATE())',
-            [memberResult.insertId, program_id || 1, duration_months, duration_months * 30, payment_status]
+            'INSERT INTO enrollments (member_id, program_id, duration_months, remaining_days, payment_status, start_date) VALUES (?, ?, ?, ?, ?, ?)',
+            [memberResult.insertId, program_id || 1, duration_months, duration_months * 30, payment_status, start_date]
         );
 
         await connection.commit();
@@ -176,6 +176,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                 e.duration_months,
                 e.remaining_days,
                 e.payment_status,
+                e.start_date,
                 p.name as program_name,
                 p.price
             FROM members m
@@ -195,7 +196,7 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { name, gender, age, birthdate, address, phone, program_id, duration_months, payment_status } = req.body;
+        const { name, gender, age, birthdate, address, phone, program_id, duration_months, payment_status, start_date } = req.body;
         const memberId = req.params.id;
 
         await connection.execute(
@@ -210,13 +211,13 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
 
         if (existingEnrollment.length > 0) {
             await connection.execute(
-                'UPDATE enrollments SET program_id = ?, duration_months = ?, payment_status = ? WHERE member_id = ?',
-                [program_id, duration_months, payment_status, memberId]
+                'UPDATE enrollments SET program_id = ?, duration_months = ?, payment_status = ? start_date = ? WHERE member_id = ?',
+                [program_id, duration_months, payment_status, start_date, memberId]
             );
         } else {
             await connection.execute(
-                'INSERT INTO enrollments (member_id, program_id, duration_months, remaining_days, payment_status, start_date) VALUES (?, ?, ?, ?, ?, CURDATE())',
-                [memberId, program_id, duration_months, duration_months * 30, payment_status]
+                'INSERT INTO enrollments (member_id, program_id, duration_months, remaining_days, payment_status, start_date) VALUES (?, ?, ?, ?, ?, ?)',
+                [memberId, program_id, duration_months, duration_months * 30, payment_status, start_date]
             );
         }
 
@@ -368,19 +369,52 @@ app.get('/api/attendance', authenticateToken, async (req, res) => {
 // Statistics APIs
 app.get('/api/statistics/monthly', authenticateToken, async (req, res) => {
     try {
+        const year = req.query.year || new Date().getFullYear();
+        console.log('요청된 연도:', year);
+        
         const [monthlyStats] = await pool.execute(`
             SELECT 
                 DATE_FORMAT(e.start_date, '%Y-%m') as month,
-                COALESCE(SUM(p.price * e.duration_months), 0) as revenue,
-                e.payment_status
+                e.payment_status,
+                COUNT(DISTINCT e.id) as enrollment_count,
+                COALESCE(SUM(p.price * e.duration_months), 0) as revenue
             FROM enrollments e
-            JOIN programs p ON e.program_id = p.id
-            GROUP BY month, e.payment_status
-            ORDER BY month DESC
-            LIMIT 12
-        `);
+            LEFT JOIN programs p ON e.program_id = p.id
+            WHERE YEAR(e.start_date) = ?
+            GROUP BY DATE_FORMAT(e.start_date, '%Y-%m'), e.payment_status
+            ORDER BY month ASC, e.payment_status
+        `, [year]);
 
-        res.json(monthlyStats);
+        console.log('데이터베이스 조회 결과:', monthlyStats);
+
+        const monthlyData = {};
+        for (let i = 1; i <= 12; i++) {
+            const monthStr = `${year}-${String(i).padStart(2, '0')}`;
+            monthlyData[monthStr] = {
+                month: monthStr,
+                revenue: 0,
+                paid_amount: 0,
+                unpaid_amount: 0,
+                enrollment_count: 0
+            };
+        }
+
+        monthlyStats.forEach(stat => {
+            const revenue = parseFloat(stat.revenue || 0);
+            if (monthlyData[stat.month]) {
+                if (stat.payment_status === 'paid') {
+                    monthlyData[stat.month].paid_amount = revenue;
+                } else {
+                    monthlyData[stat.month].unpaid_amount = revenue;
+                }
+                monthlyData[stat.month].revenue = monthlyData[stat.month].paid_amount + monthlyData[stat.month].unpaid_amount;
+                monthlyData[stat.month].enrollment_count += parseInt(stat.enrollment_count || 0);
+            }
+        });
+
+        console.log('최종 처리된 데이터:', Object.values(monthlyData));
+        res.json(Object.values(monthlyData));
+        
     } catch (err) {
         console.error('월별 통계 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
@@ -389,6 +423,8 @@ app.get('/api/statistics/monthly', authenticateToken, async (req, res) => {
 
 app.get('/api/statistics/program', authenticateToken, async (req, res) => {
     try {
+        const year = req.query.year || new Date().getFullYear();
+        
         const [programStats] = await pool.execute(`
             SELECT 
                 p.name,
@@ -397,9 +433,10 @@ app.get('/api/statistics/program', authenticateToken, async (req, res) => {
                 COALESCE(SUM(p.price * e.duration_months), 0) as revenue
             FROM programs p
             LEFT JOIN enrollments e ON p.id = e.program_id
+            WHERE YEAR(e.start_date) = ?
             GROUP BY p.id, p.name, p.price
             ORDER BY COALESCE(SUM(p.price * e.duration_months), 0) DESC
-        `);
+        `, [year]);
 
         res.json(programStats);
     } catch (err) {

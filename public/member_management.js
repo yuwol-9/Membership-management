@@ -40,6 +40,7 @@ function updateTable(members) {
             <td>${totalPrice ? formatCurrency(totalPrice) : '-'}</td>
             <td>${member.remaining_days !== undefined ? `${member.remaining_days}일` : '-'}</td>
             <td>${formatPaymentStatus(member.payment_status) || '-'}</td>
+            <td>${formatDate(member.start_date) || '-'}</td>
         `;
         tbody.appendChild(tr);
     });
