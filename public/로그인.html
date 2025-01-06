@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .all-container{
+      width: 100%;
+      max-width: 400px;
+      padding:  0px 30px;
+      text-align: center;
+    }
+    .logo-container{
+      max-width: 400px;
+      align-items: center;
+      margin : 0 0 20px;
+    }
+    .login-container {
+      background-color: white;
+      width: 100%;
+      max-width: 400px;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .login-container h1 {
+      font-size: 24px;
+      color: #E56736;
+      margin-bottom: 20px;
+    }
+    .login-container form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .login-container input {
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    .login-container input:focus {
+      border-color: #E56736;
+    }
+    .login-container button {
+      padding: 12px;
+      background-color: #E56736;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .login-container button:hover {
+      background-color: #E56736;
+    }
+    .login-container .footer {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #888;
+    }
+    .login-container .footer a {
+      color: #E56736;
+      text-decoration: none;
+    }
+    .login-container .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class = "all-container">
+    <div class = "logo-container">
+      <a href="홈페이지.html">
+        <img src="image/로고_black.png" width="300" height="50">
+      </a>
+  </div>
+  <div class="login-container">
+    <h1>로그인</h1>
+    <form id="loginForm">
+      <input type="text" name="username" placeholder="아이디를 입력하세요" required>
+      <input type="password" name="password" placeholder="비밀번호를 입력하세요" required>
+      <button type="submit">로그인</button>
+    </form>
+    <div class="footer">
+      <p>계정이 없으신가요? <a href="#">회원가입</a></p>
+      <p><a href="#">비밀번호 찾기</a></p>
+    </div>
+  </div>
+  </div>
+  <script src="api.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>
