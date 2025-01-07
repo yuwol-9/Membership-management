@@ -1,3 +1,9 @@
+CREATE DATABASE IF NOT EXISTS railway DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE railway;
+
+ALTER DATABASE railway CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET NAMES utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS oohjinDanceAcademy_DB;
 USE oohjinDanceAcademy_DB;
 
