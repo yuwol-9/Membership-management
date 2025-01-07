@@ -54,83 +54,47 @@ app.get('/선생님', (req, res) => {
 app.use('/image', express.static(path.join(__dirname, 'image')));
 
 
-// Get DB Configuration based on environment
-const getDBConfig = () => {
-    if (process.env.MYSQLHOST) {
-        // Railway-specific configuration
-        return {
-            host: process.env.MYSQLHOST,
-            user: process.env.MYSQLUSER,
-            password: process.env.MYSQLPASSWORD,
-            database: process.env.MYSQL_DATABASE,
-            port: process.env.MYSQLPORT
-        };
-    } else if (process.env.NODE_ENV === 'production') {
-        // Production environment (non-Railway)
-        return {
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            port: process.env.PORT || 3306
-        };
-    } else {
-        // Development environment
-        return {
-            host: 'localhost',
-            user: 'root',
-            password: '9999',
-            database: 'oohjinDanceAcademy_DB',
-            port: 3306
-        };
+// Print all environment variables for debugging
+console.log('Available environment variables:', {
+    MYSQLHOST: process.env.MYSQLHOST,
+    MYSQLUSER: process.env.MYSQLUSER,
+    MYSQL_DATABASE: process.env.MYSQL_DATABASE,
+    MYSQLPORT: process.env.MYSQLPORT,
+    NODE_ENV: process.env.NODE_ENV
+});
+
+// Database Configuration
+const dbConfig = {
+    host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
+    user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
+    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '9999',
+    database: process.env.MYSQL_DATABASE || process.env.DB_NAME || 'oohjinDanceAcademy_DB',
+    port: parseInt(process.env.MYSQLPORT || '3306'),
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+};
+
+console.log('Using database configuration:', dbConfig);
+
+// Create the connection pool
+const pool = mysql.createPool(dbConfig);
+
+// Test database connection
+const testConnection = async () => {
+    try {
+        const connection = await pool.getConnection();
+        console.log('데이터베이스 연결 성공!');
+        connection.release();
+    } catch (err) {
+        console.error('데이터베이스 연결 실패:', err);
+        console.log('연결 재시도를 시작합니다...');
+        setTimeout(testConnection, 10000);
     }
 };
 
-// Database Connection
-const dbConfig = getDBConfig();
-console.log('Using database configuration:', {
-    host: dbConfig.host,
-    user: dbConfig.user,
-    database: dbConfig.database,
-    port: dbConfig.port
-});
-
-const pool = mysql.createPool({
-    ...dbConfig,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    connectTimeout: 60000,
-    acquireTimeout: 60000
-});
-
-// Database Connection Test
-pool.getConnection()
-    .then(connection => {
-        console.log('데이터베이스 연결 성공!');
-        connection.release();
-    })
-    .catch(err => {
-        console.error('데이터베이스 연결 실패:', err);
-        console.log('연결 재시도를 시작합니다...');
-        connectWithRetry();
-    });
-
-
-    const connectWithRetry = async () => {
-        try {
-            const connection = await pool.getConnection();
-            console.log('데이터베이스 연결 성공!');
-            connection.release();
-        } catch (err) {
-            console.error('데이터베이스 연결 실패:', err);
-            console.log('10초 후 재시도합니다...');
-            setTimeout(connectWithRetry, 10000);
-        }
-    };
-    
-// 서버 시작 시 연결 시도
-connectWithRetry();
+// Initial connection test
+testConnection();
 
 // Authentication Middleware
 const authenticateToken = async (req, res, next) => {
