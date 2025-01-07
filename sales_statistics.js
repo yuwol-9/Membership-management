@@ -41,7 +41,7 @@ async function loadData() {
         const year = document.getElementById('yearSelect').value;
         const month = document.getElementById('monthSelect').value;
 
-        const monthlyResponse = await fetch(`http://localhost:8080/api/statistics/monthly?year=${year}`, {
+        const monthlyResponse = await fetch(`https://membership-management-production.up.railway.app/api/statistics/monthly?year=${year}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -194,7 +194,7 @@ async function loadData() {
         const month = document.getElementById('monthSelect').value;
         console.log('선택된 연도:', year);
 
-        const monthlyResponse = await fetch(`http://localhost:8080/api/statistics/monthly?year=${year}`, {
+        const monthlyResponse = await fetch(`https://membership-management-production.up.railway.app/api/statistics/monthly?year=${year}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -211,7 +211,7 @@ async function loadData() {
             return itemMonth === parseInt(month);
         });
 
-        const programResponse = await fetch(`http://localhost:8080/api/statistics/program?year=${year}`, {
+        const programResponse = await fetch(`https://membership-management-production.up.railway.app/api/statistics/program?year=${year}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
