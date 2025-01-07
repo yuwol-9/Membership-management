@@ -53,13 +53,50 @@ app.get('/선생님', (req, res) => {
 
 app.use('/image', express.static(path.join(__dirname, 'image')));
 
+
+// Get DB Configuration based on environment
+const getDBConfig = () => {
+    if (process.env.MYSQLHOST) {
+        // Railway-specific configuration
+        return {
+            host: process.env.MYSQLHOST,
+            user: process.env.MYSQLUSER,
+            password: process.env.MYSQLPASSWORD,
+            database: process.env.MYSQL_DATABASE,
+            port: process.env.MYSQLPORT
+        };
+    } else if (process.env.NODE_ENV === 'production') {
+        // Production environment (non-Railway)
+        return {
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            port: process.env.PORT || 3306
+        };
+    } else {
+        // Development environment
+        return {
+            host: 'localhost',
+            user: 'root',
+            password: '9999',
+            database: 'oohjinDanceAcademy_DB',
+            port: 3306
+        };
+    }
+};
+
 // Database Connection
+const dbConfig = getDBConfig();
+console.log('Using database configuration:', {
+    host: dbConfig.host,
+    user: dbConfig.user,
+    database: dbConfig.database,
+    port: dbConfig.port
+});
+
 const pool = mysql.createPool({
-    host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
-    user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
-    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '9999',
-    database: process.env.MYSQL_DATABASE || process.env.DB_NAME || 'oohjinDanceAcademy_DB',
-    port: process.env.MYSQLPORT || 3306,
+    ...dbConfig,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
@@ -76,13 +113,6 @@ pool.getConnection()
     .catch(err => {
         console.error('데이터베이스 연결 실패:', err);
         console.log('연결 재시도를 시작합니다...');
-        // 에러 발생 시 환경변수 출력 (디버깅용)
-        console.log('Current environment variables:', {
-            host: process.env.MYSQLHOST || process.env.DB_HOST,
-            user: process.env.MYSQLUSER || process.env.DB_USER,
-            database: process.env.MYSQL_DATABASE || process.env.DB_NAME,
-            port: process.env.MYSQLPORT
-        });
         connectWithRetry();
     });
 
