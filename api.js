@@ -1,5 +1,5 @@
 const API = {
-    API_BASE_URL: 'http://localhost:8080/api',
+    API_BASE_URL: 'https://membership-management-production.up.railway.app/api',
 
     // Token management
     getToken: () => localStorage.getItem('token'),
