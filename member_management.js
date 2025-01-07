@@ -30,13 +30,14 @@ function updateTable(members) {
         const tr = document.createElement('tr');
         const totalPrice = member.price * (member.duration_months || 1);
         tr.innerHTML = `
-            <td>${member.NAME || '-'}</td>
-            <td>${member.PHONE || '-'}</td>
+            <td>${member.name || '-'}</td>
+            <td>${member.age || '-'}</td>
             <td>${formatDate(member.birthdate) || '-'}</td>
-            <td>${member.AGE || '-'}</td>
-            <td>${formatGender(member.GENDER) || '-'}</td>
-            <td>${member.ADDRESS || '-'}</td>
+            <td>${member.phone || '-'}</td>
+            <td>${formatGender(member.gender) || '-'}</td>
+            <td>${member.address || '-'}</td>
             <td>${member.program_name || '-'}</td>
+            <td>${member.duration_months ? `${member.duration_months}개월` : '-'}</td>
             <td>${totalPrice ? formatCurrency(totalPrice) : '-'}</td>
             <td>${member.remaining_days !== undefined ? `${member.remaining_days}일` : '-'}</td>
             <td>${formatPaymentStatus(member.payment_status) || '-'}</td>

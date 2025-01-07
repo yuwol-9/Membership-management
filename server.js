@@ -123,14 +123,18 @@ const authenticateToken = async (req, res, next) => {
 };
 
 // Login API
+// Login API
 app.post('/api/login', async (req, res) => {
     try {
         console.log('로그인 요청 수신:', req.body.username);
         const { username, password } = req.body;
+        
+        // 디버깅을 위한 로그 추가
         const [rows] = await pool.execute(
             'SELECT * FROM admin WHERE username = ?',
             [username]
         );
+        console.log('데이터베이스 조회 결과:', rows);
 
         if (rows.length === 0) {
             console.log('사용자를 찾을 수 없음');
@@ -138,7 +142,18 @@ app.post('/api/login', async (req, res) => {
         }
 
         const user = rows[0];
-        const validPassword = await bcrypt.compare(password, user.PASSWORD);
+        console.log('찾은 사용자:', user);
+        
+        // password 필드명이 대문자인지 소문자인지 확인
+        const storedPassword = user.password || user.PASSWORD;
+        
+        if (!storedPassword) {
+            console.log('저장된 비밀번호가 없음');
+            return res.status(401).json({ message: '로그인 실패: 비밀번호 오류.' });
+        }
+
+        const validPassword = await bcrypt.compare(password, storedPassword);
+        console.log('비밀번호 검증 결과:', validPassword);
 
         if (!validPassword) {
             console.log('잘못된 비밀번호');
@@ -146,7 +161,7 @@ app.post('/api/login', async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user.ID, username: user.USERNAME },
+            { id: user.ID || user.id, username: user.USERNAME || user.username },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -156,13 +171,17 @@ app.post('/api/login', async (req, res) => {
             success: true,
             token,
             user: {
-                id: user.ID,
-                username: user.USERNAME
+                id: user.ID || user.id,
+                username: user.USERNAME || user.username
             }
         });
     } catch (err) {
-        console.error('로그인 처리 중 오류:', err);
-        res.status(500).json({ message: '서버 오류', error: err.message });
+        console.error('로그인 처리 중 상세 오류:', err);
+        res.status(500).json({ 
+            message: '서버 오류', 
+            error: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
     }
 });
 
@@ -202,9 +221,16 @@ app.post('/api/members', authenticateToken, async (req, res) => {
 
 app.get('/api/members', authenticateToken, async (req, res) => {
     try {
+        console.log('회원 목록 조회 API 호출됨');
         const [rows] = await pool.execute(`
             SELECT 
-                m.*,
+                m.id,
+                m.name,
+                m.gender,
+                m.age,
+                m.birthdate,
+                m.address,
+                m.phone,
                 e.duration_months,
                 e.remaining_days,
                 e.payment_status,
@@ -216,10 +242,16 @@ app.get('/api/members', authenticateToken, async (req, res) => {
             LEFT JOIN programs p ON e.program_id = p.id
             ORDER BY m.created_at DESC
         `);
+        
+        console.log('조회된 회원 데이터:', rows);
         res.json(rows);
     } catch (err) {
-        console.error('회원 목록 조회 에러:', err);
-        res.status(500).json({ message: '서버 오류' });
+        console.error('회원 목록 조회 상세 에러:', err);
+        res.status(500).json({ 
+            message: '서버 오류', 
+            error: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
     }
 });
 

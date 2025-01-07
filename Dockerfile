@@ -7,15 +7,16 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# package.json 복사
+# package.json과 package-lock.json만 먼저 복사
 COPY package*.json ./
 
-# 의존성 설치
+# 새로운 node_modules 설치
 RUN npm install
 
-# 소스 코드 복사
+# 나머지 소스 코드 복사
 COPY . .
 
 EXPOSE 8080

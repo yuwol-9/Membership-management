@@ -1,70 +1,110 @@
 CREATE DATABASE IF NOT EXISTS oohjinDanceAcademy_DB;
 USE oohjinDanceAcademy_DB;
 
-CREATE TABLE IF NOT EXISTS ADMIN (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    USERNAME VARCHAR(50) NOT NULL UNIQUE,
-    PASSWORD VARCHAR(255) NOT NULL,
-    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS admin (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO ADMIN (USERNAME, PASSWORD) 
-VALUES ('woody', '$2b$10$qrLTVzFVi0qYOh9FI1rvou5QzmoyB2yLLjwQxMktPuqIGBRhWRCN.')
-ON DUPLICATE KEY UPDATE USERNAME = VALUES(USERNAME);
+INSERT INTO admin (username, password) 
+VALUES ('woody', '$2b$10$1trTyIfKPPMbiNBpdcKWmOS62NtEzp.Ul4ZeWQXlepX67Uqu8G6Py')
+ON DUPLICATE KEY UPDATE password = VALUES(username);
 
-/* INSTRUCTOR TABLE */
-CREATE TABLE IF NOT EXISTS INSTRUCTORS (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    NAME VARCHAR(50) NOT NULL,
-    PHONE VARCHAR(20)
+/* instructor table */
+CREATE TABLE IF NOT EXISTS instructors (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20)
 );
 
-/* MEMBER TABLE */
-CREATE TABLE IF NOT EXISTS MEMBERS (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    NAME VARCHAR(50) NOT NULL,
-    GENDER VARCHAR(10) NOT NULL,
-    AGE INT NOT NULL,
-    BIRTHDATE DATE,
-    ADDRESS TEXT NOT NULL,
-    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PHONE VARCHAR(20) NOT NULL
+/* member table */
+CREATE TABLE IF NOT EXISTS members (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL,
+    gender VARCHAR(10) NOT NULL,
+    age INT NOT NULL,
+    birthdate DATE,
+    address TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    phone VARCHAR(20) NOT NULL
 );
 
-/* PROGRAM INFO TABLE */
-CREATE TABLE IF NOT EXISTS PROGRAMS (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    NAME VARCHAR(100) NOT NULL,
-    INSTRUCTOR_ID INT,
-    PRICE INT NOT NULL,
-    FOREIGN KEY (INSTRUCTOR_ID) REFERENCES INSTRUCTORS(ID)
+/* program info table */
+CREATE TABLE IF NOT EXISTS programs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    instructor_id INT,
+    price INT NOT NULL,
+    FOREIGN KEY (instructor_id) REFERENCES instructors(id)
 );
 
-/* REGISTER INFO TABLE */
-CREATE TABLE IF NOT EXISTS ENROLLMENTS (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    MEMBER_ID INT NOT NULL,
-    PROGRAM_ID INT NOT NULL,
-    DURATION_MONTHS INT NOT NULL,
-    REMAINING_DAYS INT NOT NULL,
-    PAYMENT_STATUS ENUM('PAID', 'UNPAID') NOT NULL,
-    START_DATE DATE NOT NULL,
-    FOREIGN KEY (MEMBER_ID) REFERENCES MEMBERS(ID),
-    FOREIGN KEY (PROGRAM_ID) REFERENCES PROGRAMS(ID)
+/* register info table */
+CREATE TABLE IF NOT EXISTS enrollments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    member_id INT NOT NULL,
+    program_id INT NOT NULL,
+    duration_months INT NOT NULL,
+    remaining_days INT NOT NULL,
+    payment_status ENUM('paid', 'unpaid') NOT NULL,
+    start_date DATE NOT NULL,
+    FOREIGN KEY (member_id) REFERENCES members(id),
+    FOREIGN KEY (program_id) REFERENCES programs(id)
 );
 
-/* ATTENDANCE TABLE */
-CREATE TABLE IF NOT EXISTS ATTENDANCE (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    ENROLLMENT_ID INT NOT NULL,
-    ATTENDANCE_DATE DATE NOT NULL,
-    FOREIGN KEY (ENROLLMENT_ID) REFERENCES ENROLLMENTS(ID)
+/* attendance table */
+CREATE TABLE IF NOT EXISTS attendance (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    enrollment_id INT NOT NULL,
+    attendance_date DATE NOT NULL,
+    FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)
 );
 
-INSERT INTO INSTRUCTORS (NAME, PHONE) VALUES 
-('박현운', '010-1234-5678'),
-('임수연', '010-2345-6789');
+/* Insert instructors data */
+INSERT INTO instructors (id, name) VALUES
+(1, '박현운'),
+(2, '임수연'),
+(3, '김도연'),
+(4, '장태희'),
+(5, '선다연'),
+(6, '오윤경'),
+(7, '고현미'),
+(8, '김나은'),
+(9, '공민선'),
+(10, '최서진'),
+(11, '설영우'),
+(12, '한채원'),
+(13, '최현화'),
+(14, '최연서');
 
-INSERT INTO PROGRAMS (NAME, INSTRUCTOR_ID, PRICE) VALUES 
-('FITHOP', 1, 150000),
-('ALL K-POP A', 2, 150000);
+/* Modify programs table */
+ALTER TABLE programs MODIFY COLUMN instructor_id INT NULL;
+
+/* Insert programs data */
+INSERT INTO programs (id, name, price, instructor_id) VALUES
+(1, 'FITHOP', 150000, 1),
+(2, '다이어트 이지 댄스', 150000, 1),
+(3, 'ALL K-POP A', 150000, 2),
+(4, 'ALL K-POP B', 150000, 8),
+(5, 'ALL K-POP C', 150000, 2),
+(6, 'ALL K-POP 토요반', 150000, 3),
+(7, '초등 K-POP 토요반', 150000, 3),
+(8, '청소년 K-POP 토요반', 150000, 3),
+(9, '왁킹 토요반', 150000, 2),
+(10, '코레오 토요반', 150000, 4),
+(11, '키즈 K-POP', 150000, 5),
+(12, '초,중 K-POP', 150000, 2),
+(13, '청소년 걸리쉬', 150000, 6),
+(14, '왁킹 A', 150000, 2),
+(15, '왁킹 B (80분)', 150000, 11),
+(16, '힙합 베이직', 150000, 9),
+(17, '걸즈힙합 A', 150000, 7),
+(18, '걸즈힙합 B', 150000, 10),
+(19, '하우스 베이직', 150000, 9),
+(20, '소울댄스 (80분)', 150000, 12),
+(21, '힙합 & 코레오 (80분)', 150000, 13),
+(22, '팝핑 (80분)', 150000, 14),
+(23, '코레오 A', 150000, 8),
+(24, '코레오 B', 150000, 4),
+(25, '청소년 스트릿 (문의)', 150000, NULL);
