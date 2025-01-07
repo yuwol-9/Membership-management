@@ -31,9 +31,9 @@ function updateTable(members) {
         const totalPrice = member.price * (member.duration_months || 1);
         tr.innerHTML = `
             <td>${member.name || '-'}</td>
-            <td>${member.age || '-'}</td>
-            <td>${formatDate(member.birthdate) || '-'}</td>
             <td>${member.phone || '-'}</td>
+            <td>${formatDate(member.birthdate) || '-'}</td>
+            <td>${member.age || '-'}</td>
             <td>${formatGender(member.gender) || '-'}</td>
             <td>${member.address || '-'}</td>
             <td>${member.program_name || '-'}</td>
