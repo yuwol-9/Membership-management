@@ -55,10 +55,10 @@ app.use('/image', express.static(path.join(__dirname, 'image')));
 
 // Database Connection
 const pool = mysql.createPool({
-    host: process.env.MYSQLHOST || process.env.DB_HOST,
-    user: process.env.MYSQLUSER || process.env.DB_USER,
-    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
-    database: process.env.MYSQL_DATABASE || process.env.DB_NAME,
+    host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
+    user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
+    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '9999',
+    database: process.env.MYSQL_DATABASE || process.env.DB_NAME || 'oohjinDanceAcademy_DB',
     port: process.env.MYSQLPORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
@@ -76,6 +76,13 @@ pool.getConnection()
     .catch(err => {
         console.error('데이터베이스 연결 실패:', err);
         console.log('연결 재시도를 시작합니다...');
+        // 에러 발생 시 환경변수 출력 (디버깅용)
+        console.log('Current environment variables:', {
+            host: process.env.MYSQLHOST || process.env.DB_HOST,
+            user: process.env.MYSQLUSER || process.env.DB_USER,
+            database: process.env.MYSQL_DATABASE || process.env.DB_NAME,
+            port: process.env.MYSQLPORT
+        });
         connectWithRetry();
     });
 
