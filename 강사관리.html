@@ -6,24 +6,30 @@
     <title>강사 관리</title>
     <style>
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        /* 헤더 스타일 */
-        .header-container {
-            width: 100%;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+    }
+
+    /* 헤더 컨테이너 */
+    .header-container {
+            width: 100%; /* 화면 전체 너비 */
             background-color: #fff;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
-        
+
+        /* 상단 브랜드 헤더 */
         .brand-header {
             background-color: #1a1a1a;
             padding: 10px 0;
             text-align: center;
         }
-        
+
+        /* 네비게이션 헤더 */
         .nav-header {
             display: flex;
             justify-content: center;
@@ -31,86 +37,176 @@
             padding: 5px 24px;
             background-color: white;
         }
-        
-        /* 사이드바 스타일 */
-        .sidebar {
-            width: 250px;
-            background-color: #222;
-            padding: 20px 0;
-            height: 100vh;
-        }
-        
-        .sidebar ul {
-            list-style: none;
-        }
-        
-        .sidebar ul li {
-            padding: 15px 20px;
-            border-bottom: 1px solid #333;
-            color: white;
-        }
-        
-        .sidebar ul li a {
-            color: white;
-            text-decoration: none;
-            display: block;
-        }
-        
-        /* 메인 컨텐츠 스타일 */
-        .container {
-            display: flex;
-        }
-        
-        .box {
-            width: 1200px;
-            margin: auto;
-            margin-left: 100px;
-            margin-top: 70px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-        
-        /* 테이블 스타일 */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background-color: #E56736;
-            color: white;
-        }
-        
-        /* 버튼 스타일 */
-        .button-group {
-            margin-bottom: 20px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .btn-primary {
-            background-color: #E56736;
-        }
-        
-        .btn-primary:hover {
-            background-color: #D44D1C;
-        }
+    .sidebar {
+      top: 70px; /* 헤더 높이만큼 아래로 */
+      height: 100vh;
+      width: 250px;
+      background-color: #222;
+      color: white;
+      padding: 20px 0;
+      height : 100vh;
+    }
+    .sidebar ul {
+      list-style: none;
+      
+    }
+    .sidebar ul li {
+      padding: 15px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: 1px solid #333;
+      color: white;
+      text-decoration: none; /* 밑줄 제거 */
+  
+    }
+    .sidebar ul li:hover {
+      background-color: #333;
+      text-decoration: none; /* hover 시에도 밑줄 제거 유지 */
+    }
+    .sidebar ul li.active {
+      background-color: #000000;
+      text-decoration: none; /* hover 시에도 밑줄 제거 유지 */
+    }
+    .sidebar ul li span {
+      margin-left: 10px;
+    }
+    .sidebar img {
+    margin-right: 20px;
+    vertical-align: middle; /* 기본적으로 이미지를 텍스트의 중간에 맞추기 */
+    margin-bottom: 3px; /* 이미지를 더 아래로 이동 */
+    }
+    .sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    display: block; /* li 전체 영역이 클릭 가능하도록 */
+    }
+
+    .sidebar ul li a:hover {
+    text-decoration: none;
+    }
+    .container {
+      display : flex;
+    }
+    .box {
+      width : 1400px;
+
+      margin: auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-top: 150px;
+      margin-left: 100px;
+
+    }
+    h1 {
+      font-size: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #000;
+    }
+    .search-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .search-bar input {
+      width: 80%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    .search-bar button {
+      padding: 10px 20px;
+      background-color: #E56736;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .search-bar button:hover {
+      background-color: #E56736;
+    }
+
+    .member {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .member input {
+      width: 80%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    .member button {
+      padding: 10px 20px;
+      background-color: #E56736;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .member button:hover {
+      background-color: #E56736
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background-color: #e7f1ff;
+      color: #E56736;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #f1f7ff;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .button-group button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .btn-primary {
+      background-color: #E56736;
+      color: white;
+    }
+    .btn-danger {
+      background-color: #ff6b6b;
+      color: white;
+    }
+    .btn-warning {
+      background-color: #ffa94d;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #E56736;
+    }
+    .btn-danger:hover {
+      background-color: #d64545;
+    }
+    .btn-warning:hover {
+      background-color: #e68a30;
+    }
     </style>
 </head>
 <body>
@@ -164,7 +260,7 @@
         
         <div class="box">
             <div class="button-group">
-                <a href="강사정보등록.html" class="btn btn-primary">선생님 등록</a>
+                <a href="강사정보등록.html"><button>강사 등록</button></a>
             </div>
             
             <table>
