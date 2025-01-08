@@ -42,6 +42,9 @@ function updateTable(members) {
             <td>${member.remaining_days !== undefined ? `${member.remaining_days}일` : '-'}</td>
             <td>${formatPaymentStatus(member.payment_status) || '-'}</td>
             <td>${formatDate(member.start_date) || '-'}</td>
+            <td>
+                <button onclick="location.href='회원정보수정.html?id=${member.id}'" class="btn-primary">수정</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });

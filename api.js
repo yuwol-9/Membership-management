@@ -105,6 +105,10 @@ const API = {
         });
     },
 
+    getMember: async (id) => {
+        return API.apiCall(`/members/${id}`);
+    },
+
     // Attendance APIs
     checkAttendance: async (enrollmentData) => {
         return API.apiCall('/attendance', {
@@ -120,6 +124,35 @@ const API = {
     getAttendanceList: async (filters = {}) => {
         const queryString = new URLSearchParams(filters).toString();
         return API.apiCall(`/attendance?${queryString}`);
+    },
+
+    // Instructor APIs
+    getInstructors: async () => {
+        return API.apiCall('/instructors');
+    },
+
+    createInstructor: async (instructorData) => {
+        return API.apiCall('/instructors', {
+            method: 'POST',
+            body: JSON.stringify(instructorData)
+        });
+    },
+
+    updateInstructor: async (id, instructorData) => {
+        return API.apiCall(`/instructors/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(instructorData)
+        });
+    },
+
+    deleteInstructor: async (id) => {
+        return API.apiCall(`/instructors/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
+    getInstructor: async (id) => {
+        return API.apiCall(`/instructors/${id}`);
     },
 
     // Dashboard APIs

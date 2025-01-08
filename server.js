@@ -329,6 +329,35 @@ app.delete('/api/members/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// 회원 개별 조회
+app.get('/api/members/:id', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT 
+                m.*,
+                e.program_id,
+                e.duration_months,
+                e.remaining_days,
+                e.payment_status,
+                e.start_date,
+                p.name as program_name
+            FROM members m
+            LEFT JOIN enrollments e ON m.id = e.member_id
+            LEFT JOIN programs p ON e.program_id = p.id
+            WHERE m.id = ?
+        `, [req.params.id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('회원 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 // Attendance APIs
 app.post('/api/attendance', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
@@ -538,7 +567,85 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
     }
 });
 
-// Programs APIs
+// Instructor APIs
+// 강사 목록 조회
+app.get('/api/instructors', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.execute(
+            'SELECT id, name, phone, salary FROM instructors ORDER BY name'
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('강사 목록 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 강사 등록
+app.post('/api/instructors', authenticateToken, async (req, res) => {
+    try {
+        const { name, phone, salary } = req.body;
+        const [result] = await pool.execute(
+            'INSERT INTO instructors (name, phone, salary) VALUES (?, ?, ?)',
+            [name, phone, salary]
+        );
+        res.status(201).json({
+            message: '강사가 성공적으로 등록되었습니다.',
+            id: result.insertId
+        });
+    } catch (err) {
+        console.error('강사 등록 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 강사 정보 수정
+app.put('/api/instructors/:id', authenticateToken, async (req, res) => {
+    try {
+        const { name, phone, salary } = req.body;
+        const { id } = req.params;
+        await pool.execute(
+            'UPDATE instructors SET name = ?, phone = ?, salary = ? WHERE id = ?',
+            [name, phone, salary, id]
+        );
+        res.json({ message: '강사 정보가 성공적으로 수정되었습니다.' });
+    } catch (err) {
+        console.error('강사 정보 수정 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 강사 삭제
+app.delete('/api/instructors/:id', authenticateToken, async (req, res) => {
+    try {
+        await pool.execute('DELETE FROM instructors WHERE id = ?', [req.params.id]);
+        res.json({ message: '강사가 성공적으로 삭제되었습니다.' });
+    } catch (err) {
+        console.error('강사 삭제 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 강사 개별 조회
+app.get('/api/instructors/:id', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.execute(
+            'SELECT id, name, phone, salary FROM instructors WHERE id = ?',
+            [req.params.id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '강사를 찾을 수 없습니다.' });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('강사 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+
 // Programs APIs
 app.post('/api/programs', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();

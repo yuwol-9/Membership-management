@@ -4,7 +4,7 @@ USE railway;
 ALTER DATABASE railway CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 SET NAMES utf8mb4;
 
-CREATE DATABASE IF NOT EXISTS oohjinDanceAcademy_DB;
+/* CREATE DATABASE IF NOT EXISTS oohjinDanceAcademy_DB; */
 /*USE oohjinDanceAcademy_DB;*/
 
 CREATE TABLE IF NOT EXISTS admin (
@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS instructors (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     phone VARCHAR(20)
+    salary INT DEFAULT 0;
 );
 
 /* member table */
