@@ -63,12 +63,17 @@ function fillMemberData(memberData) {
     const subscriptionType = document.getElementById('subscription-type');
     const customSubscription = document.getElementById('custom-subscription');
     
-    if (memberData.total_classes > 0) {
+    if (memberData.total_classes && memberData.total_classes > 0) {
         subscriptionType.value = 'class';
         customSubscription.value = memberData.total_classes;
-    } else if (memberData.duration_months > 0) {
+    } else if (memberData.duration_months && memberData.duration_months > 0) {
         subscriptionType.value = 'month';
         customSubscription.value = memberData.duration_months;
+    }
+
+    const customInputGroup = document.querySelector('.custom-input-group');
+    if (customInputGroup) {
+        customInputGroup.style.display = 'flex';
     }
     
     // 금액 재계산
@@ -166,7 +171,7 @@ async function updateMember(event) {
   
   try {
       const urlParams = new URLSearchParams(window.location.search);
-      const memberId = urlParams.get('memberId');
+      const memberId = urlParams.get('id');
       const subscriptionType = document.getElementById('subscription-type');
       const subscriptionInput = document.getElementById('custom-subscription');
       
@@ -179,15 +184,15 @@ async function updateMember(event) {
           phone: document.getElementById('phone').value,
           program_id: document.getElementById('program').value,
           start_date: document.getElementById('start_date').value,
-          payment_status: selectedPaymentStatus
+          payment_status: selectedPaymentStatus,
+          duration_month: 0,
+          total_classes: 0
       };
 
       // 구독 유형에 따라 데이터 설정
       if (subscriptionType.value === 'month') {
           formData.duration_months = parseInt(subscriptionInput.value);
-          formData.total_classes = null;
       } else {
-          formData.duration_months = 1;
           formData.total_classes = parseInt(subscriptionInput.value);
       }
 

@@ -299,7 +299,7 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
 
         if (existingEnrollment.length > 0) {
             await connection.execute(
-                'UPDATE enrollments SET program_id = ?, duration_months = ?, payment_status = ? start_date = ? WHERE member_id = ?',
+                'UPDATE enrollments SET program_id = ?, duration_months = ?, payment_status = ?, start_date = ? WHERE member_id = ?',
                 [program_id, duration_months, payment_status, start_date, memberId]
             );
         } else {
@@ -327,7 +327,6 @@ app.delete('/api/members/:id', authenticateToken, async (req, res) => {
 
         const memberId = req.params.id;
         
-        // 1. 먼저 회원이 존재하는지 확인
         const [memberExists] = await connection.execute(
             'SELECT id FROM members WHERE id = ?',
             [memberId]
@@ -338,20 +337,17 @@ app.delete('/api/members/:id', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
         }
 
-        // 2. 출석 기록 삭제
         await connection.execute(`
             DELETE a FROM attendance a
             INNER JOIN enrollments e ON a.enrollment_id = e.id
             WHERE e.member_id = ?
         `, [memberId]);
 
-        // 3. 수강 정보 삭제
         await connection.execute(
             'DELETE FROM enrollments WHERE member_id = ?',
             [memberId]
         );
 
-        // 4. 회원 정보 삭제
         await connection.execute(
             'DELETE FROM members WHERE id = ?',
             [memberId]
@@ -401,6 +397,54 @@ app.get('/api/members/:id', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error('회원 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+app.post('/api/members/:id/programs', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        
+        const memberId = req.params.id;
+        const { 
+            program_id, 
+            start_date, 
+            payment_status,
+            duration_months,
+            total_classes 
+        } = req.body;
+
+        // Get program price information
+        const [programPrice] = await connection.execute(
+            'SELECT monthly_price, per_class_price FROM programs WHERE id = ?',
+            [program_id]
+        );
+
+        // Calculate total amount
+        let totalAmount = 0;
+        let remainingDays = 0;
+        if (total_classes) {
+            totalAmount = total_classes * programPrice[0].per_class_price;
+            remainingDays = total_classes;
+        } else {
+            totalAmount = duration_months * programPrice[0].monthly_price;
+            remainingDays = duration_months * 30;
+        }
+
+        // Insert new enrollment
+        await connection.execute(
+            'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [memberId, program_id, duration_months || null, total_classes || null, remainingDays, payment_status, start_date, totalAmount]
+        );
+
+        await connection.commit();
+        res.status(201).json({ message: '프로그램이 성공적으로 추가되었습니다.' });
+    } catch (err) {
+        await connection.rollback();
+        console.error('프로그램 추가 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    } finally {
+        connection.release();
     }
 });
 

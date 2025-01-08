@@ -109,6 +109,13 @@ const API = {
         return API.apiCall(`/members/${id}`);
     },
 
+    addMemberProgram: async (memberId, programData) => {
+        return API.apiCall(`/members/${memberId}/programs`, {
+            method: 'POST',
+            body: JSON.stringify(programData)
+        });
+    },
+
     // Attendance APIs
     checkAttendance: async (enrollmentData) => {
         return API.apiCall('/attendance', {
