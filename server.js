@@ -412,48 +412,62 @@ app.post('/api/attendance', authenticateToken, async (req, res) => {
 
         const { enrollment_id, attendance_date, is_present } = req.body;
 
-        if (!enrollment_id || !attendance_date) {
+        // 입력값 검증 및 로깅
+        console.log('Received attendance data:', {
+            enrollment_id,
+            attendance_date,
+            is_present
+        });
+
+        // enrollment_id가 유효한지 확인
+        const [enrollment] = await connection.execute(
+            'SELECT id, remaining_days FROM enrollments WHERE id = ?',
+            [enrollment_id]
+        );
+
+        if (enrollment.length === 0) {
             await connection.rollback();
             return res.status(400).json({
-                message: '필수 입력값이 누락되었습니다.',
-                received: { enrollment_id, attendance_date, is_present }
+                message: '유효하지 않은 수강 정보입니다.',
+                received: { enrollment_id }
             });
         }
 
         if (is_present) {
+            // 이미 출석한 기록이 있는지 확인
             const [existing] = await connection.execute(
-                'SELECT * FROM attendance WHERE enrollment_id = ? AND attendance_date = ?',
+                'SELECT * FROM attendance WHERE enrollment_id = ? AND DATE(attendance_date) = DATE(?)',
                 [enrollment_id, attendance_date]
             );
-
-            console.log('Existing attendance check:', existing);
 
             if (existing.length > 0) {
                 await connection.rollback();
                 return res.status(400).json({
-                    message: '이미 출석이 등록되어 있습니다.',
+                    message: '이미 출석 처리된 기록입니다.',
                     details: { enrollment_id, attendance_date }
                 });
             }
 
+            // 출석 기록 추가
             await connection.execute(
                 'INSERT INTO attendance (enrollment_id, attendance_date) VALUES (?, ?)',
                 [enrollment_id, attendance_date]
             );
 
+            // 남은 일수 감소
             await connection.execute(
                 'UPDATE enrollments SET remaining_days = remaining_days - 1 WHERE id = ? AND remaining_days > 0',
                 [enrollment_id]
             );
         } else {
+            // 출석 취소 처리
             const [deleteResult] = await connection.execute(
-                'DELETE FROM attendance WHERE enrollment_id = ? AND attendance_date = ?',
+                'DELETE FROM attendance WHERE enrollment_id = ? AND DATE(attendance_date) = DATE(?)',
                 [enrollment_id, attendance_date]
             );
 
-            console.log('Delete result:', deleteResult);
-
             if (deleteResult.affectedRows > 0) {
+                // 남은 일수 증가
                 await connection.execute(
                     'UPDATE enrollments SET remaining_days = remaining_days + 1 WHERE id = ?',
                     [enrollment_id]
@@ -462,18 +476,14 @@ app.post('/api/attendance', authenticateToken, async (req, res) => {
         }
 
         await connection.commit();
-        
-        const response = {
+        res.json({
             success: true,
-            message: is_present ? '출석이 등록되었습니다.' : '출석이 취소되었습니다.',
+            message: is_present ? '출석이 처리되었습니다.' : '출석이 취소되었습니다.',
             data: { enrollment_id, attendance_date, is_present }
-        };
-        
-        console.log('Sending response:', response);
-        res.json(response);
+        });
     } catch (err) {
         await connection.rollback();
-        console.error('출석 처리 에러:', err);
+        console.error('출석 처리 중 오류:', err);
         res.status(500).json({
             message: '서버 오류가 발생했습니다.',
             error: err.message
