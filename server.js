@@ -47,8 +47,8 @@ app.get('/매출_통계페이지', (req, res) => {
 app.get('/설정', (req, res) => {
     res.sendFile(path.join(__dirname, '설정.html'));
 });
-app.get('/선생님', (req, res) => {
-    res.sendFile(path.join(__dirname, '선생님.html'));
+app.get('/강사관리', (req, res) => {
+    res.sendFile(path.join(__dirname, '강사관리.html'));
 });
 
 app.use('/image', express.static(path.join(__dirname, 'image')));
