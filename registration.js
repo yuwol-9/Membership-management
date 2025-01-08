@@ -112,6 +112,7 @@ function calculateAmount() {
     let totalAmount = 0;
     const quantity = parseInt(subscriptionInput.value);
     
+    // 구독 유형에 따라 다른 가격 계산
     if (subscriptionType.value === 'month') {
         totalAmount = quantity * program.monthly_price;
     } else {
@@ -119,6 +120,7 @@ function calculateAmount() {
     }
 
     amountDisplay.innerText = `결제 금액: ${totalAmount.toLocaleString()}원`;
+    return totalAmount;
 }
 
 function calculateAge(birthdate) {

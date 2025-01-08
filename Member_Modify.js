@@ -123,29 +123,31 @@ function updateSubscriptionPlaceholder() {
 }
 
 function calculateAmount() {
-  const programSelect = document.getElementById('program');
-  const subscriptionType = document.getElementById('subscription-type');
-  const subscriptionInput = document.getElementById('custom-subscription');
-  const amountDisplay = document.getElementById('amount-display');
-  
-  if (!programSelect.value || !subscriptionInput.value) {
-      amountDisplay.innerText = '결제 금액: 0원';
-      return;
-  }
+    const programSelect = document.getElementById('program');
+    const subscriptionType = document.getElementById('subscription-type');
+    const subscriptionInput = document.getElementById('custom-subscription');
+    const amountDisplay = document.getElementById('amount-display');
+    
+    if (!programSelect.value || !subscriptionInput.value) {
+        amountDisplay.innerText = '결제 금액: 0원';
+        return;
+    }
 
-  const program = programs.find(p => p.id.toString() === programSelect.value);
-  if (!program) return;
+    const program = programs.find(p => p.id.toString() === programSelect.value);
+    if (!program) return;
 
-  let totalAmount = 0;
-  const quantity = parseInt(subscriptionInput.value);
-  
-  if (subscriptionType.value === 'month') {
-      totalAmount = quantity * program.monthly_price;
-  } else {
-      totalAmount = quantity * program.per_class_price;
-  }
+    let totalAmount = 0;
+    const quantity = parseInt(subscriptionInput.value);
+    
+    // 구독 유형에 따라 다른 가격 계산
+    if (subscriptionType.value === 'month') {
+        totalAmount = quantity * program.monthly_price;
+    } else {
+        totalAmount = quantity * program.per_class_price;
+    }
 
-  amountDisplay.innerText = `결제 금액: ${totalAmount.toLocaleString()}원`;
+    amountDisplay.innerText = `결제 금액: ${totalAmount.toLocaleString()}원`;
+    return totalAmount;
 }
 
 async function updateMember(event) {

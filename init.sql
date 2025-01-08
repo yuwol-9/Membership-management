@@ -69,7 +69,8 @@ CREATE TABLE IF NOT EXISTS enrollments (
     payment_status ENUM('paid', 'unpaid') NOT NULL,
     start_date DATE NOT NULL,
     FOREIGN KEY (member_id) REFERENCES members(id),
-    FOREIGN KEY (program_id) REFERENCES programs(id)
+    FOREIGN KEY (program_id) REFERENCES programs(id),
+    total_amount INT NOT NULL DEFAULT 0
 );
 
 /* attendance table */

@@ -192,20 +192,39 @@ app.post('/api/members', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { name, gender, age, birthdate, address, phone, duration_months, payment_status, program_id, start_date } = req.body;
+        const { 
+            name, gender, age, birthdate, address, phone, 
+            program_id, start_date, payment_status,
+            duration_months, total_classes 
+        } = req.body;
 
+        // 회원 기본 정보 저장
         const [memberResult] = await connection.execute(
             'INSERT INTO members (name, gender, age, birthdate, address, phone) VALUES (?, ?, ?, ?, ?, ?)',
             [name, gender, age, birthdate, address, phone]
         );
 
+        // 프로그램 가격 조회
+        const [programPrice] = await connection.execute(
+            'SELECT monthly_price, per_class_price FROM programs WHERE id = ?',
+            [program_id]
+        );
+
+        // 수강 금액 계산
+        let totalAmount = 0;
+        if (total_classes) {
+            totalAmount = total_classes * programPrice[0].per_class_price;
+        } else {
+            totalAmount = duration_months * programPrice[0].monthly_price;
+        }
+
+        // 수강 정보 저장
         const [enrollmentResult] = await connection.execute(
-            'INSERT INTO enrollments (member_id, program_id, duration_months, remaining_days, payment_status, start_date) VALUES (?, ?, ?, ?, ?, ?)',
-            [memberResult.insertId, program_id || 1, duration_months, duration_months * 30, payment_status, start_date]
+            'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, payment_status, start_date, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [memberResult.insertId, program_id, duration_months || null, total_classes || null, payment_status, start_date, totalAmount]
         );
 
         await connection.commit();
-
         res.status(201).json({
             message: '회원이 성공적으로 등록되었습니다.',
             memberId: memberResult.insertId,
@@ -237,7 +256,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                 e.payment_status,
                 e.start_date,
                 p.name as program_name,
-                p.price
+                p.monthly_price as price
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id
@@ -464,22 +483,18 @@ app.get('/api/attendance', authenticateToken, async (req, res) => {
 app.get('/api/statistics/monthly', authenticateToken, async (req, res) => {
     try {
         const year = req.query.year || new Date().getFullYear();
-        console.log('요청된 연도:', year);
         
         const [monthlyStats] = await pool.execute(`
             SELECT 
                 DATE_FORMAT(e.start_date, '%Y-%m') as month,
                 e.payment_status,
                 COUNT(DISTINCT e.id) as enrollment_count,
-                COALESCE(SUM(p.price * e.duration_months), 0) as revenue
+                COALESCE(SUM(e.total_amount), 0) as revenue
             FROM enrollments e
-            LEFT JOIN programs p ON e.program_id = p.id
             WHERE YEAR(e.start_date) = ?
             GROUP BY DATE_FORMAT(e.start_date, '%Y-%m'), e.payment_status
             ORDER BY month ASC, e.payment_status
         `, [year]);
-
-        console.log('데이터베이스 조회 결과:', monthlyStats);
 
         const monthlyData = {};
         for (let i = 1; i <= 12; i++) {
@@ -506,9 +521,7 @@ app.get('/api/statistics/monthly', authenticateToken, async (req, res) => {
             }
         });
 
-        console.log('최종 처리된 데이터:', Object.values(monthlyData));
         res.json(Object.values(monthlyData));
-        
     } catch (err) {
         console.error('월별 통계 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
