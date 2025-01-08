@@ -300,6 +300,24 @@ document.getElementById("color-preview").style.backgroundColor = color;
 toggleColorPalette();
 }
 
+async function checkTimeConflict(day, startTime, endTime) {
+  return classData.some(existingClass => {
+      if (existingClass.day !== day) return false;
+
+      const [existingStart, existingEnd] = [
+          new Date(`1970-01-01T${existingClass.startTime}`),
+          new Date(`1970-01-01T${existingClass.endTime}`)
+      ];
+
+      const [newStart, newEnd] = [
+          new Date(`1970-01-01T${startTime}`),
+          new Date(`1970-01-01T${endTime}`)
+      ];
+
+      return (newStart < existingEnd && newEnd > existingStart);
+  });
+}
+
 
 async function addClass() {
     try {
@@ -329,10 +347,15 @@ async function addClass() {
         return;
       }
   
-      if (!monthlyPrice && !perClassPrice) {
-        alert('개월 수강료 또는 회당 수강료를 입력해주세요.');
+      if (!monthlyPrice || !perClassPrice) {
+        alert('개월 수강료와 회당 수강료를 모두 입력해주세요.');
         return;
       }
+
+      if (isNaN(monthlyPrice) || isNaN(perClassPrice) || monthlyPrice <= 0 || perClassPrice <= 0) {
+        alert('수강료는 양수의 숫자로 입력해주세요.');
+        return;
+    }
   
       // 프로그램 데이터 생성
       const programData = {
