@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원 정보 수정</title>
+  <style>
+    
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .all-container {
+      display: block;
+    }
+    .logo-container {
+      max-width: 400px;
+      align-items: right;
+      padding: 0 55px;
+      margin: 20px;
+      margin-left: 280px;
+
+    }
+
+    .container {
+      display: flex;
+      flex-direction: row;
+      gap: 40px; /* 간격을 30px로 설정 */
+      width: 900px;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .column {
+      flex: 1;
+      text-align: left;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #E56736;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+      width : 430px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 40px;
+      margin-top: 20px;
+    }
+
+    .button-group a,
+    .button-group button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      line-height: 1.5; /* 버튼 높이 조정을 위해 추가 */
+    }
+    
+
+    .btn-primary {
+      background-color: #E56736;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #cc4c24;
+    }
+
+    .btn-danger {
+      background-color: #C33A20;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #d64545;
+    }
+
+    .btn-secondary {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #218838;
+    }
+    .btn-cancel {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .btn-cancel:hover {
+      background-color: #5a6268;
+    }
+    
+    .subscription {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      padding: 10px;
+    }
+
+    .subscription button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background-color: #EE8B59;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .subscription button:hover {
+      background-color: #C33A20;
+      color: white;
+    }
+
+    .amount {
+      margin-top: 15px;
+      font-size: 16px;
+      color: black;
+      text-align: left;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="all-container">
+    <div class="logo-container">
+      <a href="홈페이지.html">
+        <img src="image/로고_black.png" width="330" height="55">
+      </a>
+    </div>
+  <div class="container">
+    <div class="column">
+      <h1>회원 기본 정보</h1>
+      <form id="edit-form">
+        <div class="form-group">
+          <label for="name">이름</label>
+          <input type="text" id="name" placeholder="이름을 입력하세요">
+        </div>
+        <div class="form-group">
+          <label for="phone">전화번호</label>
+          <input type="tel" id="phone" placeholder="전화번호를 입력하세요">
+        </div>
+        <div class="form-group">
+          <label for="birthday">생년월일</label>
+          <input type="date" id="birthday">
+        </div>
+        <div class="form-group">
+          <label for="age">나이</label>
+          <input type="number" id="age" placeholder="나이를 입력하세요">
+        </div>
+        <div class="form-group">
+          <label for="gender">성별</label>
+          <select id="gender">
+            <option value="" >선택하세요</option>
+            <option value="남성">남성</option>
+            <option value="여성">여성</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="address">주소</label>
+          <input type="text" id="address" placeholder="주소를 입력하세요">
+        </div>
+        <div class="button-group">
+          <button type="submit" class="btn-primary">저장</button>
+          <button type="button" class="btn-danger" id="delete-member-btn">삭제</button>
+        </div>
+      </form>
+    </div>
+    <div class="column">
+      <h1>프로그램 및 구독 정보</h1>
+      <form>
+        <div class="form-group">
+          <label>프로그램 선택</label>
+          <select id="program" onchange="updateProgramSelection()">
+            <option value="">선택하세요</option>
+            <option value="kpop">K-pop</option>
+            <option value="wacking">왁킹</option>
+            <option value="coyote">코레오</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>구독 기간</label>
+          <div class="subscription">
+            <button type="button" onclick="setSubscription('1개월')">1개월</button>
+            <button type="button" onclick="setSubscription('3개월')">3개월</button>
+            <button type="button" onclick="enableCustomInput()">직접입력</button>
+          </div>
+          <div class="subscription">
+            <button type="button" onclick="setSubscription('8회')">8회</button>
+            <button type="button" onclick="setSubscription('12회')">12회</button>
+            <button type="button" onclick="setSubscription('15회')">15회</button>
+          </div>
+          <input type="text" id="custom-subscription" placeholder="구독 기간을 입력하세요" style="margin-top: 10px; display: none;" oninput="calculateAmount()">
+        </div>
+        <div class="amount" id="amount-display">결제 금액: 0원</div>
+        <div class="button-group">
+          <button type="button" class="btn-secondary" id="add-program-btn">추가</button>
+          <a href="회원관리.html" class="btn-cancel" style = "text-decoration: none">나가기</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+  <script>
+    const prices = {
+      'kpop': {
+        '1개월': 150000,
+        '3개월': 450000,
+        '1회': 50000
+      },
+      'wacking': {
+        '1개월': 140000,
+        '3개월': 420000,
+        '1회': 48000
+      },
+      'coyote': {
+        '1개월': 160000,
+        '3개월': 480000,
+        '1회': 60000
+      }
+    };
+
+    let selectedProgram = '';
+
+    const members = JSON.parse(localStorage.getItem('members')) || [];
+    const urlParams = new URLSearchParams(window.location.search);
+    const memberId = urlParams.get('memberId');
+    const member = members[memberId];
+
+    if (member) {
+      document.getElementById('name').value = member.name;
+      document.getElementById('phone').value = member.phone;
+      document.getElementById('birthday').value = member.birthday;
+      document.getElementById('age').value = member.age;
+      document.getElementById('gender').value = member.gender;
+      document.getElementById('address').value = member.address;
+      document.getElementById('program').value = member.program;
+      document.getElementById('custom-subscription').value = member.subscription;
+      document.getElementById('amount-display').innerText = `결제 금액: ${member.payment}`;
+    }
+
+    function setSubscription(value) {
+      const inputField = document.getElementById('custom-subscription');
+      inputField.value = value;
+      inputField.style.display = 'block';
+      calculateAmount();
+    }
+
+    function enableCustomInput() {
+      const inputField = document.getElementById('custom-subscription');
+      inputField.style.display = 'block';
+      inputField.value = '';
+      document.getElementById('amount-display').innerText = '결제 금액: 0원';
+    }
+
+    function calculateAmount() {
+      const inputField = document.getElementById('custom-subscription');
+      const value = inputField.value.trim();
+      const amountDisplay = document.getElementById('amount-display');
+
+      const match = value.match(/^([0-9]+)(개월|회)$/);
+      if (match && selectedProgram) {
+        const quantity = parseInt(match[1]);
+        const unit = match[2];
+
+        let totalAmount = 0;
+        if (unit === '개월') {
+          totalAmount = quantity * prices[selectedProgram]['1개월'];
+        } else if (unit === '회') {
+          totalAmount = quantity * prices[selectedProgram]['1회'];
+        }
+        amountDisplay.innerText = `결제 금액: ${totalAmount.toLocaleString()}원`;
+      } else {
+        amountDisplay.innerText = '결제 금액: 0원';
+      }
+    }
+
+    function updateProgramSelection() {
+      const programSelect = document.getElementById('program');
+      selectedProgram = programSelect.value;
+      calculateAmount();
+    }
+
+    document.getElementById('edit-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      member.name = document.getElementById('name').value;
+      member.phone = document.getElementById('phone').value;
+      member.birthday = document.getElementById('birthday').value;
+      member.age = document.getElementById('age').value;
+      member.gender = document.getElementById('gender').value;
+      member.address = document.getElementById('address').value;
+      member.program = document.getElementById('program').value;
+      member.subscription = document.getElementById('custom-subscription').value;
+      member.payment = document.getElementById('amount-display').innerText.split(': ')[1];
+
+      members[memberId] = member;
+      localStorage.setItem('members', JSON.stringify(members));
+      if (!member) {
+      alert('회원 데이터를 찾을 수 없습니다.');
+      window.location.href = '회원관리.html'; // 다시 회원 관리 페이지로 이동
+    }
+
+      alert('회원 정보가 수정되었습니다!');
+      window.location.href = '회원관리.html';
+    });
+
+    document.getElementById('add-program-btn').addEventListener('click', () => {
+      const program = document.getElementById('program').value;
+      const subscription = document.getElementById('custom-subscription').value;
+      const paymentText = document.getElementById('amount-display').innerText;
+      const payment = parseInt(paymentText.replace(/[^0-9]/g, ''), 10);
+
+      // 입력값 검증
+      if (!program) {
+        alert('프로그램을 선택하세요.');
+        return;
+      }
+      if (!subscription) {
+        alert('구독 기간을 입력하세요.');
+        return;
+      }
+      if (!payment || payment <= 0) {
+        alert('결제 금액이 올바르지 않습니다.');
+        return;
+      }
+
+      // 프로그램 배열 초기화
+      if (!member.programs) {
+        member.programs = [];
+      }
+
+      // 프로그램의 한글 이름 매핑
+      const programNames = {
+        'kpop': 'K-pop',
+        'wacking': '왁킹',
+        'coyote': '코레오'
+      };
+
+      // 프로그램 추가
+      member.programs.push({
+        program: programNames[program],  // 한글 이름으로 저장
+        subscription: subscription,
+        payment: payment
+      });
+
+      // 최신 프로그램 정보를 기본 정보에도 업데이트
+      member.program = programNames[program];
+      member.subscription = subscription;
+      member.payment = paymentText.split(': ')[1];
+
+      // 로컬 스토리지 업데이트
+      members[memberId] = member;
+      localStorage.setItem('members', JSON.stringify(members));
+
+      // 확인 메시지와 페이지 이동
+      alert(`${programNames[program]} 프로그램이 추가되었습니다!`);
+      window.location.href = '회원관리.html';
+    });
+
+    document.getElementById('delete-member-btn').addEventListener('click', () => {
+      if (confirm('정말로 이 회원 정보를 삭제하시겠습니까?')) {
+        members.splice(memberId, 1);
+        localStorage.setItem('members', JSON.stringify(members));
+        alert('회원 정보가 삭제되었습니다.');
+        window.location.href = '회원관리.html';
+      }
+    });
+  </script>
+</body>
+</html>
