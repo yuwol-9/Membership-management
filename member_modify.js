@@ -167,42 +167,50 @@ function calculateAmount() {
 }
 
 async function updateMember(event) {
-  event.preventDefault();
-  
-  try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const memberId = urlParams.get('id');
-      const subscriptionType = document.getElementById('subscription-type');
-      const subscriptionInput = document.getElementById('custom-subscription');
-      
-      const formData = {
-          name: document.getElementById('name').value,
-          gender: document.getElementById('gender').value,
-          birthdate: document.getElementById('birthdate').value,
-          age: document.getElementById('age').value,
-          address: document.getElementById('address').value,
-          phone: document.getElementById('phone').value,
-          program_id: document.getElementById('program').value,
-          start_date: document.getElementById('start_date').value,
-          payment_status: selectedPaymentStatus,
-          duration_month: 0,
-          total_classes: 0
-      };
+    event.preventDefault();
+    
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const memberId = urlParams.get('id');
+        const subscriptionType = document.getElementById('subscription-type');
+        const subscriptionInput = document.getElementById('custom-subscription');
+        
+        if (!memberId) {
+            throw new Error('회원 ID를 찾을 수 없습니다.');
+        }
 
-      // 구독 유형에 따라 데이터 설정
-      if (subscriptionType.value === 'month') {
-          formData.duration_months = parseInt(subscriptionInput.value);
-      } else {
-          formData.total_classes = parseInt(subscriptionInput.value);
-      }
+        const formData = {
+            name: document.getElementById('name').value,
+            gender: document.getElementById('gender').value,
+            birthdate: document.getElementById('birthdate').value,
+            age: document.getElementById('age').value,
+            address: document.getElementById('address').value,
+            phone: document.getElementById('phone').value,
+            program_id: document.getElementById('program').value,
+            start_date: document.getElementById('start_date').value,
+            payment_status: selectedPaymentStatus
+        };
 
-      await API.updateMember(memberId, formData);
-      alert('회원 정보가 성공적으로 수정되었습니다.');
-      window.location.href = '회원관리.html';
-  } catch (error) {
-      console.error('회원 정보 수정 실패:', error);
-      alert('회원 정보 수정에 실패했습니다. 다시 시도해주세요.');
-  }
+        if (subscriptionType.value === 'month') {
+            formData.duration_months = parseInt(subscriptionInput.value);
+            formData.total_classes = 0;
+        } else {
+            formData.duration_months = 0;
+            formData.total_classes = parseInt(subscriptionInput.value);
+        }
+
+        const response = await API.updateMember(memberId, formData);
+        
+        if (response.success) {
+            alert('회원 정보가 성공적으로 수정되었습니다.');
+            window.location.href = '/회원관리.html';
+        } else {
+            throw new Error(response.message || '회원 정보 수정에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('회원 정보 수정 실패:', error);
+        alert(error.message || '회원 정보 수정에 실패했습니다. 다시 시도해주세요.');
+    }
 }
 
 async function deleteMember() {
@@ -228,7 +236,7 @@ async function deleteMember() {
 async function addProgram() {
   try {
       const urlParams = new URLSearchParams(window.location.search);
-      const memberId = urlParams.get('memberId');
+      const memberId = urlParams.get('id');
       const subscriptionType = document.getElementById('subscription-type');
       const subscriptionInput = document.getElementById('custom-subscription');
       

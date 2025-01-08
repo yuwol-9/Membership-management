@@ -284,37 +284,106 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { name, gender, age, birthdate, address, phone, program_id, duration_months, payment_status, start_date } = req.body;
         const memberId = req.params.id;
+        const { 
+            name, gender, age, birthdate, address, phone,
+            program_id, duration_months, total_classes,
+            payment_status, start_date 
+        } = req.body;
+
+        const [currentEnrollment] = await connection.execute(
+            'SELECT id, remaining_days, total_amount FROM enrollments WHERE member_id = ?',
+            [memberId]
+        );
+
+        const [programPrice] = await connection.execute(
+            'SELECT monthly_price, per_class_price FROM programs WHERE id = ?',
+            [program_id]
+        );
+
+        let newTotalAmount = 0;
+        let newRemainingDays = 0;
+
+        if (total_classes > 0) {
+            newTotalAmount = total_classes * programPrice[0].per_class_price;
+            newRemainingDays = total_classes;
+        } else {
+            newTotalAmount = duration_months * programPrice[0].monthly_price;
+            newRemainingDays = duration_months * 30;
+        }
+
+        if (currentEnrollment.length > 0) {
+            const currentRemainingDays = currentEnrollment[0].remaining_days;
+
+            if (currentRemainingDays - newRemainingDays < 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: '현재 남은 횟수가 더 적어 수정이 불가능합니다.'
+                });
+            }
+
+            await connection.execute(
+                `UPDATE enrollments 
+                SET total_amount = ?,
+                    remaining_days = ?,
+                    program_id = ?,
+                    duration_months = ?,
+                    total_classes = ?,
+                    payment_status = ?,
+                    start_date = ?
+                WHERE member_id = ?`,
+                [
+                    newTotalAmount,
+                    newRemainingDays,
+                    program_id,
+                    duration_months || null,
+                    total_classes || null,
+                    payment_status,
+                    start_date,
+                    memberId
+                ]
+            );
+        } else {
+            await connection.execute(
+                `INSERT INTO enrollments 
+                (member_id, program_id, duration_months, total_classes, 
+                remaining_days, payment_status, start_date, total_amount)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    memberId,
+                    program_id,
+                    duration_months || null,
+                    total_classes || null,
+                    newRemainingDays,
+                    payment_status,
+                    start_date,
+                    newTotalAmount
+                ]
+            );
+        }
 
         await connection.execute(
             'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
             [name, gender, age, birthdate, address, phone, memberId]
         );
 
-        const [existingEnrollment] = await connection.execute(
-            'SELECT * FROM enrollments WHERE member_id = ?',
-            [memberId]
-        );
-
-        if (existingEnrollment.length > 0) {
-            await connection.execute(
-                'UPDATE enrollments SET program_id = ?, duration_months = ?, payment_status = ?, start_date = ? WHERE member_id = ?',
-                [program_id, duration_months, payment_status, start_date, memberId]
-            );
-        } else {
-            await connection.execute(
-                'INSERT INTO enrollments (member_id, program_id, duration_months, remaining_days, payment_status, start_date) VALUES (?, ?, ?, ?, ?, ?)',
-                [memberId, program_id, duration_months, duration_months * 30, payment_status, start_date]
-            );
-        }
-
         await connection.commit();
-        res.json({ message: '회원 정보가 성공적으로 수정되었습니다.' });
+        res.json({ 
+            success: true,
+            message: '회원 정보가 성공적으로 수정되었습니다.',
+            updatedData: {
+                totalAmount: newTotalAmount,
+                remainingDays: newRemainingDays
+            }
+        });
     } catch (err) {
         await connection.rollback();
-        console.error('회원 정보 수정 에러:', err);
-        res.status(500).json({ message: '서버 오류' });
+        console.error('회원 정보 수정 중 오류:', err);
+        res.status(500).json({ 
+            success: false,
+            message: '회원 정보 수정 중 오류가 발생했습니다.',
+            error: err.message 
+        });
     } finally {
         connection.release();
     }
