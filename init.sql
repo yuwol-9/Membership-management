@@ -22,7 +22,7 @@ ON DUPLICATE KEY UPDATE password = VALUES(username);
 CREATE TABLE IF NOT EXISTS instructors (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
-    phone VARCHAR(20)
+    phone VARCHAR(20),
     salary INT DEFAULT 0
 );
 
