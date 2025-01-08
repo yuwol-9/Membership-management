@@ -9,21 +9,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function initializeForm() {
     try {
-        // 프로그램 목록 로드
         programs = await API.getPrograms();
         updateProgramSelect();
         
-        // URL에서 회원 ID 가져오기
         const urlParams = new URLSearchParams(window.location.search);
-        const memberId = urlParams.get('memberId');
+        const memberId = urlParams.get('id');
         
         if (memberId) {
             const memberData = await API.getMember(memberId);
-            fillMemberData(memberData);
+            if (memberData) {
+                fillMemberData(memberData);
+            } else {
+                throw new Error('회원 정보를 찾을 수 없습니다.');
+            }
+        } else {
+            throw new Error('회원 ID가 제공되지 않았습니다.');
         }
     } catch (error) {
         console.error('초기화 실패:', error);
-        alert('데이터 로드에 실패했습니다.');
+        alert('데이터 로드에 실패했습니다: ' + error.message);
     }
 }
 
@@ -40,28 +44,35 @@ function updateProgramSelect() {
 }
 
 function fillMemberData(memberData) {
+    // 기본 정보 채우기
     document.getElementById('name').value = memberData.name || '';
     document.getElementById('phone').value = memberData.phone || '';
-    document.getElementById('birthdate').value = memberData.birthdate || '';
+    document.getElementById('birthdate').value = memberData.birthdate ? memberData.birthdate.split('T')[0] : '';
     document.getElementById('age').value = memberData.age || '';
     document.getElementById('gender').value = memberData.gender || '';
     document.getElementById('address').value = memberData.address || '';
-    document.getElementById('start_date').value = memberData.start_date || '';
+    document.getElementById('program').value = memberData.program_id || '';
+    document.getElementById('start_date').value = memberData.start_date ? memberData.start_date.split('T')[0] : '';
     
-    if (memberData.program_id) {
-        document.getElementById('program').value = memberData.program_id;
-    }
-    
+    // 결제 상태 설정
     if (memberData.payment_status) {
         setPaymentStatus(memberData.payment_status);
     }
     
     // 구독 정보 설정
-    if (memberData.total_classes) {
-        setSubscription(`${memberData.total_classes}회`);
-    } else if (memberData.duration_months) {
-        setSubscription(`${memberData.duration_months}개월`);
+    const subscriptionType = document.getElementById('subscription-type');
+    const customSubscription = document.getElementById('custom-subscription');
+    
+    if (memberData.total_classes > 0) {
+        subscriptionType.value = 'class';
+        customSubscription.value = memberData.total_classes;
+    } else if (memberData.duration_months > 0) {
+        subscriptionType.value = 'month';
+        customSubscription.value = memberData.duration_months;
     }
+    
+    // 금액 재계산
+    calculateAmount();
 }
 
 function updateProgramSelection() {
@@ -190,19 +201,23 @@ async function updateMember(event) {
 }
 
 async function deleteMember() {
-  if (confirm('정말로 이 회원을 삭제하시겠습니까?')) {
-      try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const memberId = urlParams.get('memberId');
-          
-          await API.deleteMember(memberId);
-          alert('회원이 성공적으로 삭제되었습니다.');
-          window.location.href = '회원관리.html';
-      } catch (error) {
-          console.error('회원 삭제 실패:', error);
-          alert('회원 삭제에 실패했습니다. 다시 시도해주세요.');
-      }
-  }
+    if (confirm('정말로 이 회원을 삭제하시겠습니까?')) {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const memberId = urlParams.get('id'); // 'memberId' 대신 'id' 사용
+            
+            if (!memberId) {
+                throw new Error('회원 ID를 찾을 수 없습니다.');
+            }
+
+            await API.deleteMember(memberId);
+            alert('회원이 성공적으로 삭제되었습니다.');
+            window.location.href = '/회원관리.html';
+        } catch (error) {
+            console.error('회원 삭제 실패:', error);
+            alert('회원 삭제에 실패했습니다: ' + error.message);
+        }
+    }
 }
 
 async function addProgram() {

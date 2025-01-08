@@ -157,15 +157,17 @@ async function registerMember() {
         // 구독 유형에 따라 데이터 설정
         if (subscriptionType.value === 'month') {
             formData.duration_months = parseInt(subscriptionInput.value);
-            formData.total_classes = null;
+            formData.total_classes = 0;
         } else {
-            formData.duration_months = 1; // 회차 결제의 경우 1개월로 설정
+            formData.duration_months = 0;
             formData.total_classes = parseInt(subscriptionInput.value);
         }
 
         const response = await API.createMember(formData);
         alert('회원이 성공적으로 등록되었습니다.');
-        window.location.href = '회원관리.html';
+        setTimeout(() => {
+            window.location.href = '/회원관리.html';
+        }, 100);
     } catch (error) {
         console.error('회원 등록 실패:', error);
         alert('회원 등록에 실패했습니다. 다시 시도해주세요.');

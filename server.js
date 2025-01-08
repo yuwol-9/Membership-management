@@ -325,27 +325,51 @@ app.delete('/api/members/:id', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        await connection.execute(
-            'DELETE a FROM attendance a INNER JOIN enrollments e ON a.enrollment_id = e.id WHERE e.member_id = ?',
-            [req.params.id]
+        const memberId = req.params.id;
+        
+        // 1. 먼저 회원이 존재하는지 확인
+        const [memberExists] = await connection.execute(
+            'SELECT id FROM members WHERE id = ?',
+            [memberId]
         );
 
+        if (memberExists.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+        }
+
+        // 2. 출석 기록 삭제
+        await connection.execute(`
+            DELETE a FROM attendance a
+            INNER JOIN enrollments e ON a.enrollment_id = e.id
+            WHERE e.member_id = ?
+        `, [memberId]);
+
+        // 3. 수강 정보 삭제
         await connection.execute(
             'DELETE FROM enrollments WHERE member_id = ?',
-            [req.params.id]
+            [memberId]
         );
 
+        // 4. 회원 정보 삭제
         await connection.execute(
             'DELETE FROM members WHERE id = ?',
-            [req.params.id]
+            [memberId]
         );
 
         await connection.commit();
-        res.json({ message: '회원이 성공적으로 삭제되었습니다.' });
+        res.json({ 
+            success: true,
+            message: '회원이 성공적으로 삭제되었습니다.'
+        });
     } catch (err) {
         await connection.rollback();
-        console.error('회원 삭제 에러:', err);
-        res.status(500).json({ message: '서버 오류' });
+        console.error('회원 삭제 중 오류 발생:', err);
+        res.status(500).json({ 
+            success: false,
+            message: '서버 오류가 발생했습니다.',
+            error: process.env.NODE_ENV === 'development' ? err.message : '내부 서버 오류'
+        });
     } finally {
         connection.release();
     }
