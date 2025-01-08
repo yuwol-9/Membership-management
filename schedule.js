@@ -1,6 +1,7 @@
 const title = document.getElementById('title');
 const titleInput = document.getElementById('title-input');
 
+
 // 제목 클릭 시 입력창으로 전환
 title.addEventListener('click', () => {
     title.style.display = 'none';
@@ -189,16 +190,17 @@ let deleteMode = false; // 삭제 모드 상태
 
 // 삭제 모드 토글 함수
 function toggleDeleteMode() {
-deleteMode = !deleteMode;
-
-if (deleteMode) {
-    alert("삭제할 수업을 클릭하세요.");
-    document.getElementById("delete-class-btn").style.backgroundColor = "#FF0000"; // 버튼 색상 변경
-    enableDeleteMode();
-} else {
-    document.getElementById("delete-class-btn").style.backgroundColor = "#E56736"; // 버튼 색상 복원
-    disableDeleteMode();
-}
+  deleteMode = !deleteMode;
+  const deleteBtn = document.getElementById("delete-class-btn");
+  
+  if (deleteMode) {
+      alert("삭제할 수업을 클릭하세요.");
+      deleteBtn.style.backgroundColor = "#FF0000";
+      enableDeleteMode();
+  } else {
+      deleteBtn.style.backgroundColor = "#E56736";
+      disableDeleteMode();
+  }
 }
 let classData = [];
 // 수업 삭제 함수
@@ -251,9 +253,8 @@ if (
 }
 }
 
-const RESET_PASSWORD = "woody1234"; // 초기화 비밀번호 설정
-
 function resetClasses() {
+    const RESET_PASSWORD = "woody1234"; // 초기화 비밀번호 설정
     const userInput = prompt("초기화를 위해 비밀번호를 입력하세요:");
 
     if (userInput === null) {
