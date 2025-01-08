@@ -71,6 +71,20 @@
       box-sizing: border-box;
     }
 
+    .custom-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .custom-input-group select,
+    .custom-input-group input {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    
     .subscription {
       display: flex;
       gap: 10px;
@@ -100,6 +114,33 @@
       color: black;
       text-align: left;
       font-weight: bold;
+    }
+
+    .payment-status {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+
+    .payment-status button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background-color: #EE8B59;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .payment-status button:hover {
+      background-color: #C33A20;
+    }
+
+    .payment-status button.selected {
+      background-color: #C33A20;
     }
 
     .button-group {
@@ -207,9 +248,22 @@
               <button type="button" onclick="setSubscription('12회')">12회</button>
               <button type="button" onclick="setSubscription('15회')">15회</button>
             </div>
-            <input type="text" id="custom-subscription" placeholder="구독 기간을 입력하세요" style="margin-top: 10px; display: none;" oninput="calculateAmount()">
+            <div class="custom-input-group" style="margin-top: 10px; display: none;">
+              <select id="subscription-type" style="width: 30%;" onchange="updateSubscriptionPlaceholder()">
+                <option value="month">개월</option>
+                <option value="class">횟수</option>
+              </select>
+              <input type="number" id="custom-subscription" placeholder="개월 수 입력" style="width: 70%;" oninput="calculateAmount()" min="1">
+            </div>
           </div>
           <div class="amount" id="amount-display">결제 금액: 0원</div>
+          <div class="form-group">
+            <label>결제 상태</label>
+            <div class="payment-status">
+              <button type="button" class="status-btn" data-status="paid" onclick="setPaymentStatus('paid')">완납</button>
+              <button type="button" class="status-btn" data-status="unpaid" onclick="setPaymentStatus('unpaid')">미납</button>
+            </div>
+          </div>
           <div class="form-group">
             <label for="start_date">등록 날짜</label>
             <input type="date" id="start_date" required>

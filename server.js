@@ -539,13 +539,214 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
 });
 
 // Programs APIs
+// Programs APIs
+app.post('/api/programs', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const { 
+            name, 
+            instructor_name, 
+            monthly_price, 
+            per_class_price,
+            day,
+            startTime,
+            endTime,
+            details,
+            color 
+        } = req.body;
+
+        // 먼저 강사 정보 확인 또는 추가
+        let [instructor] = await connection.execute(
+            'SELECT id FROM instructors WHERE name = ?',
+            [instructor_name]
+        );
+
+        let instructor_id;
+        if (instructor.length === 0) {
+            const [result] = await connection.execute(
+                'INSERT INTO instructors (name) VALUES (?)',
+                [instructor_name]
+            );
+            instructor_id = result.insertId;
+        } else {
+            instructor_id = instructor[0].id;
+        }
+
+        // 프로그램 추가
+        const [program] = await connection.execute(
+            'INSERT INTO programs (name, instructor_id, monthly_price, per_class_price) VALUES (?, ?, ?, ?)',
+            [name, instructor_id, monthly_price || 0, per_class_price || 0]
+        );
+
+        // 수업 시간 정보 추가
+        if (day && startTime && endTime) {
+            await connection.execute(
+                'INSERT INTO class_schedules (program_id, day, start_time, end_time, details, color) VALUES (?, ?, ?, ?, ?, ?)',
+                [program.insertId, day, startTime, endTime, details, color]
+            );
+        }
+
+        await connection.commit();
+        res.status(201).json({
+            id: program.insertId,
+            message: '프로그램이 성공적으로 등록되었습니다.'
+        });
+    } catch (err) {
+        await connection.rollback();
+        console.error('프로그램 등록 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    } finally {
+        connection.release();
+    }
+});
+
 app.get('/api/programs', authenticateToken, async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT id, name, price FROM programs ORDER BY name');
-        res.json(rows);
+        const [programs] = await pool.execute(`
+            SELECT 
+                p.id,
+                p.name,
+                p.monthly_price,
+                p.per_class_price,
+                i.name as instructor_name,
+                cs.day,
+                cs.start_time,
+                cs.end_time,
+                cs.details,
+                cs.color
+            FROM programs p
+            LEFT JOIN instructors i ON p.instructor_id = i.id
+            LEFT JOIN class_schedules cs ON p.id = cs.program_id
+            ORDER BY p.name
+        `);
+
+        // 결과를 프로그램별로 그룹화
+        const groupedPrograms = programs.reduce((acc, curr) => {
+            if (!acc[curr.id]) {
+                acc[curr.id] = {
+                    id: curr.id,
+                    name: curr.name,
+                    instructor_name: curr.instructor_name,
+                    monthly_price: curr.monthly_price,
+                    per_class_price: curr.per_class_price,
+                    classes: []
+                };
+            }
+            
+            if (curr.day) {
+                acc[curr.id].classes.push({
+                    day: curr.day,
+                    startTime: curr.start_time,
+                    endTime: curr.end_time,
+                    details: curr.details,
+                    color: curr.color
+                });
+            }
+            
+            return acc;
+        }, {});
+
+        res.json(Object.values(groupedPrograms));
     } catch (err) {
         console.error('프로그램 목록 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 프로그램 수정 API
+app.put('/api/programs/:id', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const { id } = req.params;
+        const { 
+            name, 
+            instructor_name, 
+            monthly_price, 
+            per_class_price,
+            classes 
+        } = req.body;
+
+        // 강사 정보 확인 또는 추가
+        let [instructor] = await connection.execute(
+            'SELECT id FROM instructors WHERE name = ?',
+            [instructor_name]
+        );
+
+        let instructor_id;
+        if (instructor.length === 0) {
+            const [result] = await connection.execute(
+                'INSERT INTO instructors (name) VALUES (?)',
+                [instructor_name]
+            );
+            instructor_id = result.insertId;
+        } else {
+            instructor_id = instructor[0].id;
+        }
+
+        // 프로그램 정보 업데이트
+        await connection.execute(
+            'UPDATE programs SET name = ?, instructor_id = ?, monthly_price = ?, per_class_price = ? WHERE id = ?',
+            [name, instructor_id, monthly_price, per_class_price, id]
+        );
+
+        // 기존 수업 스케줄 삭제
+        await connection.execute('DELETE FROM class_schedules WHERE program_id = ?', [id]);
+
+        // 새로운 수업 스케줄 추가
+        if (classes && classes.length > 0) {
+            const insertSchedule = connection.prepare(
+                'INSERT INTO class_schedules (program_id, day, start_time, end_time, details, color) VALUES (?, ?, ?, ?, ?, ?)'
+            );
+
+            for (const classInfo of classes) {
+                await insertSchedule.execute([
+                    id,
+                    classInfo.day,
+                    classInfo.startTime,
+                    classInfo.endTime,
+                    classInfo.details,
+                    classInfo.color
+                ]);
+            }
+        }
+
+        await connection.commit();
+        res.json({ message: '프로그램이 성공적으로 수정되었습니다.' });
+    } catch (err) {
+        await connection.rollback();
+        console.error('프로그램 수정 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    } finally {
+        connection.release();
+    }
+});
+
+// 프로그램 삭제 API
+app.delete('/api/programs/:id', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        
+        const { id } = req.params;
+        
+        // 연결된 수업 스케줄 먼저 삭제
+        await connection.execute('DELETE FROM class_schedules WHERE program_id = ?', [id]);
+        
+        // 프로그램 삭제
+        await connection.execute('DELETE FROM programs WHERE id = ?', [id]);
+        
+        await connection.commit();
+        res.json({ message: '프로그램이 성공적으로 삭제되었습니다.' });
+    } catch (err) {
+        await connection.rollback();
+        console.error('프로그램 삭제 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    } finally {
+        connection.release();
     }
 });
 

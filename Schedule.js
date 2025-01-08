@@ -251,7 +251,7 @@ if (
 }
 }
 
-const RESET_PASSWORD = "1234"; // 초기화 비밀번호 설정
+const RESET_PASSWORD = "woody1234"; // 초기화 비밀번호 설정
 
 function resetClasses() {
     const userInput = prompt("초기화를 위해 비밀번호를 입력하세요:");
@@ -299,146 +299,151 @@ toggleColorPalette();
 }
 
 
-function addClass() {
-  const className = document.getElementById('class-name').value.trim();
-  const details = document.getElementById('class-details').value.trim();
-  const instructor = document.getElementById('instructor-name').value.trim();
-
-  // 동적으로 생성된 모든 시간 선택 필드 수집
-  const timeSelections = [];
-  const timeSelectionContainers = document.querySelectorAll('.time-selection');
-
-  timeSelectionContainers.forEach((container, index) => {
-      const day = container.querySelector(`#day-${index}`)?.value;
-      const startTime = container.querySelector(`#start-time-${index}`)?.value;
-      const endTime = container.querySelector(`#end-time-${index}`)?.value;
-
-      if (day && startTime && endTime) {
-          timeSelections.push({ day, startTime, endTime });
-      }
-  });
-
-  // 필드 유효성 검증
-  if (!className || !details || !instructor || timeSelections.length === 0) {
-      alert('모든 필드를 입력해주세요.');
-      return;
-  }
-
-  // 시간 충돌 확인 및 수업 추가
-  timeSelections.forEach(selection => {
-      const { day, startTime, endTime } = selection;
-
-      const dayElement = Array.from(document.querySelectorAll('.day')).find(
-          d => d.querySelector('h2').innerText === day
-      );
-
-      if (!dayElement) {
-          alert(`${day}에 해당하는 요일이 존재하지 않습니다.`);
-          return;
-      }
-
-      const classesContainer = dayElement.querySelector('.classes');
-
-      const [startHour, startMinute] = startTime.split(':').map(Number);
-      const [endHour, endMinute] = endTime.split(':').map(Number);
-
-      const existingClasses = Array.from(classesContainer.children);
-      const hasConflict = existingClasses.some(existingClass => {
-          const [existingStart, existingEnd] = existingClass
-              .querySelector('.time')
-              .innerText.split(' ~ ')
-              .map(t => t.trim());
-
-          const [existingStartHour, existingStartMinute] = existingStart.split(':').map(Number);
-          const [existingEndHour, existingEndMinute] = existingEnd.split(':').map(Number);
-
-          const startTimeInMinutes = startHour * 60 + startMinute;
-          const endTimeInMinutes = endHour * 60 + endMinute;
-          const existingStartTimeInMinutes = existingStartHour * 60 + existingStartMinute;
-          const existingEndTimeInMinutes = existingEndHour * 60 + existingEndMinute;
-
-          return (
-              (startTimeInMinutes >= existingStartTimeInMinutes && startTimeInMinutes < existingEndTimeInMinutes) ||
-              (endTimeInMinutes > existingStartTimeInMinutes && endTimeInMinutes <= existingEndTimeInMinutes)
-          );
-      });
-
-      if (hasConflict) {
-          alert(`${day}의 ${startTime} ~ ${endTime} 시간대에 이미 다른 수업이 있습니다.`);
-          return;
-      }
-
-      if (startTime >= endTime) {
-          alert(`${day}의 시작 시간이 종료 시간보다 같거나 늦을 수 없습니다.`);
-          return;
-      }
-
-      if (startHour < 10 || endHour > 22) {
-          alert(`${day}의 수업 시간은 10:00 ~ 22:00 사이여야 합니다.`);
-          return;
-      }
-      
-
-      // 수업 생성 및 추가
-      const newClass = createClassElement({ startTime, endTime, className, details, instructor, color: selectedColor, });
-      classesContainer.appendChild(newClass);
-  });
-
-  // 입력 필드 초기화
-  document.getElementById('class-name').value = '';
-  document.getElementById('class-details').value = '';
-  document.getElementById('instructor-name').value = '';
-
-  const timeSelectionContainer = document.getElementById('time-selection-container');
-  timeSelectionContainer.innerHTML = `
-      <div class="time-selection">
-          <label for="day-0">요일</label>
-          <select id="day-0">
-              <option value="Monday">Monday</option>
-              <option value="Tuesday">Tuesday</option>
-              <option value="Wednesday">Wednesday</option>
-              <option value="Thursday">Thursday</option>
-              <option value="Friday">Friday</option>
-              <option value="Saturday">Saturday</option>
-              <option value="Sunday">Sunday</option>
-          </select>
-
-          <label for="start-time-0">시작 시간</label>
-          <input type="time" id="start-time-0" class="start-time">
-
-          <label for="end-time-0">종료 시간</label>
-          <input type="time" id="end-time-0" class="end-time">
-      </div>
-  `;
-  timeSelectionCount = 1;
+async function addClass() {
+    try {
+      const className = document.getElementById('class-name').value.trim();
+      const details = document.getElementById('class-details').value.trim();
+      const instructor = document.getElementById('instructor-name').value.trim();
+      const monthlyPrice = document.getElementById('monthly-price').value;
+      const perClassPrice = document.getElementById('per-class-price').value;
   
-// 수업 데이터를 저장
-    timeSelections.forEach(selection => {
-        classData.push({
-        day: selection.day,
-        startTime: selection.startTime,
-        endTime: selection.endTime,
-        className,
-        details,
-        instructor,
-        color:selectedColor,
-        newTitle,
-    });
-});
-
-// 로컬 스토리지에 데이터 저장
-localStorage.setItem('classData', JSON.stringify(classData));
-
-// 화면 갱신
-renderClasses();
-// 입력 필드 초기화
-document.getElementById('class-name').value = '';
-document.getElementById('class-details').value = '';
-document.getElementById('instructor-name').value = '';
-document.getElementById('color-preview').style.backgroundColor = '#f94144'; // 기본 색상 복원
-
-  closeModal();
-}
+      // 동적으로 생성된 모든 시간 선택 필드 수집
+      const timeSelections = [];
+      const timeSelectionContainers = document.querySelectorAll('.time-selection');
+  
+      timeSelectionContainers.forEach((container, index) => {
+        const day = container.querySelector(`#day-${index}`)?.value;
+        const startTime = container.querySelector(`#start-time-${index}`)?.value;
+        const endTime = container.querySelector(`#end-time-${index}`)?.value;
+  
+        if (day && startTime && endTime) {
+          timeSelections.push({ day, startTime, endTime });
+        }
+      });
+  
+      // 필드 유효성 검증
+      if (!className || !details || !instructor || timeSelections.length === 0) {
+        alert('모든 필드를 입력해주세요.');
+        return;
+      }
+  
+      if (!monthlyPrice && !perClassPrice) {
+        alert('개월 수강료 또는 회당 수강료를 입력해주세요.');
+        return;
+      }
+  
+      // 프로그램 데이터 생성
+      const programData = {
+        name: className,
+        instructor_name: instructor,
+        monthly_price: parseInt(monthlyPrice) || 0,
+        per_class_price: parseInt(perClassPrice) || 0
+      };
+  
+      // API를 통해 프로그램 등록
+      const response = await API.createProgram(programData);
+      const programId = response.id;
+  
+      // 각 시간별로 수업 추가
+      for (const timeSelection of timeSelections) {
+        const { day, startTime, endTime } = timeSelection;
+  
+        // 시간 충돌 확인
+        if (await checkTimeConflict(day, startTime, endTime)) {
+          alert(`${day}의 ${startTime} ~ ${endTime} 시간대에 이미 다른 수업이 있습니다.`);
+          continue;
+        }
+  
+        // 수업 데이터 생성 및 저장
+        const classData = {
+          program_id: programId,
+          day,
+          startTime,
+          endTime,
+          className,
+          details,
+          instructor,
+          color: selectedColor
+        };
+  
+        // 수업 데이터 저장
+        classData.push(classData);
+        
+        // 화면에 수업 추가
+        const dayElement = getDayElement(day);
+        if (dayElement) {
+          const classElement = createClassElement({
+            startTime,
+            endTime,
+            className,
+            details,
+            instructor,
+            color: selectedColor
+          });
+          dayElement.querySelector('.classes').appendChild(classElement);
+        }
+      }
+  
+      // 로컬 스토리지에 데이터 저장
+      localStorage.setItem('classData', JSON.stringify(classData));
+  
+      // 입력 필드 초기화
+      resetForm();
+      closeModal();
+  
+    } catch (error) {
+      console.error('수업 등록 실패:', error);
+      alert('수업 등록에 실패했습니다. 다시 시도해주세요.');
+    }
+  }
+  
+  async function loadPrograms() {
+    try {
+      const programs = await API.getPrograms();
+      programs.forEach(program => {
+        // 프로그램 정보를 화면에 표시
+        const dayElements = document.querySelectorAll('.day');
+        dayElements.forEach(dayElement => {
+          const day = dayElement.querySelector('h2').innerText;
+          const classesContainer = dayElement.querySelector('.classes');
+  
+          program.classes?.forEach(classInfo => {
+            if (classInfo.day === day) {
+              const classElement = createClassElement({
+                startTime: classInfo.startTime,
+                endTime: classInfo.endTime,
+                className: program.name,
+                details: classInfo.details,
+                instructor: program.instructor_name,
+                color: classInfo.color
+              });
+              classesContainer.appendChild(classElement);
+            }
+          });
+        });
+      });
+    } catch (error) {
+      console.error('프로그램 목록 로드 실패:', error);
+    }
+  }
+  
+  function resetForm() {
+    document.getElementById('class-name').value = '';
+    document.getElementById('class-details').value = '';
+    document.getElementById('instructor-name').value = '';
+    document.getElementById('monthly-price').value = '';
+    document.getElementById('per-class-price').value = '';
+    document.getElementById('color-preview').style.backgroundColor = '#E56736';
+    
+    const timeSelectionContainer = document.getElementById('time-selection-container');
+    timeSelectionContainer.innerHTML = defaultTimeSelectionHTML;
+    timeSelectionCount = 1;
+  }
+  
+  // 페이지 로드 시 프로그램 목록 불러오기
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadPrograms();
+  });
 
 
 document.getElementById('modal-overlay').addEventListener('click', closeModal);

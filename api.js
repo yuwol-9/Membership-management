@@ -138,7 +138,62 @@ const API = {
 
     // Programs APIs
     getPrograms: async () => {
-        return API.apiCall('/programs');
+        try {
+            const response = await API.apiCall('/programs');
+            return response.map(program => ({
+                ...program,
+                monthlyPrice: parseInt(program.monthly_price),
+                perClassPrice: parseInt(program.per_class_price)
+            }));
+        } catch (error) {
+            console.error('프로그램 목록 조회 실패:', error);
+            throw error;
+        }
+    },
+
+    createProgram: async (programData) => {
+        try {
+            return await API.apiCall('/programs', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: programData.name,
+                    instructor_name: programData.instructor_name,
+                    monthly_price: programData.monthly_price,
+                    per_class_price: programData.per_class_price,
+                    day: programData.day,
+                    startTime: programData.startTime,
+                    endTime: programData.endTime,
+                    details: programData.details,
+                    color: programData.color
+                })
+            });
+        } catch (error) {
+            console.error('프로그램 등록 실패:', error);
+            throw error;
+        }
+    },
+
+    updateProgram: async (programId, programData) => {
+        try {
+            return await API.apiCall(`/programs/${programId}`, {
+                method: 'PUT',
+                body: JSON.stringify(programData)
+            });
+        } catch (error) {
+            console.error('프로그램 수정 실패:', error);
+            throw error;
+        }
+    },
+
+    deleteProgram: async (programId) => {
+        try {
+            return await API.apiCall(`/programs/${programId}`, {
+                method: 'DELETE'
+            });
+        } catch (error) {
+            console.error('프로그램 삭제 실패:', error);
+            throw error;
+        }
     },
 
     // Error Handler

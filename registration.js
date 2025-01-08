@@ -50,21 +50,54 @@ function updateProgramSelection() {
 }
 
 function setSubscription(value) {
+    const customInputGroup = document.querySelector('.custom-input-group');
+    const subscriptionType = document.getElementById('subscription-type');
     const inputField = document.getElementById('custom-subscription');
-    inputField.style.display = 'block';
-    inputField.value = value;
+    
+    customInputGroup.style.display = 'flex';
+    
+    // 값에서 숫자와 단위 분리
+    const match = value.match(/^(\d+)(개월|회)$/);
+    if (match) {
+        const [, number, unit] = match;
+        inputField.value = number;
+        
+        // 단위에 따라 select 값 설정
+        if (unit === '개월') {
+            subscriptionType.value = 'month';
+        } else if (unit === '회') {
+            subscriptionType.value = 'class';
+        }
+    }
+    
+    updateSubscriptionPlaceholder();
     calculateAmount();
 }
 
 function enableCustomInput() {
+    const customInputGroup = document.querySelector('.custom-input-group');
     const inputField = document.getElementById('custom-subscription');
-    inputField.style.display = 'block';
+    
+    customInputGroup.style.display = 'flex';
     inputField.value = '';
+    updateSubscriptionPlaceholder();
     document.getElementById('amount-display').innerText = '결제 금액: 0원';
+}
+
+function updateSubscriptionPlaceholder() {
+    const subscriptionType = document.getElementById('subscription-type');
+    const inputField = document.getElementById('custom-subscription');
+    
+    if (subscriptionType.value === 'month') {
+        inputField.placeholder = '개월 수 입력';
+    } else {
+        inputField.placeholder = '횟수 입력';
+    }
 }
 
 function calculateAmount() {
     const programSelect = document.getElementById('program');
+    const subscriptionType = document.getElementById('subscription-type');
     const subscriptionInput = document.getElementById('custom-subscription');
     const amountDisplay = document.getElementById('amount-display');
     
@@ -73,21 +106,16 @@ function calculateAmount() {
         return;
     }
 
-    const programId = programSelect.value;
-    const subscriptionValue = subscriptionInput.value;
-    
-    // "개월" 또는 "회" 단위 구분
-    const monthMatch = subscriptionValue.match(/^(\d+)개월$/);
-    const classMatch = subscriptionValue.match(/^(\d+)회$/);
-    
+    const program = programs.find(p => p.id.toString() === programSelect.value);
+    if (!program) return;
+
     let totalAmount = 0;
+    const quantity = parseInt(subscriptionInput.value);
     
-    if (monthMatch) {
-        const months = parseInt(monthMatch[1]);
-        totalAmount = months * (prices.monthly[programId] || 0);
-    } else if (classMatch) {
-        const classes = parseInt(classMatch[1]);
-        totalAmount = classes * (prices.perClass[programId] || 0);
+    if (subscriptionType.value === 'month') {
+        totalAmount = quantity * program.monthly_price;
+    } else {
+        totalAmount = quantity * program.per_class_price;
     }
 
     amountDisplay.innerText = `결제 금액: ${totalAmount.toLocaleString()}원`;
@@ -108,6 +136,9 @@ function calculateAge(birthdate) {
 
 async function registerMember() {
     try {
+        const subscriptionType = document.getElementById('subscription-type');
+        const subscriptionInput = document.getElementById('custom-subscription');
+        
         const formData = {
             name: document.getElementById('name').value,
             gender: document.getElementById('gender').value,
@@ -116,24 +147,18 @@ async function registerMember() {
             address: document.getElementById('address').value,
             phone: document.getElementById('phone').value,
             program_id: document.getElementById('program').value,
-            start_date: document.getElementById('start_date').value
+            start_date: document.getElementById('start_date').value,
+            payment_status: selectedPaymentStatus
         };
 
-        const subscription = document.getElementById('custom-subscription').value;
-        const monthMatch = subscription.match(/^(\d+)개월$/);
-        
-        if (monthMatch) {
-            formData.duration_months = parseInt(monthMatch[1]);
+        // 구독 유형에 따라 데이터 설정
+        if (subscriptionType.value === 'month') {
+            formData.duration_months = parseInt(subscriptionInput.value);
+            formData.total_classes = null;
         } else {
-            const classMatch = subscription.match(/^(\d+)회$/);
-            if (classMatch) {
-                formData.duration_months = 1; // 회차 결제의 경우 1개월로 설정
-                formData.total_classes = parseInt(classMatch[1]);
-            }
+            formData.duration_months = 1; // 회차 결제의 경우 1개월로 설정
+            formData.total_classes = parseInt(subscriptionInput.value);
         }
-
-        // 결제 상태는 기본값으로 미납으로 설정
-        formData.payment_status = 'unpaid';
 
         const response = await API.createMember(formData);
         alert('회원이 성공적으로 등록되었습니다.');
@@ -142,6 +167,20 @@ async function registerMember() {
         console.error('회원 등록 실패:', error);
         alert('회원 등록에 실패했습니다. 다시 시도해주세요.');
     }
+}
+
+function setPaymentStatus(status) {
+    selectedPaymentStatus = status;
+    
+    // 선택된 버튼 스타일 변경
+    const buttons = document.querySelectorAll('.payment-status button');
+    buttons.forEach(button => {
+        if (button.dataset.status === status) {
+            button.classList.add('selected');
+        } else {
+            button.classList.remove('selected');
+        }
+    });
 }
 
 function setupEventListeners() {

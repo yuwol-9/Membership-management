@@ -42,8 +42,20 @@ CREATE TABLE IF NOT EXISTS programs (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     instructor_id INT,
-    price INT NOT NULL,
+    monthly_price INT NOT NULL DEFAULT 0,
+    per_class_price INT NOT NULL DEFAULT 0,
     FOREIGN KEY (instructor_id) REFERENCES instructors(id)
+);
+
+CREATE TABLE IF NOT EXISTS class_schedules (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    program_id INT NOT NULL,
+    day VARCHAR(20) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    details TEXT,
+    color VARCHAR(20),
+    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
 );
 
 /* register info table */
