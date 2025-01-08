@@ -191,6 +191,7 @@ let deleteMode = false; // 삭제 모드 상태
 // 삭제 모드 토글 함수
 function toggleDeleteMode() {
     deleteMode = !deleteMode;
+    const deleteBtn = document.getElementById("delete-class-btn");
     
     if (deleteMode) {
         alert("삭제할 수업을 클릭하세요.");
