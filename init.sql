@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS admin (
 );
 
 INSERT INTO admin (username, password) 
-VALUES ('woody', '$2b$10$1trTyIfKPPMbiNBpdcKWmOS62NtEzp.Ul4ZeWQXlepX67Uqu8G6Py')
+VALUES ('woody', '$2b$10$mEyk35NjtpgJAwXng0JYi.W22b6k18YZDsO94wa4osd8Uoi2NooWy')
 ON DUPLICATE KEY UPDATE password = VALUES(username);
 
 /* instructor table */
