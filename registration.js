@@ -1,130 +1,163 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const form = document.getElementById('registrationForm');
-    const durationButtons = document.querySelectorAll('.duration-btn');
-    const statusButtons = document.querySelectorAll('.status-btn');
-    let selectedDuration = null;
-    let selectedStatus = null;
+    initializeDateFields();
+    await loadPrograms();
+    setupEventListeners();
+});
 
+function initializeDateFields() {
+    const birthdateInput = document.getElementById('birthdate');
     const startDateInput = document.getElementById('start_date');
     const today = new Date();
+    
+    // 생년월일은 오늘 이전만 선택 가능
+    birthdateInput.max = today.toISOString().split('T')[0];
+    
+    // 시작일은 오늘부터 한 달 후까지만 선택 가능
     const oneMonthLater = new Date(today);
     oneMonthLater.setMonth(today.getMonth() + 1);
     
-    startDateInput.value = today.toISOString().split('T')[0];
     startDateInput.min = today.toISOString().split('T')[0];
     startDateInput.max = oneMonthLater.toISOString().split('T')[0];
+    startDateInput.value = today.toISOString().split('T')[0];
+}
 
-    const birthdateInput = document.getElementById('birthdate');
-    birthdateInput.max = today;
-
-    // 구독 기간 버튼 이벤트 리스너
-    durationButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            durationButtons.forEach(btn => btn.classList.remove('selected'));
-            button.classList.add('selected');
-            selectedDuration = parseInt(button.dataset.months);
-        });
-    });
-
-    // 결제 상태 버튼 이벤트 리스너
-    statusButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            statusButtons.forEach(btn => btn.classList.remove('selected'));
-            button.classList.add('selected');
-            selectedStatus = button.dataset.status;
-        });
-    });
-
-    // 나이 계산 함수
-    function calculateAge(birthdate) {
-        const today = new Date();
-        const birthDate = new Date(birthdate);
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        
-        return age;
-    }
-
-    // 프로그램 선택 필드 추가
+async function loadPrograms() {
     try {
-        const programFormGroup = document.createElement('div');
-        programFormGroup.className = 'form-group';
-        
-        // 성별 선택 필드 찾기 및 프로그램 선택 필드 삽입 위치 결정
-        const genderField = form.querySelector('[name="gender"]').parentNode;
-        
-        // API를 통해 프로그램 목록 가져오기
         const programs = await API.getPrograms();
+        const programSelect = document.getElementById('program');
+        programSelect.innerHTML = '<option value="">선택하세요</option>';
         
-        // 프로그램 선택 필드 HTML 생성
-        programFormGroup.innerHTML = `
-            <label for="program">프로그램 선택</label>
-            <select id="program" name="program" required>
-                <option value="">프로그램을 선택하세요</option>
-                ${programs.map(prog => `<option value="${prog.id}">${prog.name}</option>`).join('')}
-            </select>
-        `;
-
-        // 프로그램 선택 필드 삽입
-        genderField.parentNode.insertBefore(programFormGroup, genderField.nextSibling);
-        
+        programs.forEach(prog => {
+            const option = document.createElement('option');
+            option.value = prog.id;
+            option.textContent = prog.name;
+            programSelect.appendChild(option);
+        });
     } catch (error) {
         console.error('프로그램 목록 로드 실패:', error);
+        API.handleApiError(error);
+    }
+}
+
+// 가격 정보를 저장할 객체
+const prices = {
+    monthly: {},
+    perClass: {}
+};
+
+function updateProgramSelection() {
+    calculateAmount();
+}
+
+function setSubscription(value) {
+    const inputField = document.getElementById('custom-subscription');
+    inputField.style.display = 'block';
+    inputField.value = value;
+    calculateAmount();
+}
+
+function enableCustomInput() {
+    const inputField = document.getElementById('custom-subscription');
+    inputField.style.display = 'block';
+    inputField.value = '';
+    document.getElementById('amount-display').innerText = '결제 금액: 0원';
+}
+
+function calculateAmount() {
+    const programSelect = document.getElementById('program');
+    const subscriptionInput = document.getElementById('custom-subscription');
+    const amountDisplay = document.getElementById('amount-display');
+    
+    if (!programSelect.value || !subscriptionInput.value) {
+        amountDisplay.innerText = '결제 금액: 0원';
+        return;
     }
 
-    // 폼 제출 처리
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    const programId = programSelect.value;
+    const subscriptionValue = subscriptionInput.value;
+    
+    // "개월" 또는 "회" 단위 구분
+    const monthMatch = subscriptionValue.match(/^(\d+)개월$/);
+    const classMatch = subscriptionValue.match(/^(\d+)회$/);
+    
+    let totalAmount = 0;
+    
+    if (monthMatch) {
+        const months = parseInt(monthMatch[1]);
+        totalAmount = months * (prices.monthly[programId] || 0);
+    } else if (classMatch) {
+        const classes = parseInt(classMatch[1]);
+        totalAmount = classes * (prices.perClass[programId] || 0);
+    }
 
-        try {
-            // 필수 입력값 확인
-            if (!selectedDuration) {
-                alert('구독 기간을 선택해주세요.');
-                return;
+    amountDisplay.innerText = `결제 금액: ${totalAmount.toLocaleString()}원`;
+}
+
+function calculateAge(birthdate) {
+    const today = new Date();
+    const birthDate = new Date(birthdate);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+async function registerMember() {
+    try {
+        const formData = {
+            name: document.getElementById('name').value,
+            gender: document.getElementById('gender').value,
+            birthdate: document.getElementById('birthdate').value,
+            age: document.getElementById('age').value,
+            address: document.getElementById('address').value,
+            phone: document.getElementById('phone').value,
+            program_id: document.getElementById('program').value,
+            start_date: document.getElementById('start_date').value
+        };
+
+        const subscription = document.getElementById('custom-subscription').value;
+        const monthMatch = subscription.match(/^(\d+)개월$/);
+        
+        if (monthMatch) {
+            formData.duration_months = parseInt(monthMatch[1]);
+        } else {
+            const classMatch = subscription.match(/^(\d+)회$/);
+            if (classMatch) {
+                formData.duration_months = 1; // 회차 결제의 경우 1개월로 설정
+                formData.total_classes = parseInt(classMatch[1]);
             }
-
-            if (!selectedStatus) {
-                alert('결제 상태를 선택해주세요.');
-                return;
-            }
-
-            const programSelect = form.querySelector('[name="program"]');
-            if (!programSelect || !programSelect.value) {
-                alert('프로그램을 선택해주세요.');
-                return;
-            }
-
-            const age = calculateAge(form.birthdate.value);
-            const startDate = form.start_date.value || new Date().toISOString().split('T')[0];
-
-            const memberData = {
-                name: form.name.value.trim(),
-                gender: form.gender.value,
-                birthdate: form.birthdate.value,
-                age: age,
-                address: form.address.value.trim(),
-                phone: form.phone.value.trim(),
-                duration_months: selectedDuration,
-                payment_status: selectedStatus,
-                program_id: parseInt(programSelect.value),
-                start_date: startDate
-            };
-
-            // API를 통해 회원 등록
-            await API.createMember(memberData);
-            
-            alert('회원이 성공적으로 등록되었습니다.');
-            window.location.href = '회원관리.html';
-            
-        } catch (error) {
-            console.error('회원 등록 실패:', error);
-            alert('회원 등록에 실패했습니다. 다시 시도해주세요.');
         }
-    });
-});
+
+        // 결제 상태는 기본값으로 미납으로 설정
+        formData.payment_status = 'unpaid';
+
+        const response = await API.createMember(formData);
+        alert('회원이 성공적으로 등록되었습니다.');
+        window.location.href = '회원관리.html';
+    } catch (error) {
+        console.error('회원 등록 실패:', error);
+        alert('회원 등록에 실패했습니다. 다시 시도해주세요.');
+    }
+}
+
+function setupEventListeners() {
+    const birthdateInput = document.getElementById('birthdate');
+    if (birthdateInput) {
+        birthdateInput.addEventListener('change', function() {
+            const age = calculateAge(this.value);
+            document.getElementById('age').value = age;
+        });
+    }
+
+    const registrationForm = document.getElementById('registration-form');
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            registerMember();
+        });
+    }
+}
