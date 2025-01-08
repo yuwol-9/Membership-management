@@ -4,6 +4,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
 });
 
+const prices = {
+    monthly: {},
+    perClass: {}
+};
+
+let programs = [];
+
 function initializeDateFields() {
     const birthdateInput = document.getElementById('birthdate');
     const startDateInput = document.getElementById('start_date');
@@ -23,7 +30,7 @@ function initializeDateFields() {
 
 async function loadPrograms() {
     try {
-        const programs = await API.getPrograms();
+        programs = await API.getPrograms();
         const programSelect = document.getElementById('program');
         programSelect.innerHTML = '<option value="">선택하세요</option>';
         
@@ -38,12 +45,6 @@ async function loadPrograms() {
         API.handleApiError(error);
     }
 }
-
-// 가격 정보를 저장할 객체
-const prices = {
-    monthly: {},
-    perClass: {}
-};
 
 function updateProgramSelection() {
     calculateAmount();

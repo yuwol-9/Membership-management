@@ -190,17 +190,16 @@ let deleteMode = false; // 삭제 모드 상태
 
 // 삭제 모드 토글 함수
 function toggleDeleteMode() {
-  deleteMode = !deleteMode;
-  const deleteBtn = document.getElementById("delete-class-btn");
-  
-  if (deleteMode) {
-      alert("삭제할 수업을 클릭하세요.");
-      deleteBtn.style.backgroundColor = "#FF0000";
-      enableDeleteMode();
-  } else {
-      deleteBtn.style.backgroundColor = "#E56736";
-      disableDeleteMode();
-  }
+    deleteMode = !deleteMode;
+    
+    if (deleteMode) {
+        alert("삭제할 수업을 클릭하세요.");
+        deleteBtn.style.backgroundColor = "#FF0000";
+        enableDeleteMode();
+    } else {
+        deleteBtn.style.backgroundColor = "#E56736";
+        disableDeleteMode();
+    }
 }
 let classData = [];
 // 수업 삭제 함수
@@ -253,8 +252,9 @@ if (
 }
 }
 
+const RESET_PASSWORD = "woody1234"; // 초기화 비밀번호 설정
+
 function resetClasses() {
-    const RESET_PASSWORD = "woody1234"; // 초기화 비밀번호 설정
     const userInput = prompt("초기화를 위해 비밀번호를 입력하세요:");
 
     if (userInput === null) {
@@ -301,58 +301,132 @@ toggleColorPalette();
 
 
 async function addClass() {
-  try {
+    try {
+      const className = document.getElementById('class-name').value.trim();
+      const details = document.getElementById('class-details').value.trim();
+      const instructor = document.getElementById('instructor-name').value.trim();
+      const monthlyPrice = document.getElementById('monthly-price').value;
+      const perClassPrice = document.getElementById('per-class-price').value;
+  
+      // 동적으로 생성된 모든 시간 선택 필드 수집
+      const timeSelections = [];
+      const timeSelectionContainers = document.querySelectorAll('.time-selection');
+  
+      timeSelectionContainers.forEach((container, index) => {
+        const day = container.querySelector(`#day-${index}`)?.value;
+        const startTime = container.querySelector(`#start-time-${index}`)?.value;
+        const endTime = container.querySelector(`#end-time-${index}`)?.value;
+  
+        if (day && startTime && endTime) {
+          timeSelections.push({ day, startTime, endTime });
+        }
+      });
+  
+      // 필드 유효성 검증
+      if (!className || !details || !instructor || timeSelections.length === 0) {
+        alert('모든 필드를 입력해주세요.');
+        return;
+      }
+  
+      if (!monthlyPrice && !perClassPrice) {
+        alert('개월 수강료 또는 회당 수강료를 입력해주세요.');
+        return;
+      }
+  
+      // 프로그램 데이터 생성
       const programData = {
-          name: document.getElementById('class-name').value,
-          instructor_name: document.getElementById('instructor-name').value,
-          monthly_price: parseInt(document.getElementById('monthly-price').value) || 0,
-          per_class_price: parseInt(document.getElementById('per-class-price').value) || 0,
-          day: document.querySelector('.time-selection select').value,
-          startTime: document.querySelector('.time-selection .start-time').value,
-          endTime: document.querySelector('.time-selection .end-time').value,
-          details: document.getElementById('class-details').value,
-          color: selectedColor
+        name: className,
+        instructor_name: instructor,
+        monthly_price: parseInt(monthlyPrice) || 0,
+        per_class_price: parseInt(perClassPrice) || 0
       };
-
-      await API.createProgram(programData);
-      alert('프로그램이 성공적으로 등록되었습니다.');
+  
+      // API를 통해 프로그램 등록
+      const response = await API.createProgram(programData);
+      const programId = response.id;
+  
+      // 각 시간별로 수업 추가
+      for (const timeSelection of timeSelections) {
+        const { day, startTime, endTime } = timeSelection;
+  
+        // 시간 충돌 확인
+        if (await checkTimeConflict(day, startTime, endTime)) {
+          alert(`${day}의 ${startTime} ~ ${endTime} 시간대에 이미 다른 수업이 있습니다.`);
+          continue;
+        }
+  
+        // 수업 데이터 생성 및 저장
+        const classData = {
+          program_id: programId,
+          day,
+          startTime,
+          endTime,
+          className,
+          details,
+          instructor,
+          color: selectedColor
+        };
+  
+        // 수업 데이터 저장
+        classData.push(classData);
+        
+        // 화면에 수업 추가
+        const dayElement = getDayElement(day);
+        if (dayElement) {
+          const classElement = createClassElement({
+            startTime,
+            endTime,
+            className,
+            details,
+            instructor,
+            color: selectedColor
+          });
+          dayElement.querySelector('.classes').appendChild(classElement);
+        }
+      }
+  
+      // 로컬 스토리지에 데이터 저장
+      localStorage.setItem('classData', JSON.stringify(classData));
+  
+      // 입력 필드 초기화
+      resetForm();
       closeModal();
-      await loadPrograms();  // 프로그램 목록 새로고침
-  } catch (error) {
+  
+    } catch (error) {
       console.error('수업 등록 실패:', error);
       alert('수업 등록에 실패했습니다. 다시 시도해주세요.');
+    }
   }
-}
   
-async function loadPrograms() {
-  try {
-    const programs = await API.getPrograms();
-    programs.forEach(program => {
-      // 프로그램 정보를 화면에 표시
-      const dayElements = document.querySelectorAll('.day');
-      dayElements.forEach(dayElement => {
-        const day = dayElement.querySelector('h2').innerText;
-        const classesContainer = dayElement.querySelector('.classes');
-
-        program.classes?.forEach(classInfo => {
-          if (classInfo.day === day) {
-            const classElement = createClassElement({
-              startTime: classInfo.startTime,
-              endTime: classInfo.endTime,
-              className: program.name,
-              details: classInfo.details,
-              instructor: program.instructor_name,
-              color: classInfo.color
-            });
-            classesContainer.appendChild(classElement);
-          }
+  async function loadPrograms() {
+    try {
+      const programs = await API.getPrograms();
+      programs.forEach(program => {
+        // 프로그램 정보를 화면에 표시
+        const dayElements = document.querySelectorAll('.day');
+        dayElements.forEach(dayElement => {
+          const day = dayElement.querySelector('h2').innerText;
+          const classesContainer = dayElement.querySelector('.classes');
+  
+          program.classes?.forEach(classInfo => {
+            if (classInfo.day === day) {
+              const classElement = createClassElement({
+                startTime: classInfo.startTime,
+                endTime: classInfo.endTime,
+                className: program.name,
+                details: classInfo.details,
+                instructor: program.instructor_name,
+                color: classInfo.color
+              });
+              classesContainer.appendChild(classElement);
+            }
+          });
         });
       });
-    });
-  } catch (error) {
-    console.error('프로그램 목록 로드 실패:', error);
+    } catch (error) {
+      console.error('프로그램 목록 로드 실패:', error);
+    }
   }
-}
   
   function resetForm() {
     document.getElementById('class-name').value = '';
