@@ -125,7 +125,6 @@ const authenticateToken = async (req, res, next) => {
 };
 
 // Login API
-// Login API
 app.post('/api/login', async (req, res) => {
     try {
         console.log('로그인 요청 수신:', req.body.username);
