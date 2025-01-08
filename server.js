@@ -213,16 +213,19 @@ app.post('/api/members', authenticateToken, async (req, res) => {
 
         // 수강 금액 계산
         let totalAmount = 0;
+        let remainingdays = 0;
         if (total_classes) {
             totalAmount = total_classes * programPrice[0].per_class_price;
+            remainingdays = total_classes;
         } else {
             totalAmount = duration_months * programPrice[0].monthly_price;
+            remainingdays = duration_months * 30;
         }
 
         // 수강 정보 저장
         const [enrollmentResult] = await connection.execute(
-            'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, payment_status, start_date, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [memberResult.insertId, program_id, duration_months || null, total_classes || null, payment_status, start_date, totalAmount]
+            'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [memberResult.insertId, program_id, duration_months || null, total_classes || null, remainingdays, payment_status, start_date, totalAmount]
         );
 
         await connection.commit();
