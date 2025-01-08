@@ -46,7 +46,7 @@ async function handleSubmit(event) {
         
         await API.updateInstructor(currentInstructorId, instructorData);
         alert('선생님 정보가 성공적으로 수정되었습니다.');
-        window.location.href = '선생님.html';
+        window.location.href = '강사관리.html';
     } catch (error) {
         console.error('선생님 정보 수정 실패:', error);
         alert('선생님 정보 수정에 실패했습니다. 다시 시도해주세요.');

@@ -64,7 +64,8 @@ CREATE TABLE IF NOT EXISTS enrollments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     member_id INT NOT NULL,
     program_id INT NOT NULL,
-    duration_months INT NOT NULL,
+    duration_months INT DEFAULT NULL,
+    total_classes INT DEFAULT NULL,
     remaining_days INT NOT NULL,
     payment_status ENUM('paid', 'unpaid') NOT NULL,
     start_date DATE NOT NULL,
@@ -80,3 +81,4 @@ CREATE TABLE IF NOT EXISTS attendance (
     attendance_date DATE NOT NULL,
     FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)
 );
+
