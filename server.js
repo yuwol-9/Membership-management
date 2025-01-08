@@ -18,6 +18,7 @@ app.use(cors({
 }));
 
 app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname)));
 
 // Routes
 app.get('/', (req, res) => {
@@ -522,6 +523,7 @@ app.get('/api/statistics/monthly', authenticateToken, async (req, res) => {
         });
 
         res.json(Object.values(monthlyData));
+        
     } catch (err) {
         console.error('월별 통계 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
@@ -535,14 +537,12 @@ app.get('/api/statistics/program', authenticateToken, async (req, res) => {
         const [programStats] = await pool.execute(`
             SELECT 
                 p.name,
-                p.price,
                 COUNT(DISTINCT e.member_id) as total_students,
-                COALESCE(SUM(p.price * e.duration_months), 0) as revenue
+                COALESCE(SUM(e.total_amount), 0) as revenue
             FROM programs p
-            LEFT JOIN enrollments e ON p.id = e.program_id
-            WHERE YEAR(e.start_date) = ?
-            GROUP BY p.id, p.name, p.price
-            ORDER BY COALESCE(SUM(p.price * e.duration_months), 0) DESC
+            LEFT JOIN enrollments e ON p.id = e.program_id AND YEAR(e.start_date) = ?
+            GROUP BY p.id, p.name
+            ORDER BY revenue DESC
         `, [year]);
 
         res.json(programStats);
@@ -560,10 +560,10 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
         const [todayAttendance] = await pool.execute(
             'SELECT COUNT(*) as count FROM attendance WHERE DATE(attendance_date) = CURDATE()'
         );
+
         const [monthlyRevenue] = await pool.execute(`
-            SELECT SUM(p.price * e.duration_months) as total
-            FROM enrollments e
-            JOIN programs p ON e.program_id = p.id
+            SELECT SUM(e.total_amount) as total 
+            FROM enrollments e 
             WHERE MONTH(e.start_date) = MONTH(CURRENT_DATE())
         `);
 
