@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS instructors (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     phone VARCHAR(20)
-    salary INT DEFAULT 0;
+    salary INT DEFAULT 0
 );
 
 /* member table */
