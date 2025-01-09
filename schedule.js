@@ -321,15 +321,28 @@ async function checkTimeConflict(day, startTime, endTime) {
 
 async function addClass() {
   try {
+
+    const timeSelections = document.querySelectorAll('.time-selection');
+    const schedules = Array.from(timeSelections).map(selection => {
+      return {
+        day: selection.querySelector('select').value,
+        startTime: selection.querySelector('.start-time').value,
+        endTime: selection.querySelector('.end-time').value
+      };
+    }).filter(schedule => schedule.day && schedule.startTime && schedule.endTime);
+
+    if (schedules.length === 0) {
+      alert('최소 하나의 수업 시간을 선택해주세요.');
+      return;
+    }
+
       const programData = {
           name: document.getElementById('class-name').value.trim(),
           instructor_name: document.getElementById('instructor-name').value.trim(),
           monthly_price: parseInt(document.getElementById('monthly-price').value) || 0,
           per_class_price: parseInt(document.getElementById('per-class-price').value) || 0,
           classes_per_week: parseInt(document.getElementById('classes-per-week').value) || 1,
-          day: document.querySelector('.time-selection select').value,
-          startTime: document.querySelector('.time-selection .start-time').value,
-          endTime: document.querySelector('.time-selection .end-time').value,
+          schedules: schedules,
           details: document.getElementById('class-details').value.trim(),
           color: selectedColor
       };
@@ -338,14 +351,12 @@ async function addClass() {
           !programData.name ||
           !programData.instructor_name ||
           !programData.details ||
-          !programData.day ||
-          !programData.startTime ||
-          !programData.endTime ||
+          !programData.schedules ||
           !programData.monthly_price ||
           !programData.per_class_price ||
           !programData.classes_per_week
       ) {
-          alert('모든 필드를 올바르게 입력해주세요.');
+          alert('모든 항목을 올바르게 입력해주세요.');
           return;
       }
 
@@ -386,17 +397,21 @@ async function addClass() {
   }
 }
   
-  async function loadPrograms() {
+async function loadPrograms() {
     try {
       const programs = await API.getPrograms();
-      programs.forEach(program => {
-        // 프로그램 정보를 화면에 표시
-        const dayElements = document.querySelectorAll('.day');
-        dayElements.forEach(dayElement => {
-          const day = dayElement.querySelector('h2').innerText;
-          const classesContainer = dayElement.querySelector('.classes');
+      
+      document.querySelectorAll('.day .classes').forEach(container => {
+        container.innerHTML = '';
+      });
   
-          program.classes?.forEach(classInfo => {
+      programs.forEach(program => {
+        program.classes?.forEach(classInfo => {
+          const dayElements = document.querySelectorAll('.day');
+          dayElements.forEach(dayElement => {
+            const day = dayElement.querySelector('h2').innerText;
+            const classesContainer = dayElement.querySelector('.classes');
+  
             if (classInfo.day === day) {
               const classElement = createClassElement({
                 startTime: classInfo.startTime,
@@ -415,7 +430,7 @@ async function addClass() {
       console.error('프로그램 목록 로드 실패:', error);
     }
   }
-  
+
   function resetForm() {
     document.getElementById('class-name').value = '';
     document.getElementById('class-details').value = '';
