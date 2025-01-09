@@ -10,6 +10,39 @@ const prices = {
 };
 
 let programs = [];
+let selectedPaymentStatus = 'unpaid';
+
+function setPaymentStatus(status) {
+    selectedPaymentStatus = status;
+    
+    // 선택된 버튼 스타일 변경
+    const buttons = document.querySelectorAll('.payment-status button');
+    buttons.forEach(button => {
+        if (button.dataset.status === status) {
+            button.classList.add('selected');
+        } else {
+            button.classList.remove('selected');
+        }
+    });
+}
+
+function setupEventListeners() {
+    const registrationForm = document.getElementById('registration-form');
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await registerMember();
+        });
+    }
+
+    const birthdateInput = document.getElementById('birthdate');
+    if (birthdateInput) {
+        birthdateInput.addEventListener('change', function() {
+            const age = calculateAge(this.value);
+            document.getElementById('age').value = age;
+        });
+    }
+}
 
 function initializeDateFields() {
     const birthdateInput = document.getElementById('birthdate');
@@ -137,7 +170,11 @@ function calculateAge(birthdate) {
     return age;
 }
 
-async function registerMember() {
+async function registerMember(e) {
+    if (e) {
+        e.preventDefault();
+    }
+
     const formData = {
         name: document.getElementById('name').value.trim(),
         gender: document.getElementById('gender').value,
@@ -187,48 +224,10 @@ async function registerMember() {
         
         if (response) {
             alert('회원이 성공적으로 등록되었습니다.');
-            window.location.replace('/회원관리.html');
+            window.location.href = '회원관리.html';
         }
     } catch (error) {
         console.error('회원 등록 실패:', error);
         alert('회원 등록에 실패했습니다. 다시 시도해주세요.');
-    }
-}
-
-// 폼 제출 이벤트 리스너 설정
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('registration-form');
-    form.addEventListener('submit', registerMember);
-});
-
-function setPaymentStatus(status) {
-    selectedPaymentStatus = status;
-    
-    // 선택된 버튼 스타일 변경
-    const buttons = document.querySelectorAll('.payment-status button');
-    buttons.forEach(button => {
-        if (button.dataset.status === status) {
-            button.classList.add('selected');
-        } else {
-            button.classList.remove('selected');
-        }
-    });
-}
-
-function setupEventListeners() {
-    const registrationForm = document.getElementById('registration-form');
-    if (registrationForm) {
-        registrationForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await registerMember();
-        });
-    }
-
-    const birthdateInput = document.getElementById('birthdate');
-    if (birthdateInput) {
-        birthdateInput.addEventListener('change', function() {
-            const age = calculateAge(this.value);
-            document.getElementById('age').value = age;
-        });
     }
 }
