@@ -321,7 +321,6 @@ async function checkTimeConflict(day, startTime, endTime) {
 
 async function addClass() {
   try {
-
     const timeSelections = document.querySelectorAll('.time-selection');
     const schedules = Array.from(timeSelections).map(selection => {
       return {
@@ -331,10 +330,17 @@ async function addClass() {
       };
     }).filter(schedule => schedule.day && schedule.startTime && schedule.endTime);
 
+    const classesPerWeek = parseInt(document.getElementById('classes-per-week').value) || 1;
+
     if (schedules.length === 0) {
       alert('최소 하나의 수업 시간을 선택해주세요.');
       return;
     }
+
+    if (schedules.length !== classesPerWeek) {
+        alert(`주당 ${classesPerWeek}회로 설정하셨습니다. 시간표에서 ${classesPerWeek}개의 시간을 선택해주세요. (현재 ${schedules.length}개 선택됨)`);
+        return;
+      }
 
       const programData = {
           name: document.getElementById('class-name').value.trim(),
@@ -447,6 +453,22 @@ async function loadPrograms() {
   // 페이지 로드 시 프로그램 목록 불러오기
   document.addEventListener('DOMContentLoaded', async () => {
     await loadPrograms();
+
+    document.getElementById('classes-per-week').addEventListener('change', function(e) {
+        const classesPerWeek = parseInt(e.target.value) || 1;
+        const container = document.getElementById('time-selection-container');
+        const currentSelections = container.querySelectorAll('.time-selection');
+        
+        if (currentSelections.length < classesPerWeek) {
+            for (let i = currentSelections.length; i < classesPerWeek; i++) {
+                addTimeSelection();
+            }
+        } else if (currentSelections.length > classesPerWeek) {
+            for (let i = currentSelections.length - 1; i >= classesPerWeek; i--) {
+                removeTimeSelection(i);
+            }
+        }
+    });
   });
 
 
