@@ -192,9 +192,12 @@ async function updateMember(event) {
             phone: document.getElementById('phone').value,
             program_id: document.getElementById('program').value,
             start_date: document.getElementById('start_date').value,
-            payment_status: selectedPaymentStatus
+            payment_status: selectedPaymentStatus,
+            duration_months: 0,
+            total_classes: 0
         };
 
+        // 구독 유형에 따른 데이터 설정
         if (subscriptionType.value === 'month') {
             formData.duration_months = parseInt(subscriptionInput.value);
             formData.total_classes = 0;
@@ -202,6 +205,9 @@ async function updateMember(event) {
             formData.duration_months = 0;
             formData.total_classes = parseInt(subscriptionInput.value);
         }
+
+        // 디버깅을 위한 로그
+        console.log('Sending update request with data:', formData);
 
         const response = await API.updateMember(memberId, formData);
         
