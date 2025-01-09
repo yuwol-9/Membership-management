@@ -353,7 +353,7 @@ async function addClass() {
 
       const programData = {
           name: document.getElementById('class-name').value.trim(),
-          instructor_name: document.getElementById('instructor-name').value.trim(),
+          instructor_name: document.getElementById('instructor-name').value.trim() || null,
           monthly_price: parseInt(document.getElementById('monthly-price').value) || 0,
           per_class_price: parseInt(document.getElementById('per-class-price').value) || 0,
           classes_per_week: classesPerWeek,
@@ -364,32 +364,26 @@ async function addClass() {
 
       console.log('전송할 프로그램 데이터:', programData);
 
-      if (
-          !programData.name ||
-          !programData.instructor_name ||
-          !programData.schedules ||
-          !programData.monthly_price ||
-          !programData.per_class_price ||
-          !programData.classes_per_week
-      ) {
-          alert('모든 항목을 올바르게 입력해주세요.');
-          return;
-      }
-
-      if (isNaN(programData.monthly_price) || programData.monthly_price <= 0) {
-          alert('개월 수강료는 양수로 입력해주세요.');
-          return;
-      }
-
-      if (isNaN(programData.per_class_price) || programData.per_class_price <= 0) {
-          alert('회당 수강료는 양수로 입력해주세요.');
-          return;
-      }
-
-      if (!programData.classes_per_week || programData.classes_per_week < 1 || programData.classes_per_week > 7) {
+      if (!programData.name || !programData.schedules || !programData.monthly_price || 
+        !programData.per_class_price || !programData.classes_per_week) {
+        alert('프로그램명, 시간표, 수강료는 필수 입력사항입니다.');
+        return;
+    }
+    
+    if (isNaN(programData.monthly_price) || programData.monthly_price <= 0) {
+        alert('개월 수강료는 양수로 입력해주세요.');
+        return;
+    }
+    
+    if (isNaN(programData.per_class_price) || programData.per_class_price <= 0) {
+        alert('회당 수강료는 양수로 입력해주세요.');
+        return;
+    }
+    
+    if (!programData.classes_per_week || programData.classes_per_week < 1 || programData.classes_per_week > 7) {
         alert('주간 수업 횟수를 1-7회 사이로 입력해주세요.');
         return;
-      }
+    }
 
       const timeConflict = await checkTimeConflict(
           programData.day,

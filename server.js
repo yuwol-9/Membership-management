@@ -850,20 +850,20 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
             throw new Error(`주간 수업 횟수가 올바르지 않습니다: ${classes_per_week}`);
         }
 
-
-        let [instructor] = await connection.execute(
-            'SELECT id FROM instructors WHERE name = ?',
-            [instructor_name]
-        );
-
-        let instructor_id;
-        if (instructor.length === 0) {
-            const [result] = await connection.execute(
-                'INSERT INTO instructors (name) VALUES (?)',
-                [instructor_name]
+        let instructor_id = null;
+        if (instructor_name && instructor_name.trim()) {
+            const [instructor] = await connection.execute(
+                'SELECT id FROM instructors WHERE name = ?',
+                [instructor_name.trim()]
             );
-            instructor_id = result.insertId;
-        } else {
+            
+            if (instructor.length === 0) {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: '등록되지 않은 강사입니다.'
+                });
+            }
             instructor_id = instructor[0].id;
         }
 
