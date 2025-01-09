@@ -29,9 +29,9 @@ function setPaymentStatus(status) {
 function setupEventListeners() {
     const registrationForm = document.getElementById('registration-form');
     if (registrationForm) {
-        registrationForm.addEventListener('submit', async (e) => {
+        registrationForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            await registerMember();
+            registerMember();
         });
     }
 
@@ -170,11 +170,7 @@ function calculateAge(birthdate) {
     return age;
 }
 
-async function registerMember(e) {
-    if (e) {
-        e.preventDefault();
-    }
-
+async function registerMember() {
     const formData = {
         name: document.getElementById('name').value.trim(),
         gender: document.getElementById('gender').value,
@@ -214,9 +210,7 @@ async function registerMember(e) {
         // 구독 유형에 따른 데이터 설정
         if (subscriptionType.value === 'month') {
             formData.duration_months = parseInt(subscriptionInput);
-            formData.total_classes = 0;
         } else {
-            formData.duration_months = 0;
             formData.total_classes = parseInt(subscriptionInput);
         }
 
@@ -224,7 +218,7 @@ async function registerMember(e) {
         
         if (response) {
             alert('회원이 성공적으로 등록되었습니다.');
-            window.location.href = '회원관리.html'; // 경로 수정
+            window.location.href = '회원관리.html';
         }
     } catch (error) {
         console.error('회원 등록 실패:', error);
