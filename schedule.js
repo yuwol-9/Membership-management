@@ -323,10 +323,14 @@ async function addClass() {
   try {
     const timeSelections = document.querySelectorAll('.time-selection');
     const schedules = Array.from(timeSelections).map(selection => {
+      const daySelect = selection.querySelector('select');
+      const startTimeInput = selection.querySelector('input[type="time"]:first-of-type');
+      const endTimeInput = selection.querySelector('input[type="time"]:last-of-type');
+
       return {
-        day: selection.querySelector('select').value,
-        startTime: selection.querySelector('.start-time').value,
-        endTime: selection.querySelector('.end-time').value
+        day: daySelect ? daySelect.value : '',
+        startTime: startTimeInput ? startTimeInput.value : '',
+        endTime: endTimeInput ? endTimeInput.value : ''
       };
     }).filter(schedule => schedule.day && schedule.startTime && schedule.endTime);
 
