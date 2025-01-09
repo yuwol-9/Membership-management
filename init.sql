@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS programs (
     instructor_id INT,
     monthly_price INT NOT NULL DEFAULT 0,
     per_class_price INT NOT NULL DEFAULT 0,
-    classes_per_week INT NOT NULL DEFAULT 1;
+    classes_per_week INT NOT NULL DEFAULT 1,
     FOREIGN KEY (instructor_id) REFERENCES instructors(id)
 );
 
