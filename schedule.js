@@ -365,7 +365,6 @@ async function addClass() {
       if (
           !programData.name ||
           !programData.instructor_name ||
-          !programData.details ||
           !programData.schedules ||
           !programData.monthly_price ||
           !programData.per_class_price ||

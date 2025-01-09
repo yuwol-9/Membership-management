@@ -861,7 +861,7 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
 
         const [program] = await connection.execute(
             'INSERT INTO programs (name, instructor_id, monthly_price, per_class_price, classes_per_week) VALUES (?, ?, ?, ?, ?)',
-            [name, instructor_id, monthly_price || 0, per_class_price || 0, classes_per_week]
+            [name, instructor_id, monthly_price || 0, per_class_price || 0, classes_per_week || 1]
         );
 
         if (schedules && Array.isArray(schedules) && schedules.length > 0) {
@@ -871,7 +871,14 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
             for (const schedule of schedules) {
                 await connection.execute(
                     insertScheduleQuery,
-                    [program.insertId, schedule.day, schedule.startTime, schedule.endTime, details, color]
+                    [
+                        program.insertId,
+                        schedule.day || null,
+                        schedule.startTime || null,
+                        schedule.endTime || null,
+                        details || null,
+                        color || null
+                    ]
                 );
             }
         }
