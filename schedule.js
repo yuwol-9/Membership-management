@@ -339,12 +339,12 @@ async function addClass() {
         endTime: endTimeInput.value
       };
     })
-    .filter(schedule => schedule !== null);
+    .filter(schedule => schedule && schedule.day && schedule.startTime && schedule.endTime);
 
-    if (schedules.length === 0) {
-      alert('최소 하나의 수업 시간을 선택해주세요.');
-      return;
-    }
+    if (!classesPerWeek || classesPerWeek < 1) {
+        alert('유효한 주간 수업 횟수를 입력해주세요.');
+        return;
+      }
 
     if (schedules.length !== classesPerWeek) {
         alert(`주당 ${classesPerWeek}회로 설정하셨습니다. 시간표에서 ${classesPerWeek}개의 시간을 선택해주세요. (현재 ${schedules.length}개 선택됨)`);
@@ -362,6 +362,8 @@ async function addClass() {
           color: selectedColor
       };
 
+      console.log('전송할 프로그램 데이터:', programData);
+
       if (
           !programData.name ||
           !programData.instructor_name ||
@@ -373,8 +375,6 @@ async function addClass() {
           alert('모든 항목을 올바르게 입력해주세요.');
           return;
       }
-
-      console.log('Sending program data:', programData);
 
       if (isNaN(programData.monthly_price) || programData.monthly_price <= 0) {
           alert('개월 수강료는 양수로 입력해주세요.');
@@ -403,6 +403,7 @@ async function addClass() {
       }
 
       await API.createProgram(programData);
+      console.log('서버 응답:', response);
 
       alert('프로그램이 성공적으로 등록되었습니다.');
       closeModal();

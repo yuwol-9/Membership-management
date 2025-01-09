@@ -832,6 +832,8 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
 
+        console.log('받은 프로그램 데이터:', req.body);
+
         const { 
             name, 
             instructor_name, 
@@ -842,6 +844,10 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
             details,
             color 
         } = req.body;
+
+        if (!classes_per_week || classes_per_week < 1) {
+            throw new Error('유효하지 않은 주간 수업 횟수입니다.');
+        }
 
         let [instructor] = await connection.execute(
             'SELECT id FROM instructors WHERE name = ?',
@@ -864,23 +870,18 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
             [name, instructor_id, monthly_price || 0, per_class_price || 0, classes_per_week || 1]
         );
 
-        if (schedules && Array.isArray(schedules) && schedules.length > 0) {
-            const insertScheduleQuery = 
-                'INSERT INTO class_schedules (program_id, day, start_time, end_time, details, color) VALUES (?, ?, ?, ?, ?, ?)';
-            
-            for (const schedule of schedules) {
-                await connection.execute(
-                    insertScheduleQuery,
-                    [
-                        program.insertId,
-                        schedule.day || null,
-                        schedule.startTime || null,
-                        schedule.endTime || null,
-                        details || null,
-                        color || null
-                    ]
-                );
-            }
+        console.log('생성된 프로그램:', program);
+
+        if (!schedules || !Array.isArray(schedules) || schedules.length !== classes_per_week) {
+            throw new Error('스케줄 데이터가 유효하지 않습니다.');
+        }
+
+        for (const schedule of schedules) {
+            console.log('스케줄 추가:', schedule);
+            await connection.execute(
+                'INSERT INTO class_schedules (program_id, day, start_time, end_time, details, color) VALUES (?, ?, ?, ?, ?, ?)',
+                [program.insertId, schedule.day, schedule.startTime, schedule.endTime, details || null, color]
+            );
         }
 
         await connection.commit();
