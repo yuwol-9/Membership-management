@@ -175,6 +175,7 @@ async function registerMember(e) {
         e.preventDefault();
     }
 
+    // 폼 데이터 객체 생성
     const formData = {
         name: document.getElementById('name').value.trim(),
         gender: document.getElementById('gender').value,
@@ -194,20 +195,32 @@ async function registerMember(e) {
 
     // 필수 입력 필드 검증
     const missingFields = [];
-    if (!formData.name) missingFields.push('이름');
-    if (!formData.gender) missingFields.push('성별');
-    if (!formData.birthdate) missingFields.push('생년월일');
-    if (!formData.age) missingFields.push('나이');
-    if (!formData.address) missingFields.push('주소');
-    if (!formData.phone) missingFields.push('전화번호');
-    if (!formData.program_id) missingFields.push('프로그램');
-    if (!formData.start_date) missingFields.push('시작일');
-    if (!formData.payment_status) missingFields.push('결제상태');
-    if (!subscriptionInput) missingFields.push('구독 기간/횟수');
+    const requiredFields = {
+        name: '이름',
+        gender: '성별',
+        birthdate: '생년월일',
+        age: '나이',
+        address: '주소',
+        phone: '전화번호',
+        program_id: '프로그램',
+        start_date: '시작일',
+        payment_status: '결제상태'
+    };
+
+    // 필수 필드 검증
+    for (const [field, label] of Object.entries(requiredFields)) {
+        if (!formData[field]) {
+            missingFields.push(label);
+        }
+    }
+
+    if (!subscriptionInput) {
+        missingFields.push('구독 기간/횟수');
+    }
 
     if (missingFields.length > 0) {
         alert(`다음 정보를 입력해주세요:\n${missingFields.join('\n')}`);
-        return;
+        return; // 폼 제출 중단하고 현재 입력값 유지
     }
 
     try {
@@ -222,12 +235,14 @@ async function registerMember(e) {
 
         const response = await API.createMember(formData);
         
-        if (response) {
+        if (response && response.success) {
             alert('회원이 성공적으로 등록되었습니다.');
-            window.location.href = '회원관리.html';
+            window.location.href = '/회원관리.html';
+        } else {
+            throw new Error(response.message || '회원 등록에 실패했습니다.');
         }
     } catch (error) {
         console.error('회원 등록 실패:', error);
-        alert('회원 등록에 실패했습니다. 다시 시도해주세요.');
+        alert(error.message || '회원 등록에 실패했습니다. 다시 시도해주세요.');
     }
 }
