@@ -137,9 +137,7 @@ function calculateAge(birthdate) {
     return age;
 }
 
-async function registerMember(event) {
-    event.preventDefault();
-
+async function registerMember() {
     const formData = {
         name: document.getElementById('name').value.trim(),
         gender: document.getElementById('gender').value,
@@ -185,9 +183,12 @@ async function registerMember(event) {
             formData.total_classes = parseInt(subscriptionInput);
         }
 
-        await API.createMember(formData);
-        alert('회원이 성공적으로 등록되었습니다.');
-        window.location.replace('/회원관리.html');
+        const response = await API.createMember(formData);
+        
+        if (response) {
+            alert('회원이 성공적으로 등록되었습니다.');
+            window.location.replace('/회원관리.html');
+        }
     } catch (error) {
         console.error('회원 등록 실패:', error);
         alert('회원 등록에 실패했습니다. 다시 시도해주세요.');
@@ -215,19 +216,19 @@ function setPaymentStatus(status) {
 }
 
 function setupEventListeners() {
+    const registrationForm = document.getElementById('registration-form');
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await registerMember();
+        });
+    }
+
     const birthdateInput = document.getElementById('birthdate');
     if (birthdateInput) {
         birthdateInput.addEventListener('change', function() {
             const age = calculateAge(this.value);
             document.getElementById('age').value = age;
-        });
-    }
-
-    const registrationForm = document.getElementById('registration-form');
-    if (registrationForm) {
-        registrationForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            registerMember();
         });
     }
 }
