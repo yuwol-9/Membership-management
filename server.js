@@ -856,7 +856,7 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
                 'SELECT id FROM instructors WHERE name = ?',
                 [instructor_name.trim()]
             );
-            
+
             if (instructor.length === 0) {
                 await connection.rollback();
                 return res.status(400).json({
@@ -953,7 +953,6 @@ app.get('/api/programs', authenticateToken, async (req, res) => {
     }
 });
 
-// 프로그램 수정 API
 app.put('/api/programs/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -1023,7 +1022,6 @@ app.put('/api/programs/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// 프로그램 삭제 API
 app.delete('/api/programs/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -1031,18 +1029,33 @@ app.delete('/api/programs/:id', authenticateToken, async (req, res) => {
         
         const { id } = req.params;
         
-        // 연결된 수업 스케줄 먼저 삭제
-        await connection.execute('DELETE FROM class_schedules WHERE program_id = ?', [id]);
+        const [program] = await connection.execute(
+            'SELECT id FROM programs WHERE id = ?',
+            [id]
+        );
+
+        if (program.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({
+                success: false,
+                message: '해당 프로그램을 찾을 수 없습니다.'
+            });
+        }
         
-        // 프로그램 삭제
         await connection.execute('DELETE FROM programs WHERE id = ?', [id]);
         
         await connection.commit();
-        res.json({ message: '프로그램이 성공적으로 삭제되었습니다.' });
+        res.json({
+            success: true,
+            message: '프로그램이 성공적으로 삭제되었습니다.'
+        });
     } catch (err) {
         await connection.rollback();
         console.error('프로그램 삭제 에러:', err);
-        res.status(500).json({ message: '서버 오류' });
+        res.status(500).json({
+            success: false,
+            message: '프로그램 삭제 중 오류가 발생했습니다.'
+        });
     } finally {
         connection.release();
     }
