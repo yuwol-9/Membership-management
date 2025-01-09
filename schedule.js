@@ -326,6 +326,7 @@ async function addClass() {
           instructor_name: document.getElementById('instructor-name').value.trim(),
           monthly_price: parseInt(document.getElementById('monthly-price').value) || 0,
           per_class_price: parseInt(document.getElementById('per-class-price').value) || 0,
+          classes_per_week: parseInt(document.getElementById('classes-per-week').value) || 1,
           day: document.querySelector('.time-selection select').value,
           startTime: document.querySelector('.time-selection .start-time').value,
           endTime: document.querySelector('.time-selection .end-time').value,
@@ -341,7 +342,8 @@ async function addClass() {
           !programData.startTime ||
           !programData.endTime ||
           !programData.monthly_price ||
-          !programData.per_class_price
+          !programData.per_class_price ||
+          !programData.classes_per_week
       ) {
           alert('모든 필드를 올바르게 입력해주세요.');
           return;
@@ -355,6 +357,11 @@ async function addClass() {
       if (isNaN(programData.per_class_price) || programData.per_class_price <= 0) {
           alert('회당 수강료는 양수로 입력해주세요.');
           return;
+      }
+
+      if (!programData.classes_per_week || programData.classes_per_week < 1 || programData.classes_per_week > 7) {
+        alert('주간 수업 횟수를 1-7회 사이로 입력해주세요.');
+        return;
       }
 
       const timeConflict = await checkTimeConflict(

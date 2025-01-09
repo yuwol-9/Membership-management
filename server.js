@@ -837,6 +837,7 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
             instructor_name, 
             monthly_price, 
             per_class_price,
+            classes_per_week,
             day,
             startTime,
             endTime,
@@ -844,7 +845,6 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
             color 
         } = req.body;
 
-        // 먼저 강사 정보 확인 또는 추가
         let [instructor] = await connection.execute(
             'SELECT id FROM instructors WHERE name = ?',
             [instructor_name]
@@ -861,13 +861,11 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
             instructor_id = instructor[0].id;
         }
 
-        // 프로그램 추가
         const [program] = await connection.execute(
-            'INSERT INTO programs (name, instructor_id, monthly_price, per_class_price) VALUES (?, ?, ?, ?)',
-            [name, instructor_id, monthly_price || 0, per_class_price || 0]
+            'INSERT INTO programs (name, instructor_id, monthly_price, per_class_price, classes_per_week) VALUES (?, ?, ?, ?, ?)',
+            [name, instructor_id, monthly_price || 0, per_class_price || 0, classes_per_week || 1]
         );
 
-        // 수업 시간 정보 추가
         if (day && startTime && endTime) {
             await connection.execute(
                 'INSERT INTO class_schedules (program_id, day, start_time, end_time, details, color) VALUES (?, ?, ?, ?, ?, ?)',
