@@ -137,40 +137,68 @@ function calculateAge(birthdate) {
     return age;
 }
 
-async function registerMember() {
-    try {
-        const subscriptionType = document.getElementById('subscription-type');
-        const subscriptionInput = document.getElementById('custom-subscription');
-        
-        const formData = {
-            name: document.getElementById('name').value,
-            gender: document.getElementById('gender').value,
-            birthdate: document.getElementById('birthdate').value,
-            age: document.getElementById('age').value,
-            address: document.getElementById('address').value,
-            phone: document.getElementById('phone').value,
-            program_id: document.getElementById('program').value,
-            start_date: document.getElementById('start_date').value,
-            payment_status: selectedPaymentStatus
-        };
+async function registerMember(event) {
+    event.preventDefault();
 
-        // 구독 유형에 따라 데이터 설정
+    const formData = {
+        name: document.getElementById('name').value.trim(),
+        gender: document.getElementById('gender').value,
+        birthdate: document.getElementById('birthdate').value,
+        age: document.getElementById('age').value,
+        address: document.getElementById('address').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        program_id: document.getElementById('program').value,
+        start_date: document.getElementById('start_date').value,
+        payment_status: selectedPaymentStatus,
+        duration_months: 0,
+        total_classes: 0
+    };
+
+    const subscriptionType = document.getElementById('subscription-type');
+    const subscriptionInput = document.getElementById('custom-subscription').value;
+
+    // 필수 입력 필드 검증
+    const missingFields = [];
+    if (!formData.name) missingFields.push('이름');
+    if (!formData.gender) missingFields.push('성별');
+    if (!formData.birthdate) missingFields.push('생년월일');
+    if (!formData.age) missingFields.push('나이');
+    if (!formData.address) missingFields.push('주소');
+    if (!formData.phone) missingFields.push('전화번호');
+    if (!formData.program_id) missingFields.push('프로그램');
+    if (!formData.start_date) missingFields.push('시작일');
+    if (!formData.payment_status) missingFields.push('결제상태');
+    if (!subscriptionInput) missingFields.push('구독 기간/횟수');
+
+    if (missingFields.length > 0) {
+        alert(`다음 정보를 입력해주세요:\n${missingFields.join('\n')}`);
+        return;
+    }
+
+    try {
+        // 구독 유형에 따른 데이터 설정
         if (subscriptionType.value === 'month') {
-            formData.duration_months = parseInt(subscriptionInput.value);
+            formData.duration_months = parseInt(subscriptionInput);
             formData.total_classes = 0;
         } else {
             formData.duration_months = 0;
-            formData.total_classes = parseInt(subscriptionInput.value);
+            formData.total_classes = parseInt(subscriptionInput);
         }
 
-        const response = await API.createMember(formData);
+        await API.createMember(formData);
         alert('회원이 성공적으로 등록되었습니다.');
-        window.location.href = '회원관리.html';
+        window.location.replace('/회원관리.html');
     } catch (error) {
         console.error('회원 등록 실패:', error);
         alert('회원 등록에 실패했습니다. 다시 시도해주세요.');
     }
 }
+
+// 폼 제출 이벤트 리스너 설정
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('registration-form');
+    form.addEventListener('submit', registerMember);
+});
 
 function setPaymentStatus(status) {
     selectedPaymentStatus = status;
