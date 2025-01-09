@@ -15,7 +15,6 @@ let selectedPaymentStatus = 'unpaid';
 function setPaymentStatus(status) {
     selectedPaymentStatus = status;
     
-    // 선택된 버튼 스타일 변경
     const buttons = document.querySelectorAll('.payment-status button');
     buttons.forEach(button => {
         if (button.dataset.status === status) {
@@ -31,10 +30,14 @@ function setupEventListeners() {
     if (registrationForm) {
         registrationForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            const startDateInput = document.getElementById('start_date');
+            if (!startDateInput.value) {
+                alert('등록 날짜를 선택해주세요.');
+                return;
+            }
             registerMember();
         });
     }
-
     const birthdateInput = document.getElementById('birthdate');
     if (birthdateInput) {
         birthdateInput.addEventListener('change', function() {
@@ -49,10 +52,8 @@ function initializeDateFields() {
     const startDateInput = document.getElementById('start_date');
     const today = new Date();
     
-    // 생년월일은 오늘 이전만 선택 가능
     birthdateInput.max = today.toISOString().split('T')[0];
     
-    // 시작일은 오늘부터 한 달 후까지만 선택 가능
     const oneMonthLater = new Date(today);
     oneMonthLater.setMonth(today.getMonth() + 1);
     
