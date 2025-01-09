@@ -204,7 +204,7 @@ const API = {
                 method: 'POST',
                 body: JSON.stringify({
                     name: programData.name,
-                    instructor_name: programData.instructor_name,
+                    instructor_name: programData.instructor_name || null,
                     monthly_price: parseInt(programData.monthly_price) || 0,
                     per_class_price: parseInt(programData.per_class_price) || 0,
                     classes_per_week: parseInt(programData.classes_per_week),
