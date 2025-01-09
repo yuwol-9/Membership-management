@@ -62,6 +62,7 @@ function fillMemberData(memberData) {
     // 구독 정보 설정
     const subscriptionType = document.getElementById('subscription-type');
     const customSubscription = document.getElementById('custom-subscription');
+    const customInputGroup = document.querySelector('.custom-input-group');
     
     if (memberData.total_classes && memberData.total_classes > 0) {
         subscriptionType.value = 'class';
@@ -71,12 +72,11 @@ function fillMemberData(memberData) {
         customSubscription.value = memberData.duration_months;
     }
 
-    const customInputGroup = document.querySelector('.custom-input-group');
     if (customInputGroup) {
         customInputGroup.style.display = 'flex';
     }
     
-    // 금액 재계산
+    updateSubscriptionPlaceholder();
     calculateAmount();
 }
 

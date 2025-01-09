@@ -292,9 +292,37 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
         } = req.body;
 
         const [currentEnrollment] = await connection.execute(
-            'SELECT id, remaining_days, total_amount FROM enrollments WHERE member_id = ?',
+            `SELECT e.*, p.monthly_price, p.per_class_price 
+             FROM enrollments e 
+             JOIN programs p ON e.program_id = p.id 
+             WHERE e.member_id = ?`,
             [memberId]
         );
+
+        if (currentEnrollment.length > 0) {
+            const current = currentEnrollment[0];
+            
+            let newTotalDays = 0;
+            if (total_classes > 0) {
+                newTotalDays = total_classes;
+            } else if (duration_months > 0) {
+                newTotalDays = duration_months * 30;
+            }
+
+            let currentTotalDays = 0;
+            if (current.total_classes > 0) {
+                currentTotalDays = current.total_classes;
+            } else if (current.duration_months > 0) {
+                currentTotalDays = current.duration_months * 30;
+            }
+
+            if (newTotalDays < currentTotalDays) {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: '기존 등록된 기간/횟수보다 적게 수정할 수 없습니다.'
+                });
+            }
 
         const [programPrice] = await connection.execute(
             'SELECT monthly_price, per_class_price FROM programs WHERE id = ?',
@@ -321,6 +349,7 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
                     message: '현재 남은 횟수가 더 적어 수정이 불가능합니다.'
                 });
             }
+        }
 
             await connection.execute(
                 `UPDATE enrollments 
@@ -370,11 +399,7 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
         await connection.commit();
         res.json({ 
             success: true,
-            message: '회원 정보가 성공적으로 수정되었습니다.',
-            updatedData: {
-                totalAmount: newTotalAmount,
-                remainingDays: newRemainingDays
-            }
+            message: '회원 정보가 성공적으로 수정되었습니다.'
         });
     } catch (err) {
         await connection.rollback();
