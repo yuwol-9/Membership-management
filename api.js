@@ -31,6 +31,8 @@ const API = {
                 }
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
                     API.removeToken();
@@ -40,7 +42,7 @@ const API = {
                 throw new Error(`API 요청 실패: ${response.status}`);
             }
 
-            return response.json();
+            return data;
         } catch (error) {
             console.error('API 호출 에러:', error);
             throw error;
