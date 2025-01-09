@@ -269,19 +269,13 @@
             <input type="date" id="start_date" required>
           </div>
           <div class="button-group">
-            <button type="submit" class="btn-primary">등록</button>
+            <button type="submit" class="btn-primary" onclick="registerMember()">등록</button>
             <a href="/회원관리.html" class="btn-cancel">취소</a>
           </div>
         </form>
       </div>
     </div>
   </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('start_date').value = today;
-    });
-    </script>
   <script src="api.js"></script>
   <script src="registration.js"></script>
 </body>

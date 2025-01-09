@@ -230,7 +230,6 @@ app.post('/api/members', authenticateToken, async (req, res) => {
 
         await connection.commit();
         res.status(201).json({
-            success: true,
             message: '회원이 성공적으로 등록되었습니다.',
             memberId: memberResult.insertId,
             enrollmentId: enrollmentResult.insertId
@@ -238,10 +237,7 @@ app.post('/api/members', authenticateToken, async (req, res) => {
     } catch (err) {
         await connection.rollback();
         console.error('회원 등록 에러:', err);
-        res.status(500).json({ 
-            success: false,
-            message: err.message || '서버 오류가 발생했습니다.' 
-        });
+        res.status(500).json({ message: '서버 오류' });
     } finally {
         connection.release();
     }

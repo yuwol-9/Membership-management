@@ -86,21 +86,10 @@ const API = {
     },
 
     createMember: async (memberData) => {
-        try {
-            const response = await API.apiCall('/members', {
-                method: 'POST',
-                body: JSON.stringify(memberData)
-            });
-            
-            if (response.success === false) {
-                throw new Error(response.message || '회원 등록에 실패했습니다.');
-            }
-            
-            return response;
-        } catch (error) {
-            console.error('회원 등록 API 오류:', error);
-            throw error;
-        }
+        return API.apiCall('/members', {
+            method: 'POST',
+            body: JSON.stringify(memberData)
+        });
     },
 
     updateMember: async (id, memberData) => {
