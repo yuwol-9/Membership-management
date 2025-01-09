@@ -145,13 +145,15 @@ function calculateAmount() {
     if (!program) return;
 
     let totalAmount = 0;
-    const quantity = parseInt(subscriptionInput.value);
+    let quantity = parseInt(subscriptionInput.value);
     
-    // 구독 유형에 따라 다른 가격 계산
     if (subscriptionType.value === 'month') {
         totalAmount = quantity * program.monthly_price;
+        const totalClasses = quantity * 4 * program.classes_per_week; // 한 달을 4주로 계산
+        subscriptionInput.setAttribute('data-total-classes', totalClasses);
     } else {
         totalAmount = quantity * program.per_class_price;
+        subscriptionInput.setAttribute('data-total-classes', quantity);
     }
 
     amountDisplay.innerText = `결제 금액: ${totalAmount.toLocaleString()}원`;
@@ -188,6 +190,7 @@ async function registerMember() {
 
     const subscriptionType = document.getElementById('subscription-type');
     const subscriptionInput = document.getElementById('custom-subscription').value;
+    const totalClasses = parseInt(subscriptionInput.getAttribute('data-total-classes')) || 0;
 
     // 필수 입력 필드 검증
     const missingFields = [];
@@ -210,9 +213,11 @@ async function registerMember() {
     try {
         // 구독 유형에 따른 데이터 설정
         if (subscriptionType.value === 'month') {
-            formData.duration_months = parseInt(subscriptionInput);
+            formData.duration_months = parseInt(subscriptionInput.value);
+            formData.total_classes = totalClasses;
         } else {
-            formData.total_classes = parseInt(subscriptionInput);
+            formData.duration_months = 0;
+            formData.total_classes = parseInt(subscriptionInput.value);
         }
 
         const response = await API.createMember(formData);

@@ -207,19 +207,19 @@ app.post('/api/members', authenticateToken, async (req, res) => {
 
         // 프로그램 가격 조회
         const [programPrice] = await connection.execute(
-            'SELECT monthly_price, per_class_price FROM programs WHERE id = ?',
+            'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
             [program_id]
         );
 
         // 수강 금액 계산
         let totalAmount = 0;
         let remainingdays = 0;
-        if (total_classes) {
-            totalAmount = total_classes * programPrice[0].per_class_price;
-            remainingdays = total_classes;
+        if (duration_months > 0) {
+            totalAmount = duration_months * programInfo[0].monthly_price;
+            remainingDays = total_classes;
         } else {
-            totalAmount = duration_months * programPrice[0].monthly_price;
-            remainingdays = duration_months * 30;
+            totalAmount = total_classes * programInfo[0].per_class_price;
+            remainingDays = total_classes;
         }
 
         // 수강 정보 저장

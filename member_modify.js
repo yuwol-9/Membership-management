@@ -158,12 +158,15 @@ function calculateAmount() {
     if (!program) return;
 
     let totalAmount = 0;
-    const quantity = parseInt(subscriptionInput.value);
+    let quantity = parseInt(subscriptionInput.value);
     
     if (subscriptionType.value === 'month') {
         totalAmount = quantity * program.monthly_price;
+        const totalClasses = quantity * 4 * program.classes_per_week; // 한 달을 4주로 계산
+        subscriptionInput.setAttribute('data-total-classes', totalClasses);
     } else {
         totalAmount = quantity * program.per_class_price;
+        subscriptionInput.setAttribute('data-total-classes', quantity);
     }
 
     amountDisplay.innerText = `결제 금액: ${totalAmount.toLocaleString()}원`;
