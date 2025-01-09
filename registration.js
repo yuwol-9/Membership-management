@@ -224,10 +224,10 @@ async function registerMember(e) {
         
         if (response) {
             alert('회원이 성공적으로 등록되었습니다.');
-            window.location.href = '회원관리.html';
+            window.location.href = '회원관리.html'; // 경로 수정
         }
     } catch (error) {
         console.error('회원 등록 실패:', error);
-        alert('회원 등록에 실패했습니다. 다시 시도해주세요.');
+        alert(error.message || '회원 등록에 실패했습니다. 다시 시도해주세요.');
     }
 }
