@@ -44,6 +44,8 @@ function updateProgramSelect() {
 }
 
 function fillMemberData(memberData) {
+    console.log('Member Data:', memberData); // 디버깅을 위한 로그
+
     // 기본 정보 채우기
     document.getElementById('name').value = memberData.name || '';
     document.getElementById('phone').value = memberData.phone || '';
@@ -64,19 +66,22 @@ function fillMemberData(memberData) {
     const customSubscription = document.getElementById('custom-subscription');
     const customInputGroup = document.querySelector('.custom-input-group');
     
-    if (memberData.total_classes && memberData.total_classes > 0) {
+    customInputGroup.style.display = 'flex';
+    
+    // 구독 유형 설정
+    if (memberData.total_classes > 0) {
+        console.log('Setting class subscription:', memberData.total_classes);
         subscriptionType.value = 'class';
         customSubscription.value = memberData.total_classes;
-    } else if (memberData.duration_months && memberData.duration_months > 0) {
+        updateSubscriptionPlaceholder();
+    } else if (memberData.duration_months > 0) {
+        console.log('Setting month subscription:', memberData.duration_months);
         subscriptionType.value = 'month';
         customSubscription.value = memberData.duration_months;
-    }
-
-    if (customInputGroup) {
-        customInputGroup.style.display = 'flex';
+        updateSubscriptionPlaceholder();
     }
     
-    updateSubscriptionPlaceholder();
+    // 금액 계산
     calculateAmount();
 }
 
@@ -133,9 +138,9 @@ function enableCustomInput() {
 
 function updateSubscriptionPlaceholder() {
     const subscriptionType = document.getElementById('subscription-type');
-    const inputField = document.getElementById('custom-subscription');
+    const customSubscription = document.getElementById('custom-subscription');
     
-    inputField.placeholder = subscriptionType.value === 'month' ? '개월 수 입력' : '횟수 입력';
+    customSubscription.placeholder = subscriptionType.value === 'month' ? '개월 수 입력' : '횟수 입력';
 }
 
 function calculateAmount() {
@@ -155,7 +160,6 @@ function calculateAmount() {
     let totalAmount = 0;
     const quantity = parseInt(subscriptionInput.value);
     
-    // 구독 유형에 따라 다른 가격 계산
     if (subscriptionType.value === 'month') {
         totalAmount = quantity * program.monthly_price;
     } else {

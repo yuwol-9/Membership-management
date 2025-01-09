@@ -256,11 +256,14 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                 m.address,
                 m.phone,
                 e.duration_months,
+                e.total_classes,
                 e.remaining_days,
                 e.payment_status,
                 e.start_date,
                 p.name as program_name,
-                p.monthly_price as price
+                p.monthly_price,
+                p.per_class_price,
+                e.total_amount
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id
@@ -473,10 +476,14 @@ app.get('/api/members/:id', authenticateToken, async (req, res) => {
                 m.*,
                 e.program_id,
                 e.duration_months,
+                e.total_classes,
                 e.remaining_days,
                 e.payment_status,
                 e.start_date,
-                p.name as program_name
+                p.name as program_name,
+                p.monthly_price,
+                p.per_class_price,
+                e.total_amount
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id

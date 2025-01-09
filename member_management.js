@@ -28,17 +28,19 @@ function updateTable(members) {
     
     members.forEach(member => {
         const tr = document.createElement('tr');
+        
+        // 구독 정보 및 금액 계산
         let subscriptionDisplay = '-';
-        let totalPrice = 0;
+        let totalAmount = 0;
 
-        if (member.duration_months > 0) {
-            subscriptionDisplay = `${member.duration_months}개월`;
-            totalPrice = member.price * member.duration_months;
-        }
-        else if (member.total_classes > 0) {
+        if (member.total_classes > 0) {
             subscriptionDisplay = `${member.total_classes}회`;
-            totalPrice = member.per_class_price * member.total_classes;
+            totalAmount = member.total_amount || member.per_class_price * member.total_classes;
+        } else if (member.duration_months > 0) {
+            subscriptionDisplay = `${member.duration_months}개월`;
+            totalAmount = member.total_amount || member.monthly_price * member.duration_months;
         }
+
         tr.innerHTML = `
             <td>${member.name || '-'}</td>
             <td>${member.phone || '-'}</td>
@@ -48,7 +50,7 @@ function updateTable(members) {
             <td>${member.address || '-'}</td>
             <td>${member.program_name || '-'}</td>
             <td>${subscriptionDisplay}</td>
-            <td>${totalPrice ? formatCurrency(totalPrice) : '-'}</td>
+            <td>${formatCurrency(totalAmount)}</td>
             <td>${member.remaining_days !== undefined ? `${member.remaining_days}일` : '-'}</td>
             <td>${formatPaymentStatus(member.payment_status) || '-'}</td>
             <td>${formatDate(member.start_date) || '-'}</td>
