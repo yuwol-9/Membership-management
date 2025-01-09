@@ -193,16 +193,20 @@ const API = {
 
     createProgram: async (programData) => {
         try {
+            // 데이터 유효성 검사 추가
+            if (!programData.classes_per_week || programData.classes_per_week < 1) {
+                throw new Error('주간 수업 횟수는 1 이상이어야 합니다.');
+            }
+    
             return await API.apiCall('/programs', {
                 method: 'POST',
                 body: JSON.stringify({
                     name: programData.name,
                     instructor_name: programData.instructor_name,
-                    monthly_price: programData.monthly_price,
-                    per_class_price: programData.per_class_price,
-                    day: programData.day,
-                    startTime: programData.startTime,
-                    endTime: programData.endTime,
+                    monthly_price: parseInt(programData.monthly_price) || 0,
+                    per_class_price: parseInt(programData.per_class_price) || 0,
+                    classes_per_week: parseInt(programData.classes_per_week),
+                    schedules: programData.schedules,
                     details: programData.details,
                     color: programData.color
                 })

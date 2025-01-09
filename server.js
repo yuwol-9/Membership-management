@@ -845,9 +845,11 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
             color 
         } = req.body;
 
-        if (!classes_per_week || classes_per_week < 1) {
-            throw new Error('유효하지 않은 주간 수업 횟수입니다.');
+        const classesPerWeek = parseInt(classes_per_week);
+        if (isNaN(classesPerWeek) || classesPerWeek < 1) {
+            throw new Error(`주간 수업 횟수가 올바르지 않습니다: ${classes_per_week}`);
         }
+
 
         let [instructor] = await connection.execute(
             'SELECT id FROM instructors WHERE name = ?',
