@@ -176,17 +176,25 @@ async function confirmSelection() {
 
     for (const selection of selections) {
         const day = selection.querySelector('select').value;
-        const startTime = selection.querySelector('input[type="time"]:first-of-type').value;
-        const endTime = selection.querySelector('input[type="time"]:last-of-type').value;
+        
+        const startPeriod = selection.querySelector('[id^="start-time-period"]').value;
+        const startHour = selection.querySelector('[id^="start-time-hour"]').value;
+        const startMinute = selection.querySelector('[id^="start-time-minute"]').value;
+        
+        const endPeriod = selection.querySelector('[id^="end-time-period"]').value;
+        const endHour = selection.querySelector('[id^="end-time-hour"]').value;
+        const endMinute = selection.querySelector('[id^="end-time-minute"]').value;
 
-        if (!startTime || !endTime) {
-            continue;
-        }
+        const startHour24 = startPeriod === '오후' && startHour !== '12' ? 
+            parseInt(startHour) + 12 : 
+            startPeriod === '오전' && startHour === '12' ? 0 : parseInt(startHour);
+        
+        const endHour24 = endPeriod === '오후' && endHour !== '12' ? 
+            parseInt(endHour) + 12 : 
+            endPeriod === '오전' && endHour === '12' ? 0 : parseInt(endHour);
 
-        if (convertTimeToMinutes(endTime) <= convertTimeToMinutes(startTime)) {
-            alert('종료 시간은 시작 시간보다 늦어야 합니다.');
-            return;
-        }
+        const startTime = `${startHour24.toString().padStart(2, '0')}:${startMinute}`;
+        const endTime = `${endHour24.toString().padStart(2, '0')}:${endMinute}`;
 
         const conflict = await checkTimeConflict(day, startTime, endTime);
         if (conflict) {
