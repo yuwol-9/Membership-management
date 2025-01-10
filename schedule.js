@@ -255,6 +255,11 @@ function createClassElement(data) {
     const classElement = document.createElement('div');
     classElement.classList.add('class');
 
+    const isPreview = document.getElementById('preview-modal').classList.contains('active');
+    if (isPreview) {
+        classElement.classList.add('preview-class');
+    }
+
     classElement.style.top = `${startPositionMinutes}px`;
     classElement.style.height = `${durationMinutes}px`;
 
