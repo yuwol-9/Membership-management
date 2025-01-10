@@ -46,32 +46,83 @@ function closeTimeModal() {
 }
 
 function addTimeSelection() {
-  const container = document.getElementById('time-selection-container');
-  const newSelection = document.createElement('div');
-  newSelection.classList.add('time-selection');
-  newSelection.id = `time-selection-${timeSelectionCount}`;
-  newSelection.innerHTML = `
-      <label for="day-${timeSelectionCount}">요일</label>
-      <select id="day-${timeSelectionCount}">
-          <option value="Monday">Monday</option>
-          <option value="Tuesday">Tuesday</option>
-          <option value="Wednesday">Wednesday</option>
-          <option value="Thursday">Thursday</option>
-          <option value="Friday">Friday</option>
-          <option value="Saturday">Saturday</option>
-          <option value="Sunday">Sunday</option>
-      </select>
+    const container = document.getElementById('time-selection-container');
+    const newSelection = document.createElement('div');
+    newSelection.classList.add('time-selection');
+    newSelection.id = `time-selection-${timeSelectionCount}`;
+  
+    const generateTimeOptions = (start = 10, end = 22) => {
+      let options = '';
+      for (let hour = start; hour <= end; hour++) {
+        const period = hour >= 12 ? '오후' : '오전';
+        const displayHour = hour > 12 ? hour - 12 : hour;
+        for (let minute = 0; minute < 60; minute += 10) {
+          const formattedHour = hour.toString().padStart(2, '0');
+          const formattedMinute = minute.toString().padStart(2, '0');
+          const timeValue = `${formattedHour}:${formattedMinute}`;
+          const displayTime = `${period} ${displayHour}:${formattedMinute}`;
+          options += `<option value="${timeValue}">${displayTime}</option>`;
+        }
+      }
+      return options;
+    };
+  
+    newSelection.innerHTML = `
+        <label for="day-${timeSelectionCount}">요일</label>
+        <select id="day-${timeSelectionCount}">
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        </select>
+  
+        <label for="start-time-${timeSelectionCount}">시작 시간</label>
+        <select id="start-time-${timeSelectionCount}" class="start-time">
+          ${generateTimeOptions()}
+        </select>
+  
+        <label for="end-time-${timeSelectionCount}">종료 시간</label>
+        <select id="end-time-${timeSelectionCount}" class="end-time">
+          ${generateTimeOptions()}
+        </select>
+        <button class="remove-btn" onclick="removeTimeSelection(${timeSelectionCount})">一</button>
+        <div class="divider"></div>
+    `;
+    container.appendChild(newSelection);
+    timeSelectionCount++;
+}
 
-      <label for="start-time-${timeSelectionCount}">시작 시간</label>
-      <input type="time" id="start-time-${timeSelectionCount}">
-
-      <label for="end-time-${timeSelectionCount}">종료 시간</label>
-      <input type="time" id="end-time-${timeSelectionCount}">
-      <button class="remove-btn" onclick="removeTimeSelection(${timeSelectionCount})">一</button>
-      <div class="divider"></div>
-  `;
-  container.appendChild(newSelection);
-  timeSelectionCount++;
+function setupInitialTimeSelection() {
+    const timeSelectionContainer = document.getElementById('time-selection-container');
+    timeSelectionContainer.innerHTML = `
+      <div class="time-selection" id="time-selection-0">
+        <label for="day-0">요일</label>
+        <select id="day-0">
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        </select>
+  
+        <label for="start-time-0">시작 시간</label>
+        <select id="start-time-0" class="start-time">
+          ${generateTimeOptions()}
+        </select>
+  
+        <label for="end-time-0">종료 시간</label>
+        <select id="end-time-0" class="end-time">
+          ${generateTimeOptions()}
+        </select>
+        <button class="remove-btn" onclick="removeTimeSelection(0)">一</button>
+        <div class="divider"></div>
+      </div>
+    `;
 }
 
 function removeTimeSelection(id) {
@@ -126,28 +177,8 @@ function openModal() {
     document.getElementById('classes-per-week').value = '1';
     document.getElementById('color-preview').style.backgroundColor = '#E56736';
     selectedColor = '#E56736';
-    
-    const timeSelectionContainer = document.getElementById('time-selection-container');
-    timeSelectionContainer.innerHTML = `
-        <div class="time-selection" id="time-selection-0">
-            <label for="day-0">요일</label>
-            <select id="day-0">
-                <option value="Monday">Monday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Friday">Friday</option>
-                <option value="Saturday">Saturday</option>
-                <option value="Sunday">Sunday</option>
-            </select>
-            <label for="start-time-0">시작 시간</label>
-            <input type="time" id="start-time-0" class="start-time" step="600">
-            <label for="end-time-0">종료 시간</label>
-            <input type="time" id="end-time-0" class="end-time" step="600">
-            <button class="remove-btn" onclick="removeTimeSelection(0)">一</button>
-            <div class="divider"></div>
-        </div>
-    `;
+
+    setupInitialTimeSelection();
     timeSelectionCount = 1;
 
     document.getElementById('class-modal').classList.add('active');
@@ -173,18 +204,20 @@ function createClassElement(data) {
     const startPositionMinutes = (startHour - 10) * 110 + startMinute + 80;
     const durationMinutes = (endHour - startHour) * 108 + (endMinute - startMinute);
 
+    const formattedStartTime = `${startTime.split(':')[0]}:${startTime.split(':')[1]}`;
+    const formattedEndTime = `${endTime.split(':')[0]}:${endTime.split(':')[1]}`;
+
     const classElement = document.createElement('div');
     classElement.classList.add('class');
-    
 
     classElement.style.top = `${startPositionMinutes}px`;
     classElement.style.height = `${durationMinutes}px`;
 
     classElement.innerHTML = `
         <div class="time">
-            ${startTime} ~ ${endTime}
+            ${formattedStartTime} ~ ${formattedEndTime}
         </div>
-        <div class="content" style = "background-color: ${color};">
+        <div class="content" style="background-color: ${color};">
             <div class="name" style="white-space: pre-wrap;">${className}</div>
             <div class="details">${details || '-'}</div>
         </div>
