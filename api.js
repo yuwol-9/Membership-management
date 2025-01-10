@@ -231,13 +231,13 @@ const API = {
         }
     },
 
-    deleteProgram: async (programId) => {
+    deleteAllPrograms: async () => {
         try {
-            return await API.apiCall(`/programs/${programId}`, {
+            return await API.apiCall('/programs', {
                 method: 'DELETE'
             });
         } catch (error) {
-            console.error('프로그램 삭제 실패:', error);
+            console.error('프로그램 전체 삭제 실패:', error);
             throw error;
         }
     },

@@ -204,17 +204,22 @@ function toggleDeleteMode() {
 }
 let classData = [];
 // 수업 삭제 함수
-function deleteClass(day, startTime, endTime) {
-// classData 배열에서 해당 수업 제거
-classData = classData.filter(
-    (c) => !(c.day === day && c.startTime === startTime && c.endTime === endTime)
-);
-
-// 로컬 스토리지에 업데이트된 데이터 저장
-localStorage.setItem("classData", JSON.stringify(classData));
-
-// 화면 갱신
-renderClasses();
+async function deleteClass(day, startTime, endTime) {
+    try {
+        await API.deleteProgram(programId);
+        
+        classData = classData.filter(
+            (c) => !(c.day === day && c.startTime === startTime && c.endTime === endTime)
+        );
+        
+        localStorage.setItem("classData", JSON.stringify(classData));
+        
+        renderClasses();
+        
+    } catch (error) {
+        console.error('프로그램 삭제 실패:', error);
+        alert('프로그램 삭제에 실패했습니다: ' + error.message);
+    }
 }
 
 // 삭제 모드 활성화 함수
@@ -255,23 +260,32 @@ if (
 
 const RESET_PASSWORD = "woody1234"; // 초기화 비밀번호 설정
 
-function resetClasses() {
+async function resetClasses() {
     const userInput = prompt("초기화를 위해 비밀번호를 입력하세요:");
 
     if (userInput === null) {
-        // 사용자가 취소를 누른 경우
         alert("초기화가 취소되었습니다.");
         return;
     }
 
     if (userInput === RESET_PASSWORD) {
         if (confirm("모든 수업을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
-            classData = [];
-            localStorage.removeItem("classData"); // 로컬 스토리지 데이터 제거
-            document.querySelectorAll(".classes").forEach(container => {
-                container.innerHTML = ""; // 화면에서 모든 수업 제거
-            });
-            alert("모든 수업이 초기화되었습니다.");
+            try {
+                await API.deleteAllPrograms();
+                
+                classData = [];
+                localStorage.removeItem("classData");
+                
+                document.querySelectorAll(".classes").forEach(container => {
+                    container.innerHTML = "";
+                });
+                
+                alert("모든 수업이 초기화되었습니다.");
+                
+            } catch (error) {
+                console.error('프로그램 초기화 실패:', error);
+                alert('프로그램 초기화에 실패했습니다: ' + error.message);
+            }
         }
     } else {
         alert("비밀번호가 올바르지 않습니다. 초기화가 취소되었습니다.");

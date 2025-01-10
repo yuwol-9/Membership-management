@@ -953,6 +953,33 @@ app.get('/api/programs', authenticateToken, async (req, res) => {
     }
 });
 
+app.delete('/api/programs', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        
+        // 프로그램 관련 모든 데이터 삭제
+        await connection.execute('DELETE FROM class_schedules');
+        await connection.execute('DELETE FROM enrollments');
+        await connection.execute('DELETE FROM programs');
+        
+        await connection.commit();
+        res.json({
+            success: true,
+            message: '모든 프로그램이 성공적으로 삭제되었습니다.'
+        });
+    } catch (err) {
+        await connection.rollback();
+        console.error('프로그램 전체 삭제 중 오류:', err);
+        res.status(500).json({
+            success: false,
+            message: '프로그램 삭제 중 오류가 발생했습니다.'
+        });
+    } finally {
+        connection.release();
+    }
+});
+
 app.put('/api/programs/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
