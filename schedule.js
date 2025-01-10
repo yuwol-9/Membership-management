@@ -73,25 +73,49 @@ function addTimeSelection() {
   container.appendChild(newSelection);
   timeSelectionCount++;
 }
-// 시간 선택 제거 함수
+
 function removeTimeSelection(id) {
     const element = document.getElementById(`time-selection-${id}`);
     if (element) {
         element.remove();
     }
 }
-function confirmSelection() {
+
+async function confirmSelection() {
     const selections = document.querySelectorAll('.time-selection');
-    selections.forEach((selection, index) => {
-        const day = selection.querySelector(`#day-${index}`)?.value;
-        const startTime = selection.querySelector(`#start-time-${index}`)?.value;
-        const endTime = selection.querySelector(`#end-time-${index}`)?.value;
-        console.log(`선택된 시간: ${day}, ${startTime} ~ ${endTime}`);
-    });
+    let hasConflict = false;
+    let conflictMessages = [];
+
+    for (const selection of selections) {
+        const day = selection.querySelector('select').value;
+        const startTime = selection.querySelector('input[type="time"]:first-of-type').value;
+        const endTime = selection.querySelector('input[type="time"]:last-of-type').value;
+
+        if (!startTime || !endTime) {
+            continue;
+        }
+
+        if (convertTimeToMinutes(endTime) <= convertTimeToMinutes(startTime)) {
+            alert('종료 시간은 시작 시간보다 늦어야 합니다.');
+            return;
+        }
+
+        const conflict = await checkTimeConflict(day, startTime, endTime);
+        if (conflict) {
+            hasConflict = true;
+            conflictMessages.push(`${day} ${startTime}~${endTime}`);
+        }
+    }
+
+    if (hasConflict) {
+        alert(`다음 시간대에 이미 수업이 존재합니다:\n${conflictMessages.join('\n')}`);
+        return;
+    }
 
     alert('시간이 선택되었습니다.');
     closeTimeModal();
 }
+
 
 function openModal() {
     document.getElementById('class-modal').classList.add('active');
@@ -348,21 +372,29 @@ toggleColorPalette();
 }
 
 async function checkTimeConflict(day, startTime, endTime) {
-  return classData.some(existingClass => {
-      if (existingClass.day !== day) return false;
+    try {
+        const programs = await API.getPrograms();
+        return programs.some(program => 
+            program.classes.some(classInfo => {
+                if (classInfo.day !== day) return false;
 
-      const [existingStart, existingEnd] = [
-          new Date(`1970-01-01T${existingClass.startTime}`),
-          new Date(`1970-01-01T${existingClass.endTime}`)
-      ];
+                const existingStart = convertTimeToMinutes(classInfo.startTime);
+                const existingEnd = convertTimeToMinutes(classInfo.endTime);
+                const newStart = convertTimeToMinutes(startTime);
+                const newEnd = convertTimeToMinutes(endTime);
 
-      const [newStart, newEnd] = [
-          new Date(`1970-01-01T${startTime}`),
-          new Date(`1970-01-01T${endTime}`)
-      ];
+                return (newStart < existingEnd && newEnd > existingStart);
+            })
+        );
+    } catch (error) {
+        console.error('시간 충돌 확인 중 오류:', error);
+        return false;
+    }
+}
 
-      return (newStart < existingEnd && newEnd > existingStart);
-  });
+function convertTimeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
 }
 
 
@@ -431,17 +463,6 @@ async function addClass() {
         alert('주간 수업 횟수를 1-7회 사이로 입력해주세요.');
         return;
     }
-
-      const timeConflict = await checkTimeConflict(
-          programData.day,
-          programData.startTime,
-          programData.endTime
-      );
-
-      if (timeConflict) {
-          alert(`${programData.day}의 ${programData.startTime} ~ ${programData.endTime} 시간대에 이미 다른 수업이 있습니다.`);
-          return;
-      }
 
       await API.createProgram(programData);
 
