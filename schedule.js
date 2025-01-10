@@ -206,28 +206,31 @@ let classData = [];
 // 수업 삭제 함수
 async function deleteClass(day, startTime, endTime) {
     try {
-        const classElements = document.querySelectorAll(`.day`);
+        const dayElements = document.querySelectorAll('.day');
         let classElement = null;
 
-        classElements.forEach(dayElement => {
+        for(let dayElement of dayElements) {
             const dayHeader = dayElement.querySelector('h2');
-            if (dayHeader && dayHeader.textContent.includes(day)) {
+            if (dayHeader && dayHeader.textContent === day) {
                 const classes = dayElement.querySelectorAll('.class');
-                classes.forEach(cls => {
-                    const timeText = cls.querySelector('.time').textContent;
-                    const [classStartTime, classEndTime] = timeText.split(' ~ ');
-                    if (classStartTime === startTime && classEndTime === endTime) {
+                for(let cls of classes) {
+                    const timeElement = cls.querySelector('.time');
+                    const timeText = timeElement.textContent.trim();
+                    const [currentStartTime, currentEndTime] = timeText.split('~').map(t => t.trim());
+                    
+                    if (currentStartTime === startTime && currentEndTime === endTime) {
                         classElement = cls;
+                        break;
                     }
-                });
+                }
             }
-        });
+        }
 
         if (!classElement) {
             throw new Error('삭제할 클래스를 찾을 수 없습니다.');
         }
 
-        const programName = classElement.querySelector('.content .name').textContent;
+        const programName = classElement.querySelector('.content .name').textContent.trim();
         const programs = await API.getPrograms();
 
         const program = programs.find(p => {
@@ -247,18 +250,13 @@ async function deleteClass(day, startTime, endTime) {
         
         classElement.remove();
         
-        if (classData.length > 0) {
-            classData = classData.filter(
-                (c) => !(c.day === day && c.startTime === startTime && c.endTime === endTime)
-            );
-            localStorage.setItem("classData", JSON.stringify(classData));
-        }
-
         alert('프로그램이 성공적으로 삭제되었습니다.');
+        
+        await loadPrograms();
         
     } catch (error) {
         console.error('Error deleting class:', error);
-        alert('프로그램 삭제 중 오류가 발생했습니다: ' + error.message);
+        alert(error.message);
     }
 }
 
