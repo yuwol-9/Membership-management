@@ -231,6 +231,17 @@ const API = {
         }
     },
 
+    deleteProgram: async (programId) => {
+        try {
+            return await API.apiCall(`/programs/${programId}`, {
+                method: 'DELETE'
+            });
+        } catch (error) {
+            console.error('프로그램 삭제 실패:', error);
+            throw error;
+        }
+    },
+
     deleteAllPrograms: async () => {
         try {
             return await API.apiCall('/programs', {
