@@ -45,27 +45,27 @@ function closeTimeModal() {
     document.getElementById('overlay').classList.remove('active');
 }
 
+function generateTimeOptions(start = 10, end = 22) {
+    let options = '';
+    for (let hour = start; hour <= end; hour++) {
+        const period = hour >= 12 ? '오후' : '오전';
+        const displayHour = hour > 12 ? hour - 12 : hour;
+        for (let minute = 0; minute < 60; minute += 5) {
+            const formattedHour = hour.toString().padStart(2, '0');
+            const formattedMinute = minute.toString().padStart(2, '0');
+            const timeValue = `${formattedHour}:${formattedMinute}`;
+            const displayTime = `${period} ${displayHour}:${formattedMinute}`;
+            options += `<option value="${timeValue}">${displayTime}</option>`;
+        }
+    }
+    return options;
+}
+
 function addTimeSelection() {
     const container = document.getElementById('time-selection-container');
     const newSelection = document.createElement('div');
     newSelection.classList.add('time-selection');
     newSelection.id = `time-selection-${timeSelectionCount}`;
-  
-    const generateTimeOptions = (start = 10, end = 22) => {
-      let options = '';
-      for (let hour = start; hour <= end; hour++) {
-        const period = hour >= 12 ? '오후' : '오전';
-        const displayHour = hour > 12 ? hour - 12 : hour;
-        for (let minute = 0; minute < 60; minute += 10) {
-          const formattedHour = hour.toString().padStart(2, '0');
-          const formattedMinute = minute.toString().padStart(2, '0');
-          const timeValue = `${formattedHour}:${formattedMinute}`;
-          const displayTime = `${period} ${displayHour}:${formattedMinute}`;
-          options += `<option value="${timeValue}">${displayTime}</option>`;
-        }
-      }
-      return options;
-    };
   
     newSelection.innerHTML = `
         <label for="day-${timeSelectionCount}">요일</label>
