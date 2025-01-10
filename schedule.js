@@ -517,23 +517,36 @@ async function addClass() {
         return;
       }
 
-    const timeSelections = document.querySelectorAll('.time-selection');
-    const schedules = Array.from(timeSelections).map(selection => {
-      const daySelect = selection.querySelector('select');
-      const startTimeInput = selection.querySelector('input[type="time"]:first-of-type');
-      const endTimeInput = selection.querySelector('input[type="time"]:last-of-type');
+      const timeSelections = document.querySelectorAll('.time-selection');
+      const schedules = Array.from(timeSelections).map(selection => {
+          const daySelect = selection.querySelector('select');
+          
+          const startPeriod = selection.querySelector('[id^="start-time-period"]').value;
+          const startHour = selection.querySelector('[id^="start-time-hour"]').value;
+          const startMinute = selection.querySelector('[id^="start-time-minute"]').value;
+          
+          const endPeriod = selection.querySelector('[id^="end-time-period"]').value;
+          const endHour = selection.querySelector('[id^="end-time-hour"]').value;
+          const endMinute = selection.querySelector('[id^="end-time-minute"]').value;
 
-      if (!daySelect || !startTimeInput || !endTimeInput) {
-        return null;
-      }
+          if (!daySelect || !startPeriod || !startHour || !startMinute || !endPeriod || !endHour || !endMinute) {
+              return null;
+          }
 
-      return {
-        day: daySelect.value,
-        startTime: startTimeInput.value,
-        endTime: endTimeInput.value
-      };
-    })
-    .filter(schedule => schedule && schedule.day && schedule.startTime && schedule.endTime);
+          const startHour24 = startPeriod === '오후' && startHour !== '12' ? 
+              parseInt(startHour) + 12 : 
+              startPeriod === '오전' && startHour === '12' ? 0 : parseInt(startHour);
+          
+          const endHour24 = endPeriod === '오후' && endHour !== '12' ? 
+              parseInt(endHour) + 12 : 
+              endPeriod === '오전' && endHour === '12' ? 0 : parseInt(endHour);
+
+          return {
+              day: daySelect.value,
+              startTime: `${startHour24.toString().padStart(2, '0')}:${startMinute}`,
+              endTime: `${endHour24.toString().padStart(2, '0')}:${endMinute}`
+          };
+      }).filter(schedule => schedule && schedule.day && schedule.startTime && schedule.endTime);
 
     if (schedules.length !== classesPerWeek) {
         alert(`주당 ${classesPerWeek}회로 설정하셨습니다. 시간표에서 ${classesPerWeek}개의 시간을 선택해주세요. (현재 ${schedules.length}개 선택됨)`);
@@ -551,8 +564,6 @@ async function addClass() {
           color: selectedColor
       };
 
-      console.log('전송할 프로그램 데이터:', programData);
-
       if (!programData.name || !programData.schedules || !programData.monthly_price || 
         !programData.per_class_price || !programData.classes_per_week) {
         alert('프로그램명, 시간표, 수강료는 필수 입력사항입니다.');
@@ -569,8 +580,8 @@ async function addClass() {
         return;
     }
     
-    if (!programData.classes_per_week || programData.classes_per_week < 1 || programData.classes_per_week > 7) {
-        alert('주간 수업 횟수를 1-7회 사이로 입력해주세요.');
+    if (!programData.classes_per_week || programData.classes_per_week < 1 || programData.classes_per_week > 6) {
+        alert('주간 수업 횟수를 1-6회 사이로 입력해주세요.');
         return;
     }
 
