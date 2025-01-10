@@ -118,6 +118,38 @@ async function confirmSelection() {
 
 
 function openModal() {
+    document.getElementById('class-name').value = '';
+    document.getElementById('class-details').value = '';
+    document.getElementById('instructor-name').value = '';
+    document.getElementById('monthly-price').value = '';
+    document.getElementById('per-class-price').value = '';
+    document.getElementById('classes-per-week').value = '1';
+    document.getElementById('color-preview').style.backgroundColor = '#E56736';
+    selectedColor = '#E56736';
+    
+    const timeSelectionContainer = document.getElementById('time-selection-container');
+    timeSelectionContainer.innerHTML = `
+        <div class="time-selection" id="time-selection-0">
+            <label for="day-0">요일</label>
+            <select id="day-0">
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+            </select>
+            <label for="start-time-0">시작 시간</label>
+            <input type="time" id="start-time-0" class="start-time" step="600">
+            <label for="end-time-0">종료 시간</label>
+            <input type="time" id="end-time-0" class="end-time" step="600">
+            <button class="remove-btn" onclick="removeTimeSelection(0)">一</button>
+            <div class="divider"></div>
+        </div>
+    `;
+    timeSelectionCount = 1;
+
     document.getElementById('class-modal').classList.add('active');
     document.getElementById('modal-overlay').classList.add('active');
 }
