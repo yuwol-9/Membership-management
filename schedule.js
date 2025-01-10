@@ -214,8 +214,8 @@ async function deleteClass(day, startTime, endTime) {
             if (dayHeader && dayHeader.textContent.includes(day)) {
                 const classes = dayElement.querySelectorAll('.class');
                 classes.forEach(cls => {
-                    const classStartTime = cls.querySelector('.start-time').textContent;
-                    const classEndTime = cls.querySelector('.end-time').textContent;
+                    const timeText = cls.querySelector('.time').textContent;
+                    const [classStartTime, classEndTime] = timeText.split(' ~ ');
                     if (classStartTime === startTime && classEndTime === endTime) {
                         classElement = cls;
                     }
@@ -227,7 +227,7 @@ async function deleteClass(day, startTime, endTime) {
             throw new Error('삭제할 클래스를 찾을 수 없습니다.');
         }
 
-        const programName = classElement.querySelector('.name').textContent;
+        const programName = classElement.querySelector('.content .name').textContent;
         const programs = await API.getPrograms();
 
         const program = programs.find(p => {
@@ -244,10 +244,21 @@ async function deleteClass(day, startTime, endTime) {
         }
 
         await API.deleteProgram(program.id);
-
+        
         classElement.remove();
+        
+        if (classData.length > 0) {
+            classData = classData.filter(
+                (c) => !(c.day === day && c.startTime === startTime && c.endTime === endTime)
+            );
+            localStorage.setItem("classData", JSON.stringify(classData));
+        }
+
+        alert('프로그램이 성공적으로 삭제되었습니다.');
+        
     } catch (error) {
         console.error('Error deleting class:', error);
+        alert('프로그램 삭제 중 오류가 발생했습니다: ' + error.message);
     }
 }
 
