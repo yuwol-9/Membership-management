@@ -276,50 +276,62 @@ function createClassElement(data) {
 
 
 function previewClass() {
-    const className = document.getElementById('class-name').value.trim();
-    const details = document.getElementById('class-details').value.trim();
-    const instructor = document.getElementById('instructor-name').value.trim();
     const timeSelectionContainer = document.getElementById('time-selection-container');
     const timeSelection = timeSelectionContainer.querySelector('.time-selection');
     const day = timeSelection.querySelector('select')?.value;
-    const startTime = timeSelection.querySelector('.start-time')?.value;
-    const endTime = timeSelection.querySelector('.end-time')?.value;
+    
+    const startPeriod = timeSelection.querySelector('[id^="start-time-period"]')?.value;
+    const startHour = timeSelection.querySelector('[id^="start-time-hour"]')?.value;
+    const startMinute = timeSelection.querySelector('[id^="start-time-minute"]')?.value;
+    
+    const endPeriod = timeSelection.querySelector('[id^="end-time-period"]')?.value;
+    const endHour = timeSelection.querySelector('[id^="end-time-hour"]')?.value;
+    const endMinute = timeSelection.querySelector('[id^="end-time-minute"]')?.value;
 
-    if (!className || !details || !instructor || !day || !startTime || !endTime) {
-        alert('모든 필드를 입력해주세요.');
+    if (!day || !startPeriod || !startHour || !startMinute || !endPeriod || !endHour || !endMinute) {
+        alert('시간 정보를 모두 입력해주세요.');
         return;
     }
+
+    const startHour24 = startPeriod === '오후' && startHour !== '12' ? 
+        parseInt(startHour) + 12 : 
+        startPeriod === '오전' && startHour === '12' ? 0 : parseInt(startHour);
+    
+    const endHour24 = endPeriod === '오후' && endHour !== '12' ? 
+        parseInt(endHour) + 12 : 
+        endPeriod === '오전' && endHour === '12' ? 0 : parseInt(endHour);
+
+    const startTime = `${startHour24.toString().padStart(2, '0')}:${startMinute}`;
+    const endTime = `${endHour24.toString().padStart(2, '0')}:${endMinute}`;
 
     const data = {
         startTime,
         endTime,
-        className,
-        details,
-        instructor,
-        color: selectedColor,
+        className: document.getElementById('class-name').value || '(수업명)',
+        details: document.getElementById('class-details').value || '(세부사항)',
+        instructor: document.getElementById('instructor-name').value || '(강사명)',
+        color: selectedColor
     };
 
-    // 실제 요소 생성
     const previewClassElement = createClassElement(data);
 
-    // 기존 미리보기 초기화
     const previewContent = document.getElementById('preview-content');
     previewContent.innerHTML = '';
 
-    // 스타일 초기화
     previewClassElement.style.position = 'static';
     previewClassElement.style.height = 'auto';
     previewClassElement.style.width = 'auto';
 
-    // 미리보기 컨테이너에 추가
     previewContent.appendChild(previewClassElement);
 
     document.getElementById('preview-modal').classList.add('active');
     document.getElementById('preview-overlay').classList.add('active');
 }
+
 function validateClassData(data) {
     return Object.values(data).every(value => value.trim() !== '');
 }
+
 let deleteMode = false; // 삭제 모드 상태
 
 // 삭제 모드 토글 함수
