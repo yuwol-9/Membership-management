@@ -45,20 +45,29 @@ function closeTimeModal() {
     document.getElementById('overlay').classList.remove('active');
 }
 
-function generateTimeOptions(start = 10, end = 22) {
+function generateHourOptions() {
+    let periods = ['오전', '오후'];
     let options = '';
-    for (let hour = start; hour <= end; hour++) {
-        const period = hour >= 12 ? '오후' : '오전';
-        const displayHour = hour > 12 ? hour - 12 : hour;
-        for (let minute = 0; minute < 60; minute += 5) {
-            const formattedHour = hour.toString().padStart(2, '0');
-            const formattedMinute = minute.toString().padStart(2, '0');
-            const timeValue = `${formattedHour}:${formattedMinute}`;
-            const displayTime = `${period} ${displayHour}:${formattedMinute}`;
-            options += `<option value="${timeValue}">${displayTime}</option>`;
-        }
-    }
+    periods.forEach(period => {
+        options += `<option value="${period}">${period}</option>`;
+    });
     return options;
+}
+
+function generateTimeOptions() {
+    let hourOptions = '';
+    let minuteOptions = '';
+
+    for (let hour = 1; hour <= 12; hour++) {
+        hourOptions += `<option value="${hour}">${hour}시</option>`;
+    }
+
+    for (let minute = 0; minute < 60; minute += 10) {
+        const formattedMinute = minute.toString().padStart(2, '0');
+        minuteOptions += `<option value="${formattedMinute}">${formattedMinute}분</option>`;
+    }
+
+    return { hourOptions, minuteOptions };
 }
 
 function addTimeSelection() {
@@ -66,7 +75,9 @@ function addTimeSelection() {
     const newSelection = document.createElement('div');
     newSelection.classList.add('time-selection');
     newSelection.id = `time-selection-${timeSelectionCount}`;
-  
+
+    const { hourOptions, minuteOptions } = generateTimeOptions();
+
     newSelection.innerHTML = `
         <label for="day-${timeSelectionCount}">요일</label>
         <select id="day-${timeSelectionCount}">
@@ -78,15 +89,27 @@ function addTimeSelection() {
             <option value="Saturday">Saturday</option>
             <option value="Sunday">Sunday</option>
         </select>
-  
-        <label for="start-time-${timeSelectionCount}">시작 시간</label>
-        <select id="start-time-${timeSelectionCount}" class="start-time">
-          ${generateTimeOptions()}
+
+        <label for="start-time-period-${timeSelectionCount}">시작 시간</label>
+        <select id="start-time-period-${timeSelectionCount}" class="time-period">
+            ${generateHourOptions()}
         </select>
-  
-        <label for="end-time-${timeSelectionCount}">종료 시간</label>
-        <select id="end-time-${timeSelectionCount}" class="end-time">
-          ${generateTimeOptions()}
+        <select id="start-time-hour-${timeSelectionCount}" class="time-hour">
+            ${hourOptions}
+        </select>
+        <select id="start-time-minute-${timeSelectionCount}" class="time-minute">
+            ${minuteOptions}
+        </select>
+
+        <label for="end-time-period-${timeSelectionCount}">종료 시간</label>
+        <select id="end-time-period-${timeSelectionCount}" class="time-period">
+            ${generateHourOptions()}
+        </select>
+        <select id="end-time-hour-${timeSelectionCount}" class="time-hour">
+            ${hourOptions}
+        </select>
+        <select id="end-time-minute-${timeSelectionCount}" class="time-minute">
+            ${minuteOptions}
         </select>
         <button class="remove-btn" onclick="removeTimeSelection(${timeSelectionCount})">一</button>
         <div class="divider"></div>
@@ -97,31 +120,45 @@ function addTimeSelection() {
 
 function setupInitialTimeSelection() {
     const timeSelectionContainer = document.getElementById('time-selection-container');
+    const { hourOptions, minuteOptions } = generateTimeOptions();
+
     timeSelectionContainer.innerHTML = `
-      <div class="time-selection" id="time-selection-0">
-        <label for="day-0">요일</label>
-        <select id="day-0">
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-            <option value="Saturday">Saturday</option>
-            <option value="Sunday">Sunday</option>
-        </select>
-  
-        <label for="start-time-0">시작 시간</label>
-        <select id="start-time-0" class="start-time">
-          ${generateTimeOptions()}
-        </select>
-  
-        <label for="end-time-0">종료 시간</label>
-        <select id="end-time-0" class="end-time">
-          ${generateTimeOptions()}
-        </select>
-        <button class="remove-btn" onclick="removeTimeSelection(0)">一</button>
-        <div class="divider"></div>
-      </div>
+        <div class="time-selection" id="time-selection-0">
+            <label for="day-0">요일</label>
+            <select id="day-0">
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+            </select>
+
+            <label for="start-time-period-0">시작 시간</label>
+            <select id="start-time-period-0" class="time-period">
+                ${generateHourOptions()}
+            </select>
+            <select id="start-time-hour-0" class="time-hour">
+                ${hourOptions}
+            </select>
+            <select id="start-time-minute-0" class="time-minute">
+                ${minuteOptions}
+            </select>
+
+            <label for="end-time-period-0">종료 시간</label>
+            <select id="end-time-period-0" class="time-period">
+                ${generateHourOptions()}
+            </select>
+            <select id="end-time-hour-0" class="time-hour">
+                ${hourOptions}
+            </select>
+            <select id="end-time-minute-0" class="time-minute">
+                ${minuteOptions}
+            </select>
+            <button class="remove-btn" onclick="removeTimeSelection(0)">一</button>
+            <div class="divider"></div>
+        </div>
     `;
 }
 
