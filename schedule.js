@@ -592,7 +592,7 @@ async function addClass() {
       await loadPrograms();
   } catch (error) {
       console.error('수업 등록 실패:', error);
-      alert('수업 등록에 실패했습니다. 다시 시도해주세요.');
+      alert(error.message || '수업 등록에 실패했습니다. 다시 시도해주세요.');
   }
 }
   
