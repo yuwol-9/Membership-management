@@ -154,10 +154,10 @@ function createClassElement(data) {
         </div>
         <div class="content" style = "background-color: ${color};">
             <div class="name" style="white-space: pre-wrap;">${className}</div>
-            <div class="details">${details}</div>
+            <div class="details">${details || '-'}</div>
         </div>
         <div class="instructor">
-            T. ${instructor}
+            T. ${instructor || '-'}
         </div>
     `;
 
@@ -350,7 +350,7 @@ async function resetClasses() {
 }
 
 let isPaletteOpen = false; // 팔레트 열림 상태
-let selectedColor = "#f94144"; // 기본 색상
+let selectedColor = "#E56736"; // 기본 색상
 
 // 색상 팔레트 토글
 function toggleColorPalette() {
@@ -516,6 +516,7 @@ async function loadPrograms() {
     document.getElementById('monthly-price').value = '';
     document.getElementById('per-class-price').value = '';
     document.getElementById('color-preview').style.backgroundColor = '#E56736';
+    selectedColor = '#E56736';
     
     const timeSelectionContainer = document.getElementById('time-selection-container');
     timeSelectionContainer.innerHTML = defaultTimeSelectionHTML;
