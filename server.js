@@ -861,7 +861,8 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
                 await connection.rollback();
                 return res.status(400).json({
                     success: false,
-                    message: '등록되지 않은 강사입니다.'
+                    message: '등록되지 않은 강사입니다.',
+                    errorType: 'INSTRUCTOR_NOT_FOUND'
                 });
             }
             instructor_id = instructor[0].id;

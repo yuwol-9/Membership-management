@@ -39,6 +39,9 @@ const API = {
                     window.location.href = '/로그인.html';
                     throw new Error('인증이 만료되었습니다.');
                 }
+                if (data && data.message) {
+                    throw new Error(data.message);
+                }
                 throw new Error(`API 요청 실패: ${response.status}`);
             }
 
