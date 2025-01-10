@@ -206,7 +206,29 @@ let classData = [];
 // 수업 삭제 함수
 async function deleteClass(day, startTime, endTime) {
     try {
-        await API.deleteProgram(programId);
+        const classElement = document.querySelector(`.day:has(h2:contains('${day}')) .class`);
+        if (!classElement) {
+            throw new Error('삭제할 클래스를 찾을 수 없습니다.');
+        }
+        
+        const programName = classElement.querySelector('.name').textContent;
+        
+        const programs = await API.getPrograms();
+        
+        const program = programs.find(p => {
+            return p.name === programName && 
+                   p.classes.some(c => 
+                       c.day === day && 
+                       c.startTime === startTime && 
+                       c.endTime === endTime
+                   );
+        });
+
+        if (!program) {
+            throw new Error('삭제할 프로그램을 찾을 수 없습니다.');
+        }
+
+        await API.deleteProgram(program.id);
         
         classData = classData.filter(
             (c) => !(c.day === day && c.startTime === startTime && c.endTime === endTime)
@@ -214,7 +236,7 @@ async function deleteClass(day, startTime, endTime) {
         
         localStorage.setItem("classData", JSON.stringify(classData));
         
-        renderClasses();
+        await loadPrograms();
         
     } catch (error) {
         console.error('프로그램 삭제 실패:', error);
@@ -242,22 +264,17 @@ document.querySelectorAll(".class").forEach((classElement) => {
 
 // 수업 클릭 시 삭제 처리
 function handleClassClick(event) {
-const classElement = event.currentTarget;
+    const classElement = event.currentTarget;
 
-// 수업 정보 가져오기
-const time = classElement.querySelector(".time").innerText;
-const [startTime, endTime] = time.split(" ~ ");
-const dayElement = classElement.closest(".day").querySelector("h2").innerText;
+    // 수업 정보 가져오기
+    const time = classElement.querySelector(".time").innerText;
+    const [startTime, endTime] = time.split(" ~ ");
+    const dayElement = classElement.closest(".day").querySelector("h2").innerText;
 
-if (
-    confirm(
-    `정말로 ${dayElement}의 ${startTime} ~ ${endTime} 수업을 삭제하시겠습니까?`
-    )
-) {
-    deleteClass(dayElement, startTime, endTime);
+    if (confirm(`정말로 ${dayElement}의 ${startTime} ~ ${endTime} 수업을 삭제하시겠습니까?`)) {
+        deleteClass(dayElement, startTime, endTime);
+    }
 }
-}
-
 const RESET_PASSWORD = "woody1234"; // 초기화 비밀번호 설정
 
 async function resetClasses() {
