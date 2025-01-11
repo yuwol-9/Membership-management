@@ -357,7 +357,7 @@ async function openEditModal(programId) {
         selectedColor = program.classes[0]?.color || '#E56736';
         const colorPreview = document.getElementById('color-preview');
         colorPreview.style.backgroundColor = selectedColor;
-
+        
         const colorPalette = document.getElementById('color-palette');
         isPaletteOpen = false;
         colorPalette.style.display = 'none';
@@ -426,6 +426,7 @@ async function updateProgram() {
         const instructorName = document.getElementById('instructor-name').value.trim();
         const classesPerWeek = parseInt(document.getElementById('classes-per-week').value);
         const timeSelections = getTimeSelections();
+        const details = document.getElementById('class-details').value.trim();
 
         // 필수 입력값 확인
         if (!name) {
@@ -465,8 +466,9 @@ async function updateProgram() {
             }
         }
 
-        const schedulesWithColor = timeSelections.map(schedule => ({
-            ...schedule,
+        const schedules = timeSelections.map(selection => ({
+            ...selection,
+            details: details,
             color: selectedColor
         }));
 

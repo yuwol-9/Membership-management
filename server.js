@@ -1038,7 +1038,6 @@ app.put('/api/programs/:id', authenticateToken, async (req, res) => {
             monthly_price, 
             per_class_price,
             schedules,
-            color 
         } = req.body;
 
         // 입력값 검증
