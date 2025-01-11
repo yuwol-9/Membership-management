@@ -526,10 +526,18 @@ async function deleteClass(day, startTime, endTime) {
         const programs = await API.getPrograms();
         console.log('전체 프로그램 목록:', programs);
 
+        // 시간 형식을 비교하기 위한 도우미 함수
+        const normalizeTime = (time) => {
+            // HH:MM 또는 HH:MM:SS 형식을 HH:MM으로 통일
+            return time.split(':').slice(0, 2).join(':');
+        };
+
         // 일치하는 프로그램 찾기
         const program = programs.find(p => {
             const matchingClass = p.classes.find(c => {
-                const timeMatch = c.startTime === startTime && c.endTime === endTime;
+                const timeMatch = 
+                    normalizeTime(c.startTime) === normalizeTime(startTime) && 
+                    normalizeTime(c.endTime) === normalizeTime(endTime);
                 const dayMatch = c.day === day;
                 const nameMatch = p.name === targetProgram.name;
                 
@@ -539,7 +547,13 @@ async function deleteClass(day, startTime, endTime) {
                     timeMatch,
                     dayMatch,
                     nameMatch,
-                    classInfo: c
+                    classInfo: c,
+                    normalizedTimes: {
+                        apiStart: normalizeTime(c.startTime),
+                        apiEnd: normalizeTime(c.endTime),
+                        targetStart: normalizeTime(startTime),
+                        targetEnd: normalizeTime(endTime)
+                    }
                 });
                 
                 return timeMatch && dayMatch;
