@@ -425,6 +425,7 @@ async function updateProgram() {
         const perClassPrice = parseInt(document.getElementById('per-class-price').value);
         const instructorName = document.getElementById('instructor-name').value.trim();
         const classesPerWeek = parseInt(document.getElementById('classes-per-week').value);
+        const details = document.getElementById('class-details').value.trim();
         const timeSelections = getTimeSelections();
 
         // 필수 입력값 확인
@@ -465,13 +466,18 @@ async function updateProgram() {
             }
         }
 
+        const schedules = timeSelections.map(schedule => ({
+            ...schedule,
+            color: selectedColor,
+            details: details
+        }));
+
         const programData = {
             name: name,
             instructor_name: document.getElementById('instructor-name').value.trim(),
             monthly_price: monthlyPrice,
             per_class_price: perClassPrice,
-            schedules: timeSelections,
-            color: selectedColor
+            schedules: schedules
         };
 
         await API.updateProgram(currentProgramId, programData);
