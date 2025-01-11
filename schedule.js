@@ -35,8 +35,27 @@ const saveTitle = () => {
 
 let timeSelectionCount = 1;
 let isEditing = false;
+let deleteMode = false;
 let currentProgramId = null;
 let selectedColor = '#E56736';
+
+function editClickHandler(e) {
+    if (!deleteMode) {
+        const id = e.currentTarget.getAttribute('data-id');
+        isEditing = true;
+        currentProgramId = parseInt(id);
+        openEditModal(parseInt(id));
+    }
+}
+
+function deleteClickHandler(e) {
+    e.stopPropagation();
+    const timeElement = e.currentTarget.querySelector(".time");
+    const [startTime, endTime] = timeElement.textContent.split("~").map(t => t.trim());
+    const dayElement = e.currentTarget.closest(".day");
+    const day = dayElement.querySelector("h2").textContent;
+    deleteClass(day, startTime, endTime);
+}
 
 function openTimeModal() {
     document.getElementById('time-modal').classList.add('active');
@@ -240,13 +259,9 @@ function createClassElement(data) {
     classElement.style.top = `${startPositionMinutes}px`;
     classElement.style.height = `${durationMinutes}px`;
 
-    classElement.addEventListener('click', () => {
-        if (deleteMode) {
-            isEditing = true;
-            currentProgramId = data.id;
-            openEditModal(currentProgramId);
-        }
-    });
+    classElement.addEventListener('click', editClickHandler);
+    
+    classElement.setAttribute('data-id', data.id);
 
     classElement.innerHTML = `
         <div class="time">
@@ -463,8 +478,6 @@ function validateClassData(data) {
     return Object.values(data).every(value => value.trim() !== '');
 }
 
-let deleteMode = false; // 삭제 모드 상태
-
 // 삭제 모드 토글 함수
 function toggleDeleteMode() {
     deleteMode = !deleteMode;
@@ -595,8 +608,8 @@ async function deleteClass(day, startTime, endTime) {
 // 삭제 모드 활성화 함수
 function enableDeleteMode() {
     document.querySelectorAll(".class").forEach((classElement) => {
-        classElement.removeEventListener("click", handleClassClick);
-        classElement.addEventListener("click", handleClassClick);
+        classElement.removeEventListener('click', editClickHandler);
+        classElement.addEventListener('click', deleteClickHandler);
         classElement.style.cursor = "pointer";
         classElement.style.border = "2px solid #ff4d4d";
     });
@@ -605,12 +618,37 @@ function enableDeleteMode() {
 // 삭제 모드 비활성화 함수
 function disableDeleteMode() {
     document.querySelectorAll(".class").forEach((classElement) => {
-        classElement.removeEventListener("click", handleClassClick);
+        classElement.removeEventListener('click', deleteClickHandler);
+        const id = classElement.getAttribute('data-id');
+        const editHandler = (e) => {
+            if (!deleteMode) {
+                isEditing = true;
+                currentProgramId = parseInt(id);
+                openEditModal(parseInt(id));
+            }
+        };
+        classElement.addEventListener('click', editHandler);
         classElement.style.cursor = "default";
         classElement.style.border = "none";
-
-        loadPrograms();
     });
+}
+
+function editClickHandler(e) {
+    if (!deleteMode) {
+        const id = e.currentTarget.getAttribute('data-id');
+        isEditing = true;
+        currentProgramId = parseInt(id);
+        openEditModal(parseInt(id));
+    }
+}
+
+function deleteClickHandler(e) {
+    e.stopPropagation();
+    const timeElement = e.currentTarget.querySelector(".time");
+    const [startTime, endTime] = timeElement.textContent.split("~").map(t => t.trim());
+    const dayElement = e.currentTarget.closest(".day");
+    const day = dayElement.querySelector("h2").textContent;
+    deleteClass(day, startTime, endTime);
 }
 
 // 수업 클릭 시 삭제 처리
