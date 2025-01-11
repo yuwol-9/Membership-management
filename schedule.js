@@ -34,6 +34,9 @@ const saveTitle = () => {
 }
 
 let timeSelectionCount = 1;
+let isEditing = false;
+let currentProgramId = null;
+let selectedColor = '#E56736';
 
 function openTimeModal() {
     document.getElementById('time-modal').classList.add('active');
@@ -197,9 +200,9 @@ async function confirmSelection() {
             const startTime = `${startHour24.toString().padStart(2, '0')}:${startMinute}`;
             const endTime = `${endHour24.toString().padStart(2, '0')}:${endMinute}`;
 
-            const currentProgramId = isEditing ? currentProgramId : null;
+            const programIdToExclude = isEditing ? currentProgramId : null;
             
-            const conflict = await checkTimeConflict(day, startTime, endTime, currentProgramId);
+            const conflict = await checkTimeConflict(day, startTime, endTime, programIdToExclude);
             if (conflict) {
                 hasConflict = true;
                 conflictMessages.push(`${day} ${startTime}~${endTime}`);
@@ -215,12 +218,9 @@ async function confirmSelection() {
         closeTimeModal();
     } catch (error) {
         console.error('시간 선택 중 오류:', error);
-        alert(error.message);
+        alert(error.message || '시간 선택 중 오류가 발생했습니다.');
     }
 }
-
-let isEditing = false;
-let currentProgramId = null;
 
 function createClassElement(data) {
     const { startTime, endTime, className, details, instructor, color } = data;
@@ -274,6 +274,8 @@ function openModal() {
 
 async function openEditModal(programId) {
     try {
+        isEditing = true;
+        currentProgramId = programId;
         const program = await API.getProgram(programId);
         document.getElementById('modal-title').textContent = '프로그램 수정';
         document.getElementById('submit-btn').textContent = '수정';
@@ -599,7 +601,6 @@ async function resetClasses() {
 }
 
 let isPaletteOpen = false; // 팔레트 열림 상태
-let selectedColor = "#E56736"; // 기본 색상
 
 // 색상 팔레트 토글
 function toggleColorPalette() {
