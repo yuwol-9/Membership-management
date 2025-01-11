@@ -477,12 +477,14 @@ function toggleDeleteMode() {
         disableDeleteMode();
     }
 }
+
 let classData = [];
 // 수업 삭제 함수
 async function deleteClass(day, startTime, endTime) {
     try {
         const dayElements = document.querySelectorAll('.day');
-        let classElement = null;
+        let programId = null;
+        let programName = null;
 
         for(let dayElement of dayElements) {
             const dayHeader = dayElement.querySelector('h2');
@@ -494,20 +496,18 @@ async function deleteClass(day, startTime, endTime) {
                     const [currentStartTime, currentEndTime] = timeText.split('~').map(t => t.trim());
                     
                     if (currentStartTime === startTime && currentEndTime === endTime) {
-                        classElement = cls;
+                        programName = cls.querySelector('.content .name').textContent.trim();
                         break;
                     }
                 }
             }
         }
 
-        if (!classElement) {
+        if (!programName) {
             throw new Error('삭제할 클래스를 찾을 수 없습니다.');
         }
 
-        const programName = classElement.querySelector('.content .name').textContent.trim();
         const programs = await API.getPrograms();
-
         const program = programs.find(p => {
             return p.name === programName && 
                    p.classes.some(c => 
@@ -521,9 +521,11 @@ async function deleteClass(day, startTime, endTime) {
             throw new Error('삭제할 프로그램을 찾을 수 없습니다.');
         }
 
+        if (!confirm(`정말로 ${programName} 프로그램을 삭제하시겠습니까?`)) {
+            return;
+        }
+
         await API.deleteProgram(program.id);
-        
-        classElement.remove();
         
         alert('프로그램이 성공적으로 삭제되었습니다.');
         
@@ -531,40 +533,37 @@ async function deleteClass(day, startTime, endTime) {
         
     } catch (error) {
         console.error('Error deleting class:', error);
-        alert(error.message);
+        alert(error.message || '프로그램 삭제 중 오류가 발생했습니다.');
     }
 }
 
 // 삭제 모드 활성화 함수
 function enableDeleteMode() {
-document.querySelectorAll(".class").forEach((classElement) => {
-    classElement.addEventListener("click", handleClassClick); // 삭제 이벤트 추가
-    classElement.style.cursor = "pointer"; // 클릭 가능 표시
-    classElement.style.border = "2px solid #ff4d4d"; // 삭제 모드 시 시각적 강조
-});
+    document.querySelectorAll(".class").forEach((classElement) => {
+        classElement.addEventListener("click", handleClassClick);
+        classElement.style.cursor = "pointer";
+        classElement.style.border = "2px solid #ff4d4d";
+    });
 }
 
 // 삭제 모드 비활성화 함수
 function disableDeleteMode() {
-document.querySelectorAll(".class").forEach((classElement) => {
-    classElement.removeEventListener("click", handleClassClick); // 삭제 이벤트 제거
-    classElement.style.cursor = "default"; // 기본 커서로 복원
-    classElement.style.border = "none"; // 강조 제거
-});
+    document.querySelectorAll(".class").forEach((classElement) => {
+        classElement.removeEventListener("click", handleClassClick);
+        classElement.style.cursor = "default";
+        classElement.style.border = "none";
+    });
 }
 
 // 수업 클릭 시 삭제 처리
 function handleClassClick(event) {
     const classElement = event.currentTarget;
+    const timeElement = classElement.querySelector(".time");
+    const [startTime, endTime] = timeElement.textContent.split(" ~ ").map(t => t.trim());
+    const dayElement = classElement.closest(".day");
+    const day = dayElement.querySelector("h2").textContent;
 
-    // 수업 정보 가져오기
-    const time = classElement.querySelector(".time").innerText;
-    const [startTime, endTime] = time.split(" ~ ");
-    const dayElement = classElement.closest(".day").querySelector("h2").innerText;
-
-    if (confirm(`정말로 ${dayElement}의 ${startTime} ~ ${endTime} 수업을 삭제하시겠습니까?`)) {
-        deleteClass(dayElement, startTime, endTime);
-    }
+    deleteClass(day, startTime, endTime);
 }
 const RESET_PASSWORD = "woody1234"; // 초기화 비밀번호 설정
 
