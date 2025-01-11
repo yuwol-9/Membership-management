@@ -54,6 +54,7 @@ async function updateProgram() {
         const name = document.getElementById('class-name').value.trim();
         const monthlyPrice = parseInt(document.getElementById('monthly-price').value);
         const perClassPrice = parseInt(document.getElementById('per-class-price').value);
+        const instructorName = document.getElementById('instructor-name').value.trim();
         const timeSelections = getTimeSelections();
 
         // 필수 입력값 확인
@@ -75,6 +76,18 @@ async function updateProgram() {
         if (!timeSelections || timeSelections.length === 0) {
             alert('수업 시간을 선택해주세요.');
             return;
+        }
+
+        if (instructorName) {
+            const instructors = await API.getInstructors();
+            const instructorExists = instructors.some(
+                instructor => instructor.name === instructorName
+            );
+
+            if (!instructorExists) {
+                alert('등록되지 않은 강사입니다. 먼저 강사를 등록해주세요.');
+                return;
+            }
         }
 
         const programData = {

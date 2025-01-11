@@ -1071,14 +1071,13 @@ app.put('/api/programs/:id', authenticateToken, async (req, res) => {
             );
 
             if (instructor.length === 0) {
-                const [result] = await connection.execute(
-                    'INSERT INTO instructors (name) VALUES (?)',
-                    [instructor_name]
-                );
-                instructor_id = result.insertId;
-            } else {
-                instructor_id = instructor[0].id;
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: '등록되지 않은 강사입니다. 먼저 강사를 등록해주세요.'
+                });
             }
+            instructor_id = instructor[0].id;
         }
 
         await connection.execute(
