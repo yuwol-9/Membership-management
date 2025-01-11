@@ -607,7 +607,34 @@ async function deleteClass(day, startTime, endTime) {
         alert('프로그램이 성공적으로 삭제되었습니다.');
         
         // 프로그램 목록 새로고침
-        await loadPrograms();
+        const updatedPrograms = await API.getPrograms();
+        document.querySelectorAll('.day .classes').forEach(container => {
+            container.innerHTML = '';
+        });
+
+        updatedPrograms.forEach(program => {
+            program.classes?.forEach(classInfo => {
+                const dayElements = document.querySelectorAll('.day');
+                dayElements.forEach(dayElement => {
+                    const day = dayElement.querySelector('h2').innerText;
+                    const classesContainer = dayElement.querySelector('.classes');
+
+                    if (classInfo.day === day) {
+                        const classElement = createClassElement({
+                            id: program.id,
+                            startTime: classInfo.startTime,
+                            endTime: classInfo.endTime,
+                            className: program.name,
+                            details: classInfo.details,
+                            instructor: program.instructor_name,
+                            color: classInfo.color
+                        });
+                        classesContainer.appendChild(classElement);
+                    }
+                });
+            });
+        });
+        enableDeleteMode();
         
     } catch (error) {
         console.error('프로그램 삭제 중 상세 오류:', error);
