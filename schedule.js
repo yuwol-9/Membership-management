@@ -579,6 +579,39 @@ document.getElementById("color-preview").style.backgroundColor = color;
 toggleColorPalette();
 }
 
+function getTimeSelections() {
+    const timeSelections = document.querySelectorAll('.time-selection');
+    const schedules = Array.from(timeSelections).map(selection => {
+        const daySelect = selection.querySelector('select[id^="day"]');
+        const startPeriod = selection.querySelector('[id^="start-time-period"]').value;
+        const startHour = selection.querySelector('[id^="start-time-hour"]').value;
+        const startMinute = selection.querySelector('[id^="start-time-minute"]').value;
+        const endPeriod = selection.querySelector('[id^="end-time-period"]').value;
+        const endHour = selection.querySelector('[id^="end-time-hour"]').value;
+        const endMinute = selection.querySelector('[id^="end-time-minute"]').value;
+
+        if (!daySelect || !startPeriod || !startHour || !startMinute || !endPeriod || !endHour || !endMinute) {
+            return null;
+        }
+
+        const startHour24 = startPeriod === '오후' && startHour !== '12' ? 
+            parseInt(startHour) + 12 : 
+            startPeriod === '오전' && startHour === '12' ? 0 : parseInt(startHour);
+        
+        const endHour24 = endPeriod === '오후' && endHour !== '12' ? 
+            parseInt(endHour) + 12 : 
+            endPeriod === '오전' && endHour === '12' ? 0 : parseInt(endHour);
+
+        return {
+            day: daySelect.value,
+            startTime: `${startHour24.toString().padStart(2, '0')}:${startMinute}`,
+            endTime: `${endHour24.toString().padStart(2, '0')}:${endMinute}`
+        };
+    });
+
+    return schedules.filter(schedule => schedule !== null);
+}
+
 async function checkTimeConflict(day, startTime, endTime) {
     try {
         const programs = await API.getPrograms();
@@ -615,36 +648,7 @@ async function addClass() {
         return;
       }
 
-      const timeSelections = document.querySelectorAll('.time-selection');
-      const schedules = Array.from(timeSelections).map(selection => {
-          const daySelect = selection.querySelector('select');
-          
-          const startPeriod = selection.querySelector('[id^="start-time-period"]').value;
-          const startHour = selection.querySelector('[id^="start-time-hour"]').value;
-          const startMinute = selection.querySelector('[id^="start-time-minute"]').value;
-          
-          const endPeriod = selection.querySelector('[id^="end-time-period"]').value;
-          const endHour = selection.querySelector('[id^="end-time-hour"]').value;
-          const endMinute = selection.querySelector('[id^="end-time-minute"]').value;
-
-          if (!daySelect || !startPeriod || !startHour || !startMinute || !endPeriod || !endHour || !endMinute) {
-              return null;
-          }
-
-          const startHour24 = startPeriod === '오후' && startHour !== '12' ? 
-              parseInt(startHour) + 12 : 
-              startPeriod === '오전' && startHour === '12' ? 0 : parseInt(startHour);
-          
-          const endHour24 = endPeriod === '오후' && endHour !== '12' ? 
-              parseInt(endHour) + 12 : 
-              endPeriod === '오전' && endHour === '12' ? 0 : parseInt(endHour);
-
-          return {
-              day: daySelect.value,
-              startTime: `${startHour24.toString().padStart(2, '0')}:${startMinute}`,
-              endTime: `${endHour24.toString().padStart(2, '0')}:${endMinute}`
-          };
-      }).filter(schedule => schedule && schedule.day && schedule.startTime && schedule.endTime);
+    const schedules = getTimeSelections();
 
     if (schedules.length !== classesPerWeek) {
         alert(`주당 ${classesPerWeek}회로 설정하셨습니다. ${classesPerWeek}개의 시간을 선택해주세요. (현재 ${schedules.length}개 선택됨)`);
