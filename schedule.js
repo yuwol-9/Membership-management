@@ -357,6 +357,10 @@ async function openEditModal(programId) {
         selectedColor = program.classes[0]?.color || '#E56736';
         const colorPreview = document.getElementById('color-preview');
         colorPreview.style.backgroundColor = selectedColor;
+        
+        const colorPalette = document.getElementById('color-palette');
+        isPaletteOpen = false;
+        colorPalette.style.display = 'none';
 
         // 모달 열기
         document.getElementById('class-modal').classList.add('active');
@@ -422,7 +426,6 @@ async function updateProgram() {
         const instructorName = document.getElementById('instructor-name').value.trim();
         const classesPerWeek = parseInt(document.getElementById('classes-per-week').value);
         const timeSelections = getTimeSelections();
-        const details = document.getElementById('class-details').value.trim();
 
         // 필수 입력값 확인
         if (!name) {
@@ -461,12 +464,6 @@ async function updateProgram() {
                 return;
             }
         }
-
-        const schedules = timeSelections.map(selection => ({
-            ...selection,
-            details: details,
-            color: selectedColor
-        }));
 
         const programData = {
             name: name,
@@ -712,26 +709,19 @@ let isPaletteOpen = false; // 팔레트 열림 상태
 
 // 색상 팔레트 토글
 function toggleColorPalette() {
-    const palette = document.getElementById('color-palette');
-    if (!palette) return;
-    
+    const palette = document.getElementById("color-palette");
     isPaletteOpen = !isPaletteOpen;
-    if (isPaletteOpen) {
-        palette.classList.remove('hidden');
-    } else {
-        palette.classList.add('hidden');
-    }
+    palette.classList.toggle("hidden", !isPaletteOpen);
 }
+
 
 // 색상 선택 함수
 function selectColor(color) {
-    const colorPreview = document.getElementById('color-preview');
-    if (!colorPreview) return;
-    
     selectedColor = color;
-    colorPreview.style.backgroundColor = color;
+    document.getElementById("color-preview").style.backgroundColor = color;
     toggleColorPalette();
 }
+
 
 async function checkTimeConflict(day, startTime, endTime, excludeProgramId = null) {
     try {
@@ -890,28 +880,8 @@ async function loadPrograms() {
             }
         }
     });
+  });
 
-    const colorOptions = document.querySelectorAll('.color-option');
-    colorOptions.forEach(option => {
-        option.addEventListener('click', (e) => {
-            const color = e.target.dataset.color;
-            selectColor(color);
-        });
-    });
-
-    // 팔레트 외부 클릭 시 닫기
-    document.addEventListener('click', (e) => {
-        const palette = document.getElementById('color-palette');
-        const colorPreview = document.getElementById('color-preview');
-        
-        if (!palette || !colorPreview) return;
-        
-        if (!palette.contains(e.target) && !colorPreview.contains(e.target)) {
-            palette.classList.add('hidden');
-            isPaletteOpen = false;
-        }
-    });
-});
 
 document.getElementById('modal-overlay').addEventListener('click', closeModal);
 document.getElementById('class-modal').addEventListener('click', e => e.stopPropagation());
