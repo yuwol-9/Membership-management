@@ -287,6 +287,7 @@ function openModal() {
     document.getElementById('submit-btn').textContent = '추가';
     document.getElementById('class-modal').classList.add('active');
     document.getElementById('modal-overlay').classList.add('active');
+    setupColorPaletteEvents();
 }
 
 async function openEditModal(programId) {
@@ -365,6 +366,7 @@ async function openEditModal(programId) {
         // 모달 열기
         document.getElementById('class-modal').classList.add('active');
         document.getElementById('modal-overlay').classList.add('active');
+        setupColorPaletteEvents();
     } catch (error) {
         console.error('프로그램 데이터 로드 실패:', error);
         alert('프로그램 정보를 불러오는데 실패했습니다.');
@@ -886,7 +888,36 @@ async function loadPrograms() {
             }
         }
     });
+    setupColorPaletteEvents();
   });
+
+  function setupColorPaletteEvents() {
+    const colorPreview = document.getElementById('color-preview');
+    if (colorPreview) {
+        colorPreview.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleColorPalette();
+        });
+    }
+
+    document.querySelectorAll('.color-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            selectColor(e.target.getAttribute('data-color'));
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        const palette = document.getElementById('color-palette');
+        const colorPreview = document.getElementById('color-preview');
+        if (palette && colorPreview && !palette.contains(e.target) && !colorPreview.contains(e.target)) {
+            palette.classList.add('hidden');
+            isPaletteOpen = false;
+        }
+    });
+}
 
 
 document.getElementById('modal-overlay').addEventListener('click', closeModal);
