@@ -357,10 +357,6 @@ async function openEditModal(programId) {
         selectedColor = program.classes[0]?.color || '#E56736';
         const colorPreview = document.getElementById('color-preview');
         colorPreview.style.backgroundColor = selectedColor;
-        
-        const colorPalette = document.getElementById('color-palette');
-        isPaletteOpen = false;
-        colorPalette.style.display = 'none';
 
         // 모달 열기
         document.getElementById('class-modal').classList.add('active');
