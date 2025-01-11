@@ -344,7 +344,6 @@ async function openEditModal(programId) {
                 }
             });
         } else {
-            // 시간 데이터가 없는 경우 기본 시간 선택 UI 추가
             addTimeSelection();
         }
 
@@ -358,6 +357,10 @@ async function openEditModal(programId) {
         selectedColor = program.classes[0]?.color || '#E56736';
         const colorPreview = document.getElementById('color-preview');
         colorPreview.style.backgroundColor = selectedColor;
+
+        const colorPalette = document.getElementById('color-palette');
+        isPaletteOpen = false;
+        colorPalette.style.display = 'none';
 
         // 모달 열기
         document.getElementById('class-modal').classList.add('active');
@@ -461,6 +464,11 @@ async function updateProgram() {
                 return;
             }
         }
+
+        const schedulesWithColor = timeSelections.map(schedule => ({
+            ...schedule,
+            color: selectedColor
+        }));
 
         const programData = {
             name: name,
