@@ -356,7 +356,8 @@ async function openEditModal(programId) {
 
         // 색상 설정
         selectedColor = program.classes[0]?.color || '#E56736';
-        document.getElementById('color-preview').style.backgroundColor = selectedColor;
+        const colorPreview = document.getElementById('color-preview');
+        colorPreview.style.backgroundColor = selectedColor;
 
         // 모달 열기
         document.getElementById('class-modal').classList.add('active');
@@ -420,6 +421,7 @@ async function updateProgram() {
         const monthlyPrice = parseInt(document.getElementById('monthly-price').value);
         const perClassPrice = parseInt(document.getElementById('per-class-price').value);
         const instructorName = document.getElementById('instructor-name').value.trim();
+        const classesPerWeek = parseInt(document.getElementById('classes-per-week').value);
         const timeSelections = getTimeSelections();
 
         // 필수 입력값 확인
@@ -440,6 +442,11 @@ async function updateProgram() {
 
         if (!timeSelections || timeSelections.length === 0) {
             alert('수업 시간을 선택해주세요.');
+            return;
+        }
+
+        if (timeSelections.length !== classesPerWeek) {
+            alert(`주당 ${classesPerWeek}회로 설정하셨습니다. ${classesPerWeek}개의 시간을 선택해주세요. (현재 ${timeSelections.length}개 선택됨)`);
             return;
         }
 
@@ -707,13 +714,9 @@ function toggleColorPalette() {
 
 // 색상 선택 함수
 function selectColor(color) {
-selectedColor = color; // 선택된 색상 저장
-
-// 미리보기 색상 업데이트
-document.getElementById("color-preview").style.backgroundColor = color;
-
-// 팔레트 닫기
-toggleColorPalette();
+    selectedColor = color;
+    document.getElementById("color-preview").style.backgroundColor = color;
+    toggleColorPalette();
 }
 
 
