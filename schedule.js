@@ -241,9 +241,11 @@ function createClassElement(data) {
     classElement.style.height = `${durationMinutes}px`;
 
     classElement.addEventListener('click', () => {
-        isEditing = true;
-        currentProgramId = data.id;
-        openEditModal(currentProgramId);
+        if (deleteMode) {
+            isEditing = true;
+            currentProgramId = data.id;
+            openEditModal(currentProgramId);
+        }
     });
 
     classElement.innerHTML = `
@@ -593,6 +595,7 @@ async function deleteClass(day, startTime, endTime) {
 // 삭제 모드 활성화 함수
 function enableDeleteMode() {
     document.querySelectorAll(".class").forEach((classElement) => {
+        classElement.removeEventListener("click", handleClassClick);
         classElement.addEventListener("click", handleClassClick);
         classElement.style.cursor = "pointer";
         classElement.style.border = "2px solid #ff4d4d";
@@ -605,6 +608,8 @@ function disableDeleteMode() {
         classElement.removeEventListener("click", handleClassClick);
         classElement.style.cursor = "default";
         classElement.style.border = "none";
+
+        loadPrograms();
     });
 }
 
