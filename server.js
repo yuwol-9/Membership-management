@@ -1037,10 +1037,12 @@ app.put('/api/programs/:id', authenticateToken, async (req, res) => {
             instructor_name, 
             monthly_price, 
             per_class_price,
-            schedules 
+            schedules,
+            color 
         } = req.body;
 
-        if (!name || !monthly_price || !per_class_price || !schedules || !Array.isArray(schedules) || schedules.length === 0) {
+        // 입력값 검증
+        if (!name || !monthly_price || !per_class_price || !schedules || !Array.isArray(schedules)) {
             await connection.rollback();
             return res.status(400).json({
                 success: false,
@@ -1048,62 +1050,50 @@ app.put('/api/programs/:id', authenticateToken, async (req, res) => {
             });
         }
 
-        const [existingSchedules] = await connection.execute(`
-            SELECT cs.day, cs.start_time, cs.end_time 
-            FROM class_schedules cs 
-            JOIN programs p ON cs.program_id = p.id 
-            WHERE p.id != ?
-        `, [id]);
-
-        for (const schedule of schedules) {
-            const conflict = existingSchedules.some(existing => {
-                if (existing.day !== schedule.day) return false;
-
-                const existingStart = convertTimeToMinutes(existing.start_time);
-                const existingEnd = convertTimeToMinutes(existing.end_time);
-                const newStart = convertTimeToMinutes(schedule.startTime);
-                const newEnd = convertTimeToMinutes(schedule.endTime);
-
-                return (newStart < existingEnd && newEnd > existingStart);
-            });
-
-            if (conflict) {
-                await connection.rollback();
-                return res.status(400).json({
-                    success: false,
-                    message: '해당 시간에 이미 다른 수업이 존재합니다.'
-                });
-            }
-        }
-
+        // instructor_id 처리
         let instructor_id = null;
-        if (instructor_name) {
-            let [instructor] = await connection.execute(
+        if (instructor_name && instructor_name.trim()) {
+            const [instructor] = await connection.execute(
                 'SELECT id FROM instructors WHERE name = ?',
-                [instructor_name]
+                [instructor_name.trim()]
             );
 
-            if (instructor.length === 0) {
-                await connection.rollback();
-                return res.status(400).json({
-                    success: false,
-                    message: '등록되지 않은 강사입니다. 먼저 강사를 등록해주세요.'
-                });
+            if (instructor.length > 0) {
+                instructor_id = instructor[0].id;
             }
-            instructor_id = instructor[0].id;
         }
 
+        // 프로그램 정보 업데이트
         await connection.execute(
             'UPDATE programs SET name = ?, instructor_id = ?, monthly_price = ?, per_class_price = ? WHERE id = ?',
-            [name, instructor_id, monthly_price, per_class_price, id]
+            [
+                name,
+                instructor_id,
+                parseInt(monthly_price) || 0,
+                parseInt(per_class_price) || 0,
+                id
+            ]
         );
 
+        // 기존 스케줄 삭제
         await connection.execute('DELETE FROM class_schedules WHERE program_id = ?', [id]);
 
+        // 새로운 스케줄 추가
         for (const schedule of schedules) {
+            if (!schedule.day || !schedule.startTime || !schedule.endTime) {
+                continue; // 잘못된 스케줄 데이터는 건너뛰기
+            }
+
             await connection.execute(
                 'INSERT INTO class_schedules (program_id, day, start_time, end_time, details, color) VALUES (?, ?, ?, ?, ?, ?)',
-                [id, schedule.day, schedule.startTime, schedule.endTime, schedule.details || null, schedule.color]
+                [
+                    id,
+                    schedule.day,
+                    schedule.startTime,
+                    schedule.endTime,
+                    schedule.details || null,
+                    schedule.color || '#E56736'
+                ]
             );
         }
 
