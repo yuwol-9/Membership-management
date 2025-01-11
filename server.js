@@ -984,27 +984,35 @@ app.delete('/api/programs', authenticateToken, async (req, res) => {
 // 프로그램 개별 조회 API
 app.get('/api/programs/:id', authenticateToken, async (req, res) => {
     try {
-        const [program] = await pool.execute(`
+        const [rows] = await pool.execute(`
             SELECT 
                 p.id,
                 p.name,
                 p.monthly_price,
                 p.per_class_price,
                 i.name as instructor_name,
-                cs.day,
-                cs.start_time,
-                cs.end_time,
-                cs.details,
-                cs.color
+                GROUP_CONCAT(
+                    JSON_OBJECT(
+                        'day', cs.day,
+                        'startTime', cs.start_time,
+                        'endTime', cs.end_time,
+                        'details', cs.details,
+                        'color', cs.color
+                    )
+                ) as classes
             FROM programs p
             LEFT JOIN instructors i ON p.instructor_id = i.id
             LEFT JOIN class_schedules cs ON p.id = cs.program_id
             WHERE p.id = ?
+            GROUP BY p.id
         `, [req.params.id]);
 
-        if (!program) {
+        if (!rows || rows.length === 0) {
             return res.status(404).json({ message: '프로그램을 찾을 수 없습니다.' });
         }
+
+        const program = rows[0];
+        program.classes = program.classes ? JSON.parse(`[${program.classes}]`) : [];
 
         res.json(program);
     } catch (err) {
