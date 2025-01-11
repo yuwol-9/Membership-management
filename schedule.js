@@ -236,7 +236,7 @@ function createClassElement(data) {
     classElement.addEventListener('click', () => {
         isEditing = true;
         currentProgramId = data.id;
-        openEditModal(data.id);
+        openEditModal(currentProgramId);
     });
 
     classElement.innerHTML = `
@@ -697,7 +697,6 @@ async function addClass() {
 async function loadPrograms() {
     try {
       const programs = await API.getPrograms();
-      
       document.querySelectorAll('.day .classes').forEach(container => {
         container.innerHTML = '';
       });
@@ -711,6 +710,7 @@ async function loadPrograms() {
   
             if (classInfo.day === day) {
               const classElement = createClassElement({
+                id: program.id,
                 startTime: classInfo.startTime,
                 endTime: classInfo.endTime,
                 className: program.name,
