@@ -382,6 +382,8 @@ async function handleSubmit() {
 
 function getTimeSelections() {
     const timeSelections = document.querySelectorAll('.time-selection');
+    const details = document.getElementById('class-details').value.trim();
+
     const schedules = Array.from(timeSelections).map(selection => {
         const daySelect = selection.querySelector('select[id^="day"]');
         const startPeriod = selection.querySelector('[id^="start-time-period"]').value;
@@ -406,7 +408,9 @@ function getTimeSelections() {
         return {
             day: daySelect.value,
             startTime: `${startHour24.toString().padStart(2, '0')}:${startMinute}`,
-            endTime: `${endHour24.toString().padStart(2, '0')}:${endMinute}`
+            endTime: `${endHour24.toString().padStart(2, '0')}:${endMinute}`,
+            details: details,
+            color: selectedColor
         };
     });
 
