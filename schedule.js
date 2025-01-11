@@ -734,12 +734,11 @@ async function loadPrograms() {
     document.getElementById('instructor-name').value = '';
     document.getElementById('monthly-price').value = '';
     document.getElementById('per-class-price').value = '';
+    document.getElementById('classes-per-week').value = '1';
     document.getElementById('color-preview').style.backgroundColor = '#E56736';
     selectedColor = '#E56736';
     
-    const timeSelectionContainer = document.getElementById('time-selection-container');
-    timeSelectionContainer.innerHTML = defaultTimeSelectionHTML;
-    timeSelectionCount = 1;
+    setupInitialTimeSelection();
   }
   
   // 페이지 로드 시 프로그램 목록 불러오기
