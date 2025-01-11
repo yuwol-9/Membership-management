@@ -235,11 +235,6 @@ function closeModal() {
     document.getElementById('modal-overlay').classList.remove('active');
 }
 
-function closePreview() {
-    document.getElementById('preview-modal').classList.remove('active');
-    document.getElementById('preview-overlay').classList.remove('active');
-}
-
 function createClassElement(data) {
     const { startTime, endTime, className, details, instructor, color } = data;
 
@@ -254,11 +249,6 @@ function createClassElement(data) {
 
     const classElement = document.createElement('div');
     classElement.classList.add('class');
-
-    const isPreview = document.getElementById('preview-modal').classList.contains('active');
-    if (isPreview) {
-        classElement.classList.add('preview-class');
-    }
 
     classElement.style.top = `${startPositionMinutes}px`;
     classElement.style.height = `${durationMinutes}px`;
@@ -277,60 +267,6 @@ function createClassElement(data) {
     `;
 
     return classElement;
-}
-
-
-function previewClass() {
-    const timeSelectionContainer = document.getElementById('time-selection-container');
-    const timeSelection = timeSelectionContainer.querySelector('.time-selection');
-    const day = timeSelection.querySelector('select')?.value;
-    
-    const startPeriod = timeSelection.querySelector('[id^="start-time-period"]')?.value;
-    const startHour = timeSelection.querySelector('[id^="start-time-hour"]')?.value;
-    const startMinute = timeSelection.querySelector('[id^="start-time-minute"]')?.value;
-    
-    const endPeriod = timeSelection.querySelector('[id^="end-time-period"]')?.value;
-    const endHour = timeSelection.querySelector('[id^="end-time-hour"]')?.value;
-    const endMinute = timeSelection.querySelector('[id^="end-time-minute"]')?.value;
-
-    if (!day || !startPeriod || !startHour || !startMinute || !endPeriod || !endHour || !endMinute) {
-        alert('시간 정보를 모두 입력해주세요.');
-        return;
-    }
-
-    const startHour24 = startPeriod === '오후' && startHour !== '12' ? 
-        parseInt(startHour) + 12 : 
-        startPeriod === '오전' && startHour === '12' ? 0 : parseInt(startHour);
-    
-    const endHour24 = endPeriod === '오후' && endHour !== '12' ? 
-        parseInt(endHour) + 12 : 
-        endPeriod === '오전' && endHour === '12' ? 0 : parseInt(endHour);
-
-    const startTime = `${startHour24.toString().padStart(2, '0')}:${startMinute}`;
-    const endTime = `${endHour24.toString().padStart(2, '0')}:${endMinute}`;
-
-    const data = {
-        startTime,
-        endTime,
-        className: document.getElementById('class-name').value || '(수업명)',
-        details: document.getElementById('class-details').value || '(세부사항)',
-        instructor: document.getElementById('instructor-name').value || '(강사명)',
-        color: selectedColor
-    };
-
-    const previewClassElement = createClassElement(data);
-
-    const previewContent = document.getElementById('preview-content');
-    previewContent.innerHTML = '';
-
-    previewClassElement.style.position = 'static';
-    previewClassElement.style.height = 'auto';
-    previewClassElement.style.width = 'auto';
-
-    previewContent.appendChild(previewClassElement);
-
-    document.getElementById('preview-modal').classList.add('active');
-    document.getElementById('preview-overlay').classList.add('active');
 }
 
 function validateClassData(data) {
@@ -684,10 +620,7 @@ async function loadPrograms() {
 
 
 document.getElementById('modal-overlay').addEventListener('click', closeModal);
-document.getElementById('preview-overlay').addEventListener('click', closePreview);
-
 document.getElementById('class-modal').addEventListener('click', e => e.stopPropagation());
-document.getElementById('preview-modal').addEventListener('click', e => e.stopPropagation());
 
 // 수업 렌더링 함수
 function renderClasses() {
