@@ -253,6 +253,10 @@ function createClassElement(data) {
     classElement.style.top = `${startPositionMinutes}px`;
     classElement.style.height = `${durationMinutes}px`;
 
+    classElement.addEventListener('click', () => {
+        window.location.href = `수업정보수정.html?id=${data.id}`;
+    });
+    
     classElement.innerHTML = `
         <div class="time">
             ${formattedStartTime} ~ ${formattedEndTime}
@@ -502,7 +506,7 @@ async function addClass() {
       }).filter(schedule => schedule && schedule.day && schedule.startTime && schedule.endTime);
 
     if (schedules.length !== classesPerWeek) {
-        alert(`주당 ${classesPerWeek}회로 설정하셨습니다. 시간표에서 ${classesPerWeek}개의 시간을 선택해주세요. (현재 ${schedules.length}개 선택됨)`);
+        alert(`주당 ${classesPerWeek}회로 설정하셨습니다. ${classesPerWeek}개의 시간을 선택해주세요. (현재 ${schedules.length}개 선택됨)`);
         return;
       }
 
@@ -519,7 +523,7 @@ async function addClass() {
 
       if (!programData.name || !programData.schedules || !programData.monthly_price || 
         !programData.per_class_price || !programData.classes_per_week) {
-        alert('프로그램명, 시간표, 수강료는 필수 입력사항입니다.');
+        alert('프로그램명, 시간, 수강료는 필수 입력사항입니다.');
         return;
     }
     

@@ -166,6 +166,12 @@
             left: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            cursor: pointer; /* 클릭 가능함을 표시 */
+            transition: transform 0.2s ease; /* 호버 효과를 부드럽게 */
+        }
+
+        .class:hover {
+        transform: scale(1.02); /* 호버 시 살짝 커지는 효과 */
         }
 
         .class .time {

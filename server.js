@@ -981,6 +981,38 @@ app.delete('/api/programs', authenticateToken, async (req, res) => {
     }
 });
 
+// 프로그램 개별 조회 API
+app.get('/api/programs/:id', authenticateToken, async (req, res) => {
+    try {
+        const [program] = await pool.execute(`
+            SELECT 
+                p.id,
+                p.name,
+                p.monthly_price,
+                p.per_class_price,
+                i.name as instructor_name,
+                cs.day,
+                cs.start_time,
+                cs.end_time,
+                cs.details,
+                cs.color
+            FROM programs p
+            LEFT JOIN instructors i ON p.instructor_id = i.id
+            LEFT JOIN class_schedules cs ON p.id = cs.program_id
+            WHERE p.id = ?
+        `, [req.params.id]);
+
+        if (!program) {
+            return res.status(404).json({ message: '프로그램을 찾을 수 없습니다.' });
+        }
+
+        res.json(program);
+    } catch (err) {
+        console.error('프로그램 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 app.put('/api/programs/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -992,59 +1024,89 @@ app.put('/api/programs/:id', authenticateToken, async (req, res) => {
             instructor_name, 
             monthly_price, 
             per_class_price,
-            classes 
+            schedules 
         } = req.body;
 
-        // 강사 정보 확인 또는 추가
-        let [instructor] = await connection.execute(
-            'SELECT id FROM instructors WHERE name = ?',
-            [instructor_name]
-        );
-
-        let instructor_id;
-        if (instructor.length === 0) {
-            const [result] = await connection.execute(
-                'INSERT INTO instructors (name) VALUES (?)',
-                [instructor_name]
-            );
-            instructor_id = result.insertId;
-        } else {
-            instructor_id = instructor[0].id;
+        if (!name || !monthly_price || !per_class_price || !schedules || !Array.isArray(schedules) || schedules.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({
+                success: false,
+                message: '필수 입력값이 누락되었습니다.'
+            });
         }
 
-        // 프로그램 정보 업데이트
+        const [existingSchedules] = await connection.execute(`
+            SELECT cs.day, cs.start_time, cs.end_time 
+            FROM class_schedules cs 
+            JOIN programs p ON cs.program_id = p.id 
+            WHERE p.id != ?
+        `, [id]);
+
+        for (const schedule of schedules) {
+            const conflict = existingSchedules.some(existing => {
+                if (existing.day !== schedule.day) return false;
+
+                const existingStart = convertTimeToMinutes(existing.start_time);
+                const existingEnd = convertTimeToMinutes(existing.end_time);
+                const newStart = convertTimeToMinutes(schedule.startTime);
+                const newEnd = convertTimeToMinutes(schedule.endTime);
+
+                return (newStart < existingEnd && newEnd > existingStart);
+            });
+
+            if (conflict) {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: '해당 시간에 이미 다른 수업이 존재합니다.'
+                });
+            }
+        }
+
+        let instructor_id = null;
+        if (instructor_name) {
+            let [instructor] = await connection.execute(
+                'SELECT id FROM instructors WHERE name = ?',
+                [instructor_name]
+            );
+
+            if (instructor.length === 0) {
+                const [result] = await connection.execute(
+                    'INSERT INTO instructors (name) VALUES (?)',
+                    [instructor_name]
+                );
+                instructor_id = result.insertId;
+            } else {
+                instructor_id = instructor[0].id;
+            }
+        }
+
         await connection.execute(
             'UPDATE programs SET name = ?, instructor_id = ?, monthly_price = ?, per_class_price = ? WHERE id = ?',
             [name, instructor_id, monthly_price, per_class_price, id]
         );
 
-        // 기존 수업 스케줄 삭제
         await connection.execute('DELETE FROM class_schedules WHERE program_id = ?', [id]);
 
-        // 새로운 수업 스케줄 추가
-        if (classes && classes.length > 0) {
-            const insertSchedule = connection.prepare(
-                'INSERT INTO class_schedules (program_id, day, start_time, end_time, details, color) VALUES (?, ?, ?, ?, ?, ?)'
+        for (const schedule of schedules) {
+            await connection.execute(
+                'INSERT INTO class_schedules (program_id, day, start_time, end_time, details, color) VALUES (?, ?, ?, ?, ?, ?)',
+                [id, schedule.day, schedule.startTime, schedule.endTime, schedule.details || null, schedule.color]
             );
-
-            for (const classInfo of classes) {
-                await insertSchedule.execute([
-                    id,
-                    classInfo.day,
-                    classInfo.startTime,
-                    classInfo.endTime,
-                    classInfo.details,
-                    classInfo.color
-                ]);
-            }
         }
 
         await connection.commit();
-        res.json({ message: '프로그램이 성공적으로 수정되었습니다.' });
+        res.json({ 
+            success: true, 
+            message: '프로그램이 성공적으로 수정되었습니다.'
+        });
     } catch (err) {
         await connection.rollback();
         console.error('프로그램 수정 에러:', err);
-        res.status(500).json({ message: '서버 오류' });
+        res.status(500).json({ 
+            success: false, 
+            message: '서버 오류가 발생했습니다.'
+        });
     } finally {
         connection.release();
     }

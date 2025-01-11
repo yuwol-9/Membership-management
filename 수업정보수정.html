@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수업 정보 수정</title>
+    <!-- 수업관리.html과 동일한 스타일 사용 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f9fafc;
+            color: #333d4b;
+            min-width: 1000px;
+        }
+        .all-container {
+            height: 120px;
+            display: flex;
+            align-items: center;
+
+
+        }
+        .logo-container {
+            max-width: 300px;
+            align-items: left;
+            padding: 0 55px;
+
+            margin-top: 30px;
+        }
+
+        .title-container {
+            max-width: 400px; /* 최대 너비를 800px로 제한 */
+            flex-grow: 1;  /* 남은 공간 채우기 */
+            text-align: center;
+            margin-left: 420px;  /* 로고 너비만큼 오른쪽 여백 추가 */
+
+
+        }
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: box-shadow 0.3s ease, transform 0.2s ease;
+            background-color: #9FD3ED;
+            color: white;
+
+        }
+
+        .title:hover {
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .title-input {
+            font-size: 28px;
+            font-weight: bold;
+            width: 400px;
+            padding: 10px;
+
+            border: 2px solid #36B4E5;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .title-input:focus {
+            border-color: #36B4E5;
+        }
+
+        
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 40px;
+        }
+
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            margin-left: 250px;  /* 로고 너비만큼 오른쪽 여백 추가 */
+
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .schedule {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 16px;
+
+          }
+        
+        .schedule .time-column {
+          padding-top: 30px; 
+          gap: 10px;
+          }
+        
+
+        .time-column {
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
+        }
+
+        .time-slot {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #4e5968;
+        }
+
+        .day {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            min-height: 720px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .day-0 {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            min-height: 20px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+
+        .day h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333d4b;
+            text-align: center;
+        }
+
+        .class {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: calc(100% - 16px);
+            position: absolute;
+            left: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .class .time {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #D9D9D9;
+            border-radius: 5px;
+            color: #000;
+            font-size: 13px; /* 적당한 글자 크기 */
+            font-weight: bold;
+            text-align: center;
+            height: 17px; /* 고정 높이 */
+            flex-shrink: 0; /* 고정 높이 유지 */
+        }
+
+        .class .content {
+
+            flex-grow: 1; /* 나머지 공간 차지 */
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .class .name {
+            color: white;
+            font-size: 19px; /* 적당한 글자 크기 */
+            font-weight: 700;
+            text-align: center;
+            word-break: keep-all;
+            white-space: pre-wrap; /* 줄바꿈 반영 */
+        }
+
+        .class .details {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px; /* 적당한 글자 크기 */
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .class .instructor {
+
+            background-color: transparent;
+            color: #1f2937;
+            font-size: 13px; /* 적당한 글자 크기 */
+            text-align: center;
+            border-radius: 5px;
+            height: 18px; /* 고정 높이 */
+            font-weight: bold;
+            flex-shrink: 0; /* 고정 높이 유지 */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .add-class {
+            display: flex;
+            flex-direction: column; 
+            align-items: center;    
+            margin-top: 24px;
+            height: auto;          
+            width: 250px;
+            gap: 10px;          
+        }
+
+        .add-class button {
+            width: 60%;        
+            margin: 5px 30px;         
+            background-color: #E56736;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        #reset-classes-btn {
+            width: 60%;        
+            margin: 30px 30px;         
+            background-color: #E5365C; /* 초기화 버튼 색상 */
+            color: white;
+            border: 2px solid #FF0000;
+            border-radius: 8px;
+            padding: 10px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+
+        #reset-classes-btn:hover {
+            background-color: #c9302c;
+        }
+
+
+        .add-class button:hover {
+            background-color: #DF4420;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 400px;
+            z-index: 1000;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #333d4b;
+        }
+
+        .modal label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4e5968;
+            margin-bottom: 8px;
+        }
+
+        .modal input,
+        .modal select,
+        .modal textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e8eb;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 16px;
+            background-color: #f8f9fa;
+        }
+
+        .modal textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-buttons button {
+          background-color: #E56736; 
+          color: white; 
+          border: none; /* 테두리 제거 */
+          border-radius: 8px; /* 둥근 모서리 */
+          padding: 10px 20px; /* 버튼 크기 조정 */
+          font-size: 14px; /* 글자 크기 */
+          font-weight: 600; /* 글자 두께 */
+          cursor: pointer; /* 클릭 시 포인터 표시 */
+          transition: all 0.2s; /* 부드러운 효과 */
+          width: 40%;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 */
+        }
+
+        .modal-buttons button:hover {
+          background-color: #DF4420; /* 호버 시 색상 변경 */
+        }
+
+        .modal-buttons {
+          display: flex;
+          justify-content: space-between; /* 버튼 간격 조정 */
+          gap: 5px; /* 버튼 사이 간격 */
+          margin-top: 16px; /* 위쪽 여백 */
+        }
+        .time-selection-container {
+            max-height: 60vh; /* 최대 높이 */
+            overflow-y: auto; /* 세로 스크롤 추가 */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .time-selection select {
+        width: 150px;
+        padding: 8px;
+        margin: 5px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        }
+        .time-selection .time-period {
+        width: 80px;
+        }
+        .time-selection .time-hour {
+            width: 80px;
+        }
+        .time-selection .time-minute {
+            width: 80px;
+        }
+        .time-selection select:first-of-type {
+            width: 150px;
+        }
+        .time-selection {
+            position: relative;
+            margin-bottom: 10px;
+            padding-bottom: 10px; /* 아래 구분선을 위한 여백 */
+        }
+        .time-selection .remove-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 16px;
+            font-weight: 900;
+            line-height: 1;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .time-selection .remove-btn:hover {
+            background-color: #ff1a1a;
+        }
+        .button-time{
+          background-color: #E56736;
+          color: white;
+          border: none; /* 테두리 제거 */
+          border-radius: 8px; /* 둥근 모서리 */
+          padding: 8px 25px; /* 버튼 크기 조정 */
+          font-size: 14px; /* 글자 크기 */
+          font-weight: 600; /* 글자 두께 */
+          cursor: pointer; /* 클릭 시 포인터 표시 */
+          transition: all 0.2s; /* 부드러운 효과 */
+          width: 35%;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 */
+        }
+        .button-time:hover{
+          background-color: #DF4420; /* 호버 시 색상 변경 */
+        }
+      
+        .button-group {
+          display: flex;
+          justify-content: space-between;
+          gap: 40px;
+          margin-top: 20px;
+        }
+        .button-gray{
+          background-color: #6c757d;
+          color: white;
+          border: none; /* 테두리 제거 */
+          border-radius: 8px; /* 둥근 모서리 */
+          padding: 8px 25px; /* 버튼 크기 조정 */
+          font-size: 14px; /* 글자 크기 */
+          font-weight: 600; /* 글자 두께 */
+          cursor: pointer; /* 클릭 시 포인터 표시 */
+          transition: all 0.2s; /* 부드러운 효과 */
+          width: 35%;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 */
+        }
+        .button-gray:hover{
+          background-color: #5a6268; /* 호버 시 색상 변경 */
+        }
+        .add-time-button{
+          background-color: #20A9C3;
+          color: white;
+          border: none; /* 테두리 제거 */
+          border-radius: 8px; /* 둥근 모서리 */
+          padding: 5px 25px; /* 버튼 크기 조정 */
+          font-size: 12px; /* 글자 크기 */
+          font-weight: 500; /* 글자 두께 */
+          cursor: pointer; /* 클릭 시 포인터 표시 */
+          transition: all 0.2s; /* 부드러운 효과 */
+          width: 35%;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 */
+
+        }
+
+        .divider {
+            border-bottom: 1px solid #ddd;
+            margin-top: 20px;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative; /* 드롭다운 포지셔닝 */
+        }
+
+            #color-picker-btn {
+            padding: 10px 15px;
+            font-size: 14px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .color-options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            position: absolute;
+            top: 45px;
+            left: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+            .color-options.hidden {
+            display: none;
+        }
+
+            .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+            .color-option:hover {
+            transform: scale(1.2);
+        }
+
+            .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+        }
+
+        .price-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin: 10px 0;
+    }
+
+    .price-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .price-input-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .price-input-group label {
+      font-size: 14px;
+      color: #666;
+    }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <div class="brand-header">
+            <a href="홈페이지.html">
+                <img src="image/로고_white.png" width="200" height="30">
+            </a>
+        </div>
+        <div class="nav-header">
+            <h1>수업 정보 수정</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="schedule">
+            <div class="time-column">
+                <div class="time-slot">10:00</div>
+                <div class="time-slot">11:00</div>
+                <div class="time-slot">12:00</div>
+                <div class="time-slot">13:00</div>
+                <div class="time-slot">14:00</div>
+                <div class="time-slot">15:00</div>
+                <div class="time-slot">16:00</div>
+                <div class="time-slot">17:00</div>
+                <div class="time-slot">18:00</div>
+                <div class="time-slot">19:00</div>
+                <div class="time-slot">20:00</div>
+                <div class="time-slot">21:00</div>
+                <div class="time-slot">22:00</div>
+            </div>
+            <div class="day">
+                <h2>Monday</h2>
+                <div class="classes"></div>
+            </div>
+            <div class="day">
+                <h2>Tuesday</h2>
+                <div class="classes"></div>
+            </div>
+            <div class="day">
+                <h2>Wednesday</h2>
+                <div class="classes"></div>
+            </div>
+            <div class="day">
+                <h2>Thursday</h2>
+                <div class="classes"></div>
+            </div>
+            <div class="day">
+                <h2>Friday</h2>
+                <div class="classes"></div>
+            </div>
+            <div class="day">
+                <h2>Saturday</h2>
+                <div class="classes"></div>
+            </div>
+            <div class="add-class">
+                <div>
+              <button id="add-class-btn" onclick="openModal()">수업 추가</button>
+              <button id="delete-class-btn" onclick="toggleDeleteMode()">수업 삭제</button>
+              <button id="reset-classes-btn" onclick="resetClasses()">초기화</button>
+          </div>
+        </div>
+
+        <div class="modal" id="class-modal">
+            <h2>프로그램 수정</h2>
+            <div class="form-group">
+                <label for="class-name">프로그램 이름</label>
+                <textarea id="class-name" placeholder="예: 피트니스 + 힙합"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>프로그램 가격</label>
+                <div class="price-inputs">
+                    <div class="price-input-group">
+                        <label for="monthly-price">개월 수강료 (원/월)</label>
+                        <input type="number" id="monthly-price" min="0">
+                    </div>
+                    <div class="price-input-group">
+                        <label for="per-class-price">회당 수강료 (원/회)</label>
+                        <input type="number" id="per-class-price" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>시간 선택</label>
+                <div id="time-selection-container">
+                    <!-- 시간 선택 항목들이 동적으로 추가됨 -->
+                </div>
+                <button onclick="addTimeSelection()">시간 추가</button>
+            </div>
+
+            <div class="form-group">
+                <label for="instructor-name">강사님 이름</label>
+                <input type="text" id="instructor-name">
+            </div>
+            
+            <div class="color-picker-container">
+                <button id="color-picker-btn" onclick="toggleColorPalette()">수업 색상</button>
+                  <div class="color-options hidden" id="color-palette">
+                    <button class="color-option" style="background-color: #E56736;" data-color="#E56736" onclick="selectColor('#E56736')"></button>
+                    <button class="color-option" style="background-color: #7950f2;" data-color="#7950f2" onclick="selectColor('#7950f2')"></button>
+                    <button class="color-option" style="background-color: #f94144;" data-color="#f94144" onclick="selectColor('#f94144')"></button>
+                    <button class="color-option" style="background-color: #f3722c;" data-color="#f3722c" onclick="selectColor('#f3722c')"></button>
+                    <button class="color-option" style="background-color: #f8961e;" data-color="#f8961e" onclick="selectColor('#f8961e')"></button>
+                    <button class="color-option" style="background-color: #f9c74f;" data-color="#f9c74f" onclick="selectColor('#f9c74f')"></button>
+                    <button class="color-option" style="background-color: #90be6d;" data-color="#90be6d" onclick="selectColor('#90be6d')"></button>
+                    <button class="color-option" style="background-color: #43aa8b;" data-color="#43aa8b" onclick="selectColor('#43aa8b')"></button>
+                    <button class="color-option" style="background-color: #4d908e;" data-color="#4d908e" onclick="selectColor('#4d908e')"></button>
+                    <button class="color-option" style="background-color: #577590;" data-color="#577590" onclick="selectColor('#577590')"></button>
+                    <button class="color-option" style="background-color: #277da1;" data-color="#277da1" onclick="selectColor('#277da1')"></button>
+                    <button class="color-option" style="background-color: #ff6f61;" data-color="#ff6f61" onclick="selectColor('#ff6f61')"></button>
+                    <button class="color-option" style="background-color: #ffa07a;" data-color="#ffa07a" onclick="selectColor('#ffa07a')"></button>
+                    <button class="color-option" style="background-color: #ffb703;" data-color="#ffb703" onclick="selectColor('#ffb703')"></button>
+                    <button class="color-option" style="background-color: #8ac926;" data-color="#8ac926" onclick="selectColor('#8ac926')"></button>
+                    <button class="color-option" style="background-color: #1982c4;" data-color="#1982c4" onclick="selectColor('#1982c4')"></button>
+                    <button class="color-option" style="background-color: #6a4c93;" data-color="#6a4c93" onclick="selectColor('#6a4c93')"></button>
+                    <button class="color-option" style="background-color: #8338ec;" data-color="#8338ec" onclick="selectColor('#8338ec')"></button>
+                    <button class="color-option" style="background-color: #3a0ca3;" data-color="#3a0ca3" onclick="selectColor('#3a0ca3')"></button>
+                    <button class="color-option" style="background-color: #b5179e;" data-color="#b5179e" onclick="selectColor('#b5179e')"></button>
+                    <button class="color-option" style="background-color: #ef233c;" data-color="#ef233c" onclick="selectColor('#ef233c')"></button>
+                    <button class="color-option" style="background-color: #3f37c9;" data-color="#3f37c9" onclick="selectColor('#3f37c9')"></button>
+                    <button class="color-option" style="background-color: #4361ee;" data-color="#4361ee" onclick="selectColor('#4361ee')"></button>
+                    <button class="color-option" style="background-color: #4895ef;" data-color="#4895ef" onclick="selectColor('#4895ef')"></button>
+                    <button class="color-option" style="background-color: #48cae4;" data-color="#48cae4" onclick="selectColor('#48cae4')"></button>
+                    <!-- 나머지 색상들 추가 -->
+                  </div>
+                  <div class="color-preview" id="color-preview" style="background-color: #E56736;"></div>
+            </div>
+
+            <div class="modal-buttons">
+                <button onclick="updateProgram()">수정</button>
+                <button onclick="deleteProgram()">삭제</button>
+                <button onclick="window.location.href='수업관리.html'">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="schedule_modify.js"></script>
+</body>
+</html>

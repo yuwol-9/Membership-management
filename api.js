@@ -222,6 +222,15 @@ const API = {
         }
     },
 
+    getProgram: async (programId) => {
+        try {
+            return await API.apiCall(`/programs/${programId}`);
+        } catch (error) {
+            console.error('프로그램 조회 실패:', error);
+            throw error;
+        }
+    },
+    
     updateProgram: async (programId, programData) => {
         try {
             return await API.apiCall(`/programs/${programId}`, {
