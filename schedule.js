@@ -280,39 +280,40 @@ async function openEditModal(programId) {
         // 시간 데이터 채우기
         const timeSelectionContainer = document.getElementById('time-selection-container');
         timeSelectionContainer.innerHTML = ''; // 기존 시간 선택 UI 초기화
+        timeSelectionCount = 0; // 새로운 시간 선택 초기화
 
         if (program.classes && program.classes.length > 0) {
             program.classes.forEach((classInfo) => {
                 const timeSelection = addTimeSelection(); // 시간 선택 UI 추가
 
                 // 요일 설정
-                const daySelect = timeSelection.querySelector('select[id^="day"]');
+                const daySelect = document.getElementById(`day-${timeSelectionCount - 1}`);
                 if (daySelect) {
-                    daySelect.value = classInfo.day || '';
+                    daySelect.value = classInfo.day || 'Monday';
                 }
 
                 // 시작 시간 설정
                 if (classInfo.startTime) {
                     const [startHour, startMinute] = classInfo.startTime.split(':');
                     const startHour24 = parseInt(startHour, 10);
-                    const startTimePeriod = startHour24 >= 12 ? '오후' : '오전';
+                    const startTimePeriod = startHour24 >= 12 ? 'PM' : 'AM';
                     const startHour12 = startHour24 > 12 ? startHour24 - 12 : startHour24;
 
-                    timeSelection.querySelector('[id^="start-time-period"]').value = startTimePeriod;
-                    timeSelection.querySelector('[id^="start-time-hour"]').value = startHour12;
-                    timeSelection.querySelector('[id^="start-time-minute"]').value = startMinute;
+                    document.getElementById(`start-time-period-${timeSelectionCount - 1}`).value = startTimePeriod;
+                    document.getElementById(`start-time-hour-${timeSelectionCount - 1}`).value = String(startHour12).padStart(2, '0');
+                    document.getElementById(`start-time-minute-${timeSelectionCount - 1}`).value = String(startMinute).padStart(2, '0');
                 }
 
                 // 종료 시간 설정
                 if (classInfo.endTime) {
                     const [endHour, endMinute] = classInfo.endTime.split(':');
                     const endHour24 = parseInt(endHour, 10);
-                    const endTimePeriod = endHour24 >= 12 ? '오후' : '오전';
+                    const endTimePeriod = endHour24 >= 12 ? 'PM' : 'AM';
                     const endHour12 = endHour24 > 12 ? endHour24 - 12 : endHour24;
 
-                    timeSelection.querySelector('[id^="end-time-period"]').value = endTimePeriod;
-                    timeSelection.querySelector('[id^="end-time-hour"]').value = endHour12;
-                    timeSelection.querySelector('[id^="end-time-minute"]').value = endMinute;
+                    document.getElementById(`end-time-period-${timeSelectionCount - 1}`).value = endTimePeriod;
+                    document.getElementById(`end-time-hour-${timeSelectionCount - 1}`).value = String(endHour12).padStart(2, '0');
+                    document.getElementById(`end-time-minute-${timeSelectionCount - 1}`).value = String(endMinute).padStart(2, '0');
                 }
             });
         } else {
@@ -338,7 +339,6 @@ async function openEditModal(programId) {
         alert('프로그램 정보를 불러오는데 실패했습니다.');
     }
 }
-
 
 function closeModal() {
     document.getElementById('class-modal').classList.remove('active');
