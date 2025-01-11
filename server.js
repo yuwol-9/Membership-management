@@ -1021,6 +1021,11 @@ app.get('/api/programs/:id', authenticateToken, async (req, res) => {
     }
 });
 
+function convertTimeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
 app.put('/api/programs/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
