@@ -267,7 +267,7 @@ function openModal() {
 
 async function openEditModal(programId) {
     try {
-        const program = await API.getProgram(programId); // 프로그램 데이터 로드
+        const program = await API.getProgram(programId);
         document.getElementById('modal-title').textContent = '프로그램 수정';
         document.getElementById('submit-btn').textContent = '수정';
 
@@ -275,7 +275,7 @@ async function openEditModal(programId) {
         document.getElementById('class-name').value = program.name;
         document.getElementById('monthly-price').value = program.monthly_price;
         document.getElementById('per-class-price').value = program.per_class_price;
-        document.getElementById('instructor-name').value = program.instructor_name;
+        document.getElementById('instructor-name').value = program.instructor_name || '';
 
         // 시간 데이터 채우기
         const timeSelectionContainer = document.getElementById('time-selection-container');
@@ -284,36 +284,37 @@ async function openEditModal(programId) {
 
         if (program.classes && program.classes.length > 0) {
             program.classes.forEach((classInfo) => {
-                const timeSelection = addTimeSelection(); // 시간 선택 UI 추가
+                addTimeSelection(); // 새로운 시간 선택 UI 추가
+                const currentIndex = timeSelectionCount - 1;
 
                 // 요일 설정
-                const daySelect = document.getElementById(`day-${timeSelectionCount - 1}`);
+                const daySelect = document.getElementById(`day-${currentIndex}`);
                 if (daySelect) {
-                    daySelect.value = classInfo.day || 'Monday';
+                    daySelect.value = classInfo.day;
                 }
 
                 // 시작 시간 설정
                 if (classInfo.startTime) {
                     const [startHour, startMinute] = classInfo.startTime.split(':');
-                    const startHour24 = parseInt(startHour, 10);
-                    const startTimePeriod = startHour24 >= 12 ? 'PM' : 'AM';
-                    const startHour12 = startHour24 > 12 ? startHour24 - 12 : startHour24;
+                    const startHour24 = parseInt(startHour);
+                    const startPeriod = startHour24 >= 12 ? '오후' : '오전';
+                    const startHour12 = startHour24 > 12 ? startHour24 - 12 : (startHour24 === 0 ? 12 : startHour24);
 
-                    document.getElementById(`start-time-period-${timeSelectionCount - 1}`).value = startTimePeriod;
-                    document.getElementById(`start-time-hour-${timeSelectionCount - 1}`).value = String(startHour12).padStart(2, '0');
-                    document.getElementById(`start-time-minute-${timeSelectionCount - 1}`).value = String(startMinute).padStart(2, '0');
+                    document.getElementById(`start-time-period-${currentIndex}`).value = startPeriod;
+                    document.getElementById(`start-time-hour-${currentIndex}`).value = startHour12;
+                    document.getElementById(`start-time-minute-${currentIndex}`).value = startMinute;
                 }
 
                 // 종료 시간 설정
                 if (classInfo.endTime) {
                     const [endHour, endMinute] = classInfo.endTime.split(':');
-                    const endHour24 = parseInt(endHour, 10);
-                    const endTimePeriod = endHour24 >= 12 ? 'PM' : 'AM';
-                    const endHour12 = endHour24 > 12 ? endHour24 - 12 : endHour24;
+                    const endHour24 = parseInt(endHour);
+                    const endPeriod = endHour24 >= 12 ? '오후' : '오전';
+                    const endHour12 = endHour24 > 12 ? endHour24 - 12 : (endHour24 === 0 ? 12 : endHour24);
 
-                    document.getElementById(`end-time-period-${timeSelectionCount - 1}`).value = endTimePeriod;
-                    document.getElementById(`end-time-hour-${timeSelectionCount - 1}`).value = String(endHour12).padStart(2, '0');
-                    document.getElementById(`end-time-minute-${timeSelectionCount - 1}`).value = String(endMinute).padStart(2, '0');
+                    document.getElementById(`end-time-period-${currentIndex}`).value = endPeriod;
+                    document.getElementById(`end-time-hour-${currentIndex}`).value = endHour12;
+                    document.getElementById(`end-time-minute-${currentIndex}`).value = endMinute;
                 }
             });
         } else {
@@ -612,11 +613,16 @@ document.getElementById("color-preview").style.backgroundColor = color;
 toggleColorPalette();
 }
 
-async function checkTimeConflict(day, startTime, endTime) {
+
+async function checkTimeConflict(day, startTime, endTime, excludeProgramId) {
     try {
         const programs = await API.getPrograms();
-        return programs.some(program => 
-            program.classes.some(classInfo => {
+        return programs.some(program => {
+            if (program.id.toString() === excludeProgramId.toString()) {
+                return false;
+            }
+
+            return program.classes.some(classInfo => {
                 if (classInfo.day !== day) return false;
 
                 const existingStart = convertTimeToMinutes(classInfo.startTime);
@@ -625,11 +631,11 @@ async function checkTimeConflict(day, startTime, endTime) {
                 const newEnd = convertTimeToMinutes(endTime);
 
                 return (newStart < existingEnd && newEnd > existingStart);
-            })
-        );
+            });
+        });
     } catch (error) {
         console.error('시간 충돌 확인 중 오류:', error);
-        return false;
+        throw new Error('시간 충돌 확인 중 오류가 발생했습니다.');
     }
 }
 
