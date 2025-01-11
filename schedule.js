@@ -482,57 +482,96 @@ let classData = [];
 // 수업 삭제 함수
 async function deleteClass(day, startTime, endTime) {
     try {
+        console.log('삭제 시도:', { day, startTime, endTime });
+        
         const dayElements = document.querySelectorAll('.day');
-        let programId = null;
-        let programName = null;
+        let targetProgram = null;
 
+        // DOM에서 해당 클래스 찾기
         for(let dayElement of dayElements) {
             const dayHeader = dayElement.querySelector('h2');
             if (dayHeader && dayHeader.textContent === day) {
                 const classes = dayElement.querySelectorAll('.class');
                 for(let cls of classes) {
                     const timeElement = cls.querySelector('.time');
+                    const nameElement = cls.querySelector('.content .name');
                     const timeText = timeElement.textContent.trim();
                     const [currentStartTime, currentEndTime] = timeText.split('~').map(t => t.trim());
                     
+                    console.log('비교 중:', {
+                        currentStartTime,
+                        currentEndTime,
+                        targetStartTime: startTime,
+                        targetEndTime: endTime
+                    });
+                    
                     if (currentStartTime === startTime && currentEndTime === endTime) {
-                        programName = cls.querySelector('.content .name').textContent.trim();
+                        targetProgram = {
+                            name: nameElement.textContent.trim(),
+                            element: cls
+                        };
                         break;
                     }
                 }
             }
         }
 
-        if (!programName) {
-            throw new Error('삭제할 클래스를 찾을 수 없습니다.');
+        console.log('찾은 프로그램:', targetProgram);
+
+        if (!targetProgram) {
+            throw new Error('삭제할 클래스를 화면에서 찾을 수 없습니다.');
         }
 
+        // 프로그램 목록 가져오기
         const programs = await API.getPrograms();
+        console.log('전체 프로그램 목록:', programs);
+
+        // 일치하는 프로그램 찾기
         const program = programs.find(p => {
-            return p.name === programName && 
-                   p.classes.some(c => 
-                       c.day === day && 
-                       c.startTime === startTime && 
-                       c.endTime === endTime
-                   );
+            const matchingClass = p.classes.find(c => {
+                const timeMatch = c.startTime === startTime && c.endTime === endTime;
+                const dayMatch = c.day === day;
+                const nameMatch = p.name === targetProgram.name;
+                
+                console.log('프로그램 비교:', {
+                    programName: p.name,
+                    className: targetProgram.name,
+                    timeMatch,
+                    dayMatch,
+                    nameMatch,
+                    classInfo: c
+                });
+                
+                return timeMatch && dayMatch;
+            });
+            
+            return matchingClass !== undefined;
         });
 
+        console.log('찾은 프로그램 데이터:', program);
+
         if (!program) {
-            throw new Error('삭제할 프로그램을 찾을 수 없습니다.');
+            throw new Error('삭제할 프로그램을 API에서 찾을 수 없습니다.');
         }
 
-        if (!confirm(`정말로 ${programName} 프로그램을 삭제하시겠습니까?`)) {
+        // 삭제 전 확인
+        if (!confirm(`정말로 "${targetProgram.name}" 프로그램을 삭제하시겠습니까?`)) {
             return;
         }
 
+        // 프로그램 삭제
         await API.deleteProgram(program.id);
+        
+        // DOM에서 클래스 요소 삭제
+        targetProgram.element.remove();
         
         alert('프로그램이 성공적으로 삭제되었습니다.');
         
+        // 프로그램 목록 새로고침
         await loadPrograms();
         
     } catch (error) {
-        console.error('Error deleting class:', error);
+        console.error('프로그램 삭제 중 상세 오류:', error);
         alert(error.message || '프로그램 삭제 중 오류가 발생했습니다.');
     }
 }
