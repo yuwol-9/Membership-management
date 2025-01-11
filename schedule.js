@@ -716,19 +716,26 @@ let isPaletteOpen = false; // 팔레트 열림 상태
 
 // 색상 팔레트 토글
 function toggleColorPalette() {
-    const palette = document.getElementById("color-palette");
+    const palette = document.getElementById('color-palette');
+    if (!palette) return;
+    
     isPaletteOpen = !isPaletteOpen;
-    palette.classList.toggle("hidden", !isPaletteOpen);
+    if (isPaletteOpen) {
+        palette.classList.remove('hidden');
+    } else {
+        palette.classList.add('hidden');
+    }
 }
-
 
 // 색상 선택 함수
 function selectColor(color) {
+    const colorPreview = document.getElementById('color-preview');
+    if (!colorPreview) return;
+    
     selectedColor = color;
-    document.getElementById("color-preview").style.backgroundColor = color;
+    colorPreview.style.backgroundColor = color;
     toggleColorPalette();
 }
-
 
 async function checkTimeConflict(day, startTime, endTime, excludeProgramId = null) {
     try {
@@ -887,8 +894,28 @@ async function loadPrograms() {
             }
         }
     });
-  });
 
+    const colorOptions = document.querySelectorAll('.color-option');
+    colorOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            const color = e.target.dataset.color;
+            selectColor(color);
+        });
+    });
+
+    // 팔레트 외부 클릭 시 닫기
+    document.addEventListener('click', (e) => {
+        const palette = document.getElementById('color-palette');
+        const colorPreview = document.getElementById('color-preview');
+        
+        if (!palette || !colorPreview) return;
+        
+        if (!palette.contains(e.target) && !colorPreview.contains(e.target)) {
+            palette.classList.add('hidden');
+            isPaletteOpen = false;
+        }
+    });
+});
 
 document.getElementById('modal-overlay').addEventListener('click', closeModal);
 document.getElementById('class-modal').addEventListener('click', e => e.stopPropagation());
