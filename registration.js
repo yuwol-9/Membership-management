@@ -188,10 +188,6 @@ async function registerMember() {
         total_classes: 0
     };
 
-    const subscriptionType = document.getElementById('subscription-type');
-    const subscriptionInput = document.getElementById('custom-subscription').value;
-    const totalClasses = parseInt(subscriptionInput.getAttribute('data-total-classes')) || 0;
-
     // 필수 입력 필드 검증
     const missingFields = [];
     if (!formData.name) missingFields.push('이름');
@@ -200,15 +196,25 @@ async function registerMember() {
     if (!formData.age) missingFields.push('나이');
     if (!formData.address) missingFields.push('주소');
     if (!formData.phone) missingFields.push('전화번호');
-    if (!formData.program_id) missingFields.push('프로그램');
+    if (!formData.program_id) {
+        alert('프로그램을 선택해주세요.');
+        return;
+    }
     if (!formData.start_date) missingFields.push('시작일');
     if (!formData.payment_status) missingFields.push('결제상태');
-    if (!subscriptionInput) missingFields.push('구독 기간/횟수');
+    if (!subscriptionInput || !subscriptionInput.value) {
+        alert('구독 기간/횟수를 입력해주세요.');
+        return;
+    }
 
     if (missingFields.length > 0) {
         alert(`다음 정보를 입력해주세요:\n${missingFields.join('\n')}`);
         return;
     }
+
+    const subscriptionType = document.getElementById('subscription-type');
+    const subscriptionInput = document.getElementById('custom-subscription').value;
+    const totalClasses = parseInt(subscriptionInput.getAttribute('data-total-classes')) || 0;
 
     try {
         // 구독 유형에 따른 데이터 설정
