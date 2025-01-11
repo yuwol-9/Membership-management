@@ -843,6 +843,9 @@ async function loadPrograms() {
           });
         });
       });
+      if (deleteMode) {
+        disableDeleteMode();
+      }
     } catch (error) {
       console.error('프로그램 목록 로드 실패:', error);
     }
