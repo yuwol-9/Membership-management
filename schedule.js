@@ -267,70 +267,69 @@ function openModal() {
 
 async function openEditModal(programId) {
     try {
-        const program = await API.getProgram(programId);
+        const program = await API.getProgram(programId); // 프로그램 데이터 로드
         document.getElementById('modal-title').textContent = '프로그램 수정';
         document.getElementById('submit-btn').textContent = '수정';
-        
-        // 폼 데이터 채우기
+
+        // 프로그램 기본 정보 설정
         document.getElementById('class-name').value = program.name;
         document.getElementById('monthly-price').value = program.monthly_price;
         document.getElementById('per-class-price').value = program.per_class_price;
         document.getElementById('instructor-name').value = program.instructor_name;
- 
+
         // 시간 데이터 채우기
         const timeSelectionContainer = document.getElementById('time-selection-container');
-        timeSelectionContainer.innerHTML = '';
- 
+        timeSelectionContainer.innerHTML = ''; // 기존 시간 선택 UI 초기화
+
         if (program.classes && program.classes.length > 0) {
-            program.classes.forEach((classInfo, index) => {
-                if (index > 0) {
-                    addTimeSelection();
+            program.classes.forEach((classInfo) => {
+                const timeSelection = addTimeSelection(); // 시간 선택 UI 추가
+
+                // 요일 설정
+                const daySelect = timeSelection.querySelector('select[id^="day"]');
+                if (daySelect) {
+                    daySelect.value = classInfo.day || '';
                 }
- 
-                const timeSelection = document.querySelectorAll('.time-selection')[index];
-                if (timeSelection) {
-                    // 요일 설정
-                    const daySelect = timeSelection.querySelector('select[id^="day"]');
-                    if (daySelect) {
-                        daySelect.value = classInfo.day;
-                    }
- 
-                    // 시작 시간 설정
+
+                // 시작 시간 설정
+                if (classInfo.startTime) {
                     const [startHour, startMinute] = classInfo.startTime.split(':');
-                    const startHour24 = parseInt(startHour);
+                    const startHour24 = parseInt(startHour, 10);
                     const startTimePeriod = startHour24 >= 12 ? '오후' : '오전';
                     const startHour12 = startHour24 > 12 ? startHour24 - 12 : startHour24;
- 
+
                     timeSelection.querySelector('[id^="start-time-period"]').value = startTimePeriod;
                     timeSelection.querySelector('[id^="start-time-hour"]').value = startHour12;
                     timeSelection.querySelector('[id^="start-time-minute"]').value = startMinute;
- 
-                    // 종료 시간 설정
+                }
+
+                // 종료 시간 설정
+                if (classInfo.endTime) {
                     const [endHour, endMinute] = classInfo.endTime.split(':');
-                    const endHour24 = parseInt(endHour);
+                    const endHour24 = parseInt(endHour, 10);
                     const endTimePeriod = endHour24 >= 12 ? '오후' : '오전';
                     const endHour12 = endHour24 > 12 ? endHour24 - 12 : endHour24;
- 
+
                     timeSelection.querySelector('[id^="end-time-period"]').value = endTimePeriod;
                     timeSelection.querySelector('[id^="end-time-hour"]').value = endHour12;
                     timeSelection.querySelector('[id^="end-time-minute"]').value = endMinute;
                 }
             });
         } else {
-            // 시간 데이터가 없는 경우 기본 시간 선택 UI 하나 추가
+            // 시간 데이터가 없는 경우 기본 시간 선택 UI 추가
             addTimeSelection();
         }
- 
+
         // 주간 수업 횟수 설정
         document.getElementById('classes-per-week').value = program.classes.length || 1;
- 
+
         // 특이사항 설정
         document.getElementById('class-details').value = program.classes[0]?.details || '';
- 
+
         // 색상 설정
         selectedColor = program.classes[0]?.color || '#E56736';
         document.getElementById('color-preview').style.backgroundColor = selectedColor;
- 
+
         // 모달 열기
         document.getElementById('class-modal').classList.add('active');
         document.getElementById('modal-overlay').classList.add('active');
@@ -338,7 +337,8 @@ async function openEditModal(programId) {
         console.error('프로그램 데이터 로드 실패:', error);
         alert('프로그램 정보를 불러오는데 실패했습니다.');
     }
- }
+}
+
 
 function closeModal() {
     document.getElementById('class-modal').classList.remove('active');
