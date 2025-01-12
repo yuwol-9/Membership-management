@@ -27,7 +27,7 @@ function updateTable(instructors) {
             <td>${instructor.phone || '-'}</td>
             <td>${formatCurrency(instructor.salary) || '-'}</td>
             <td>
-                <a href="강사정보수정.html?id=${instructor.id}" class="btn btn-primary">수정</a>
+                <a href="강사정보수정.html?id=${instructor.id}"><button class="instructor-btn">수정</button></a>
             </td>
         `;
         tbody.appendChild(tr);
