@@ -124,8 +124,10 @@ function updateAttendanceTable(data) {
         const tdRemaining = document.createElement('td');
         const remainingDays = Math.max(0, attendance.remaining_days);
         tdRemaining.textContent = remainingDays;
-        if (remainingDays <= 5) {
+        if (remainingDays == 0) {
             tdRemaining.style.color = 'red';
+        } else if (remainingDays <= 3) {
+            tdRemaining.style.color = '#E56736';
         }
         tr.appendChild(tdRemaining);
 

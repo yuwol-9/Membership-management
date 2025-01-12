@@ -42,7 +42,7 @@ function updateTable(members) {
         }
 
         tr.innerHTML = `
-            <td>${member.name || '-'}</td>
+            <td style="${member.remaining_days == 0 ? 'color: red;' : member.remaining_days <= 3 ? 'color: #E56736;' : ''}">${member.name || '-'}</td>
             <td>${member.phone || '-'}</td>
             <td>${formatDate(member.birthdate) || '-'}</td>
             <td>${member.age || '-'}</td>
@@ -51,7 +51,7 @@ function updateTable(members) {
             <td>${member.program_name || '-'}</td>
             <td>${subscriptionDisplay}</td>
             <td>${formatCurrency(totalAmount)}</td>
-            <td>${member.remaining_days !== undefined ? `${member.remaining_days}일` : '-'}</td>
+            <td style="${member.remaining_days == 0 ? 'color: red;' : member.remaining_days <= 3 ? 'color: #E56736;' : ''}">${member.remaining_days !== undefined ? `${member.remaining_days}일` : '-'}</td>
             <td>${formatPaymentStatus(member.payment_status) || '-'}</td>
             <td>${formatDate(member.start_date) || '-'}</td>
             <td>
@@ -139,15 +139,15 @@ function setupSortButtons() {
 
 function sortMembers(members, type) {
     switch(type) {
-        case '정렬':
+        case '이름순':
             members.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             break;
         case '남은 횟수':
-            members.sort((a, b) => (b.remaining_days || 0) - (a.remaining_days || 0));
+            members.sort((a, b) => (a.remaining_days || 0) - (b.remaining_days || 0));
             break;
         case '결제 상태':
             members.sort((a, b) => {
-                const statusOrder = { 'paid': 0, 'unpaid': 1 };
+                const statusOrder = { 'paid': 1, 'unpaid': 0 };
                 return statusOrder[a.payment_status] - statusOrder[b.payment_status];
             });
             break;

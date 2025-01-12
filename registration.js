@@ -176,10 +176,7 @@ function calculateAge(birthdate) {
 async function registerMember() {
     const subscriptionType = document.getElementById('subscription-type');
     const subscriptionInput = document.getElementById('custom-subscription');
-
-    console.log('구독 유형:', subscriptionType.value);
-    console.log('구독 입력값:', subscriptionInput.value);
-
+    
     const formData = {
         name: document.getElementById('name').value.trim(),
         gender: document.getElementById('gender').value,
@@ -193,8 +190,6 @@ async function registerMember() {
         duration_months: subscriptionType.value === 'month' ? parseInt(subscriptionInput.value) : 0,
         total_classes: subscriptionType.value === 'class' ? parseInt(subscriptionInput.value) : 0
     };
-
-    console.log('서버로 전송되는 데이터:', formData);
 
     // 필수 입력 필드 검증
     const missingFields = [];
