@@ -84,7 +84,7 @@ function formatCurrency(amount) {
     return Number(amount || 0).toLocaleString('ko-KR');
 }
 
-function updateSalesTable(monthlyData) {
+function updateSalesTable(monthlyData, yearlyData) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
     
@@ -120,7 +120,6 @@ function updateSalesTable(monthlyData) {
     if (yearlyData && yearlyData.length > 0) {
         yearlyTotal = yearlyData.reduce((sum, data) => sum + Number(data.revenue || 0), 0);
     }
-
     const monthlyTotalRevenue = monthlyPaidTotal + monthlyUnpaidTotal;
 
     const summaryElement = document.querySelector('.summary');
