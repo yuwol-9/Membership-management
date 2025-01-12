@@ -307,8 +307,8 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
         // 새로운 구독의 총 일수 계산
         let newTotalDays = duration_months > 0 ? duration_months * 30 : total_classes;
         let totalAmount = duration_months > 0 ? 
-            duration_months * programInfo[0].monthly_price : 
-            total_classes * programInfo[0].per_class_price;
+            duration_months * programPrice[0].monthly_price : 
+            total_classes * programPrice[0].per_class_price;
 
         // 기존 등록 정보 조회
         const [currentEnrollment] = await connection.execute(
