@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS class_schedules (
 );
 
 /* register info table */
-CREATE TABLE member_programs (
+CREATE TABLE if NOT EXISTS member_programs (
     id INT PRIMARY KEY AUTO_INCREMENT,
     member_id INT NOT NULL,
     program_id INT NOT NULL,
@@ -78,7 +78,7 @@ CREATE TABLE member_programs (
 /* attendance table */
 CREATE TABLE IF NOT EXISTS attendance (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    enrollment_id INT NOT NULL,
+    member_program_id INT NOT NULL,
     attendance_date DATE NOT NULL,
     FOREIGN KEY (member_program_id) REFERENCES member_programs(id) ON DELETE CASCADE
 );
