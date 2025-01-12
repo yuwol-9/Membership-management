@@ -314,6 +314,11 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
 
         const program = programs[0];
 
+        const [currentEnrollment] = await connection.execute(
+            'SELECT duration_months, total_classes, remaining_days FROM enrollments WHERE member_id = ?',
+            [memberId]
+        );
+
         // 새로운 구독의 총 금액과 남은 일수 계산
         let totalAmount = 0;
         let newRemainingDays = 0;
@@ -321,10 +326,23 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
         if (duration_months > 0) {
             totalAmount = duration_months * program.monthly_price;
             const classesPerMonth = program.classes_per_week * 4;
-            newRemainingDays = duration_months * classesPerMonth;
+            const newTotalClasses = duration_months * classesPerMonth;
+            
+            if (currentEnrollment[0].total_classes && newTotalClasses < currentEnrollment[0].total_classes) {
+                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
+            }
+            
+            newRemainingDays = currentEnrollment[0].remaining_days + 
+                            (newTotalClasses - currentEnrollment[0].total_classes);
         } else if (total_classes > 0) {
             totalAmount = total_classes * program.per_class_price;
-            newRemainingDays = total_classes;
+            
+            if (currentEnrollment[0].total_classes && total_classes < currentEnrollment[0].total_classes) {
+                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
+            }
+            
+            newRemainingDays = currentEnrollment[0].remaining_days + 
+                            (total_classes - currentEnrollment[0].total_classes);
         }
 
         // 회원 기본 정보 업데이트
