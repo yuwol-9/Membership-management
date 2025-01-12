@@ -36,6 +36,37 @@ function setupEventListeners() {
     loadData();
 }
 
+async function loadData() {
+    try {
+        const year = document.getElementById('yearSelect').value;
+        const month = document.getElementById('monthSelect').value;
+
+        const monthlyResponse = await fetch(`https://membership-management-production.up.railway.app/api/statistics/monthly?year=${year}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!monthlyResponse.ok) {
+            throw new Error('월별 통계 데이터 로드 실패');
+        }
+
+        const monthlyStats = await monthlyResponse.json();
+        const yearlyData = monthlyStats;
+        const monthlyData = yearlyData.filter(item => {
+            const itemMonth = parseInt(item.month.split('-')[1]);
+            return itemMonth === parseInt(month);
+        });
+
+        updateSalesTable(monthlyData);
+        updateMonthlyChart(yearlyData);
+
+    } catch (error) {
+        console.error('데이터 로드 오류:', error);
+        alert('데이터를 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
 function filterDataByYear(data, year) {
     return data.filter(item => {
         const itemYear = item.month.split('-')[0];
@@ -182,7 +213,9 @@ async function loadData() {
             const itemMonth = parseInt(item.month.split('-')[1]);
             return itemMonth === parseInt(month);
         });
+
         updateSalesTable(monthlyData, yearlyData);
+        updateMonthlyChart(yearlyData);
 
         const programResponse = await fetch(`https://membership-management-production.up.railway.app/api/statistics/program?year=${year}`, {
             headers: {
@@ -195,9 +228,6 @@ async function loadData() {
         }
 
         const programStats = await programResponse.json();
-
-        updateSalesTable(monthlyData);
-        updateMonthlyChart(yearlyData);
         updateProgramChart(programStats);
 
     } catch (error) {
