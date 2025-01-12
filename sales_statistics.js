@@ -213,6 +213,7 @@ async function loadData() {
             const itemMonth = parseInt(item.month.split('-')[1]);
             return itemMonth === parseInt(month);
         });
+        updateSalesTable(monthlyData, yearlyData);
 
         const programResponse = await fetch(`https://membership-management-production.up.railway.app/api/statistics/program?year=${year}`, {
             headers: {
