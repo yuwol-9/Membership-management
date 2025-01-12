@@ -174,6 +174,7 @@ function calculateAge(birthdate) {
 }
 
 async function registerMember() {
+    const subscriptionInput = document.getElementById('custom-subscription');
     const formData = {
         name: document.getElementById('name').value.trim(),
         gender: document.getElementById('gender').value,
@@ -213,7 +214,6 @@ async function registerMember() {
     }
 
     const subscriptionType = document.getElementById('subscription-type');
-    const subscriptionInput = document.getElementById('custom-subscription').value;
     const totalClasses = parseInt(subscriptionInput.getAttribute('data-total-classes')) || 0;
 
     try {
