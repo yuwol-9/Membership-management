@@ -61,7 +61,10 @@ function setupEventListeners() {
 
     if (showAllButton) {
         showAllButton.addEventListener('click', async () => {
-            searchInput.value = '';
+            const searchInput = document.querySelector('.search-bar input');
+            if (searchInput) {
+                searchInput.value = '';
+            }
             await loadInstructors();
         });
     }

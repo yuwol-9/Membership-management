@@ -114,11 +114,14 @@ function setupSearchFunction() {
             }
         });
     }
-    
+
     if (showAllButton) {
         showAllButton.addEventListener('click', async () => {
+        const searchInput = document.querySelector('.search-bar input');
+        if (searchInput) {
             searchInput.value = '';
-            await loadMembers();
+        }
+        await loadMembers();
         });
     }
 }
