@@ -87,44 +87,47 @@ function formatCurrency(amount) {
 function updateSalesTable(monthlyData) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
-
-    const data = Array.isArray(monthlyData) ? monthlyData : [monthlyData];
+    
+    const yearSelect = document.getElementById('yearSelect').value;
+    const monthSelect = document.getElementById('monthSelect').value;
     
     let monthlyPaidTotal = 0;
     let monthlyUnpaidTotal = 0;
+    let yearlyTotal = 0;
 
-    // First row for paid amount
-    if (data[0]?.paid_amount > 0) {
+    if (monthlyData[0]?.paid_amount > 0) {
         const trPaid = document.createElement('tr');
-        monthlyPaidTotal = Number(data[0].paid_amount || 0);
+        monthlyPaidTotal = Number(monthlyData[0].paid_amount || 0);
         trPaid.innerHTML = `
-            <td>${formatCurrency(data[0].paid_amount)}원</td>
-            <td>${data[0].month}</td>
+            <td>${formatCurrency(monthlyData[0].paid_amount)}원</td>
+            <td>${monthlyData[0].month}</td>
             <td>완납</td>
         `;
         tbody.appendChild(trPaid);
     }
 
-    // Second row for unpaid amount
-    if (data[0]?.unpaid_amount > 0) {
+    if (monthlyData[0]?.unpaid_amount > 0) {
         const trUnpaid = document.createElement('tr');
-        monthlyUnpaidTotal = Number(data[0].unpaid_amount || 0);
+        monthlyUnpaidTotal = Number(monthlyData[0].unpaid_amount || 0);
         trUnpaid.innerHTML = `
-            <td>${formatCurrency(data[0].unpaid_amount)}원</td>
-            <td>${data[0].month}</td>
+            <td>${formatCurrency(monthlyData[0].unpaid_amount)}원</td>
+            <td>${monthlyData[0].month}</td>
             <td>미납</td>
         `;
         tbody.appendChild(trUnpaid);
     }
 
-    const summaryElement = document.querySelector('.summary');
+    if (yearlyData && yearlyData.length > 0) {
+        yearlyTotal = yearlyData.reduce((sum, data) => sum + Number(data.revenue || 0), 0);
+    }
+
     const monthlyTotalRevenue = monthlyPaidTotal + monthlyUnpaidTotal;
-    
+
+    const summaryElement = document.querySelector('.summary');
     if (summaryElement) {
         summaryElement.innerHTML = `
-            완납 금액: ${formatCurrency(monthlyPaidTotal)}원<br>
-            미납 금액: ${formatCurrency(monthlyUnpaidTotal)}원<br>
-            총 매출: ${formatCurrency(monthlyTotalRevenue)}원
+            ${yearSelect}년 총매출: ${formatCurrency(yearlyTotal)}원<br>
+            ${yearSelect}년 ${monthSelect}월 총매출: ${formatCurrency(monthlyTotalRevenue)}원
         `;
     }
 }

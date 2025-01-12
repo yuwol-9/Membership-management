@@ -41,3 +41,40 @@ function formatCurrency(amount) {
         currency: 'KRW'
     }).format(amount);
 }
+
+function setupEventListeners() {
+    const searchInput = document.querySelector('.search-bar input');
+    const searchButton = document.querySelector('.search-bar button');
+    
+    if (searchInput && searchButton) {
+        searchButton.addEventListener('click', () => {
+            performSearch(searchInput.value);
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch(searchInput.value);
+            }
+        });
+    }
+}
+
+function performSearch(searchTerm) {
+    const rows = document.querySelectorAll('tbody tr');
+    searchTerm = searchTerm.toLowerCase().trim();
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await loadInstructors();
+        setupEventListeners();
+    } catch (error) {
+        console.error('강사 데이터 로드 실패:', error);
+        API.handleApiError(error);
+    }
+});
