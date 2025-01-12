@@ -61,14 +61,14 @@ CREATE TABLE IF NOT EXISTS class_schedules (
 );
 
 /* register info table */
-CREATE TABLE if NOT EXISTS member_programs (
+CREATE TABLE IF NOT EXISTS enrollments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     member_id INT NOT NULL,
     program_id INT NOT NULL,
     start_date DATE NOT NULL,
     duration_months INT DEFAULT NULL,
     total_classes INT DEFAULT NULL,
-    remaining_classes INT NOT NULL,
+    remaining_days INT NOT NULL,
     payment_status ENUM('paid', 'unpaid') NOT NULL,
     total_amount INT NOT NULL DEFAULT 0,
     FOREIGN KEY (member_id) REFERENCES members(id),
@@ -78,8 +78,8 @@ CREATE TABLE if NOT EXISTS member_programs (
 /* attendance table */
 CREATE TABLE IF NOT EXISTS attendance (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    member_program_id INT NOT NULL,
+    enrollment_id INT NOT NULL,
     attendance_date DATE NOT NULL,
-    FOREIGN KEY (member_program_id) REFERENCES member_programs(id) ON DELETE CASCADE
+    FOREIGN KEY (enrollmentm_id) REFERENCES enrollments(id) ON DELETE CASCADE
 );
 
