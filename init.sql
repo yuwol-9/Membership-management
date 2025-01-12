@@ -80,6 +80,6 @@ CREATE TABLE IF NOT EXISTS attendance (
     id INT PRIMARY KEY AUTO_INCREMENT,
     enrollment_id INT NOT NULL,
     attendance_date DATE NOT NULL,
-    FOREIGN KEY (enrollment_id) REFERENCES enrollments(id) ON DELETE CASCADE
+    FOREIGN KEY (member_program_id) REFERENCES member_programs(id) ON DELETE CASCADE
 );
 
