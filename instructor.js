@@ -44,7 +44,7 @@ function formatCurrency(amount) {
 
 function setupEventListeners() {
     const searchInput = document.querySelector('.search-bar input');
-    const showAllButton = document.querySelector('.show-all-btn');
+    const showAllButton = document.querySelector('.search-bar button');
     const searchButton = document.querySelector('.search-bar button');
     
     if (searchInput && searchButton) {
