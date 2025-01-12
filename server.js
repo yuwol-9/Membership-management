@@ -205,14 +205,14 @@ app.post('/api/members', authenticateToken, async (req, res) => {
             [name, gender, age, birthdate, address, phone]
         );
 
-        // 프로그램 정보 조회
+        // 수업 정보 조회
         const [programs] = await connection.execute(
             'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
             [program_id]
         );
 
         if (programs.length === 0) {
-            throw new Error('프로그램 정보를 찾을 수 없습니다.');
+            throw new Error('수업 정보를 찾을 수 없습니다.');
         }
 
         const program = programs[0];
@@ -302,14 +302,14 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
             payment_status, start_date 
         } = req.body;
 
-        // 프로그램 정보 조회
+        // 수업 정보 조회
         const [programs] = await connection.execute(
             'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
             [program_id]
         );
 
         if (programs.length === 0) {
-            throw new Error('프로그램 정보를 찾을 수 없습니다.');
+            throw new Error('수업 정보를 찾을 수 없습니다.');
         }
 
         const program = programs[0];
@@ -344,7 +344,7 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
             const additionalClasses = total_classes - currentEnrollment[0].total_classes;
             newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
         }
-        
+
         // 회원 기본 정보 업데이트
         await connection.execute(
             'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
@@ -515,10 +515,10 @@ app.post('/api/members/:id/programs', authenticateToken, async (req, res) => {
         );
 
         await connection.commit();
-        res.status(201).json({ message: '프로그램이 성공적으로 추가되었습니다.' });
+        res.status(201).json({ message: '수업이 성공적으로 추가되었습니다.' });
     } catch (err) {
         await connection.rollback();
-        console.error('프로그램 추가 에러:', err);
+        console.error('수업 추가 에러:', err);
         res.status(500).json({ message: '서버 오류' });
     } finally {
         connection.release();
@@ -705,7 +705,7 @@ app.get('/api/statistics/program', authenticateToken, async (req, res) => {
 
         res.json(programStats);
     } catch (err) {
-        console.error('프로그램별 통계 조회 에러:', err);
+        console.error('수업별 통계 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
     }
 });
@@ -822,7 +822,7 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        console.log('받은 프로그램 데이터:', req.body);
+        console.log('받은 수업 데이터:', req.body);
 
         const { 
             name, 
@@ -863,7 +863,7 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
             [name, instructor_id, monthly_price || 0, per_class_price || 0, classes_per_week || 1]
         );
 
-        console.log('생성된 프로그램:', program);
+        console.log('생성된 수업:', program);
 
         if (!schedules || !Array.isArray(schedules) || schedules.length !== classes_per_week) {
             throw new Error('스케줄 데이터가 유효하지 않습니다.');
@@ -880,11 +880,11 @@ app.post('/api/programs', authenticateToken, async (req, res) => {
         await connection.commit();
         res.status(201).json({
             id: program.insertId,
-            message: '프로그램이 성공적으로 등록되었습니다.'
+            message: '수업이 성공적으로 등록되었습니다.'
         });
     } catch (err) {
         await connection.rollback();
-        console.error('프로그램 등록 에러:', err);
+        console.error('수업 등록 에러:', err);
         res.status(500).json({ message: '서버 오류' });
     } finally {
         connection.release();
@@ -911,7 +911,7 @@ app.get('/api/programs', authenticateToken, async (req, res) => {
             ORDER BY p.name
         `);
 
-        // 결과를 프로그램별로 그룹화
+        // 결과를 수업별로 그룹화
         const groupedPrograms = programs.reduce((acc, curr) => {
             if (!acc[curr.id]) {
                 acc[curr.id] = {
@@ -939,7 +939,7 @@ app.get('/api/programs', authenticateToken, async (req, res) => {
 
         res.json(Object.values(groupedPrograms));
     } catch (err) {
-        console.error('프로그램 목록 조회 에러:', err);
+        console.error('수업 목록 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
     }
 });
@@ -949,7 +949,7 @@ app.delete('/api/programs', authenticateToken, async (req, res) => {
     try {
         await connection.beginTransaction();
         
-        // 프로그램 관련 모든 데이터 삭제
+        // 수업 관련 모든 데이터 삭제
         await connection.execute('DELETE FROM class_schedules');
         await connection.execute('DELETE FROM enrollments');
         await connection.execute('DELETE FROM programs');
@@ -957,21 +957,21 @@ app.delete('/api/programs', authenticateToken, async (req, res) => {
         await connection.commit();
         res.json({
             success: true,
-            message: '모든 프로그램이 성공적으로 삭제되었습니다.'
+            message: '모든 수업이 성공적으로 삭제되었습니다.'
         });
     } catch (err) {
         await connection.rollback();
-        console.error('프로그램 전체 삭제 중 오류:', err);
+        console.error('수업 전체 삭제 중 오류:', err);
         res.status(500).json({
             success: false,
-            message: '프로그램 삭제 중 오류가 발생했습니다.'
+            message: '수업 삭제 중 오류가 발생했습니다.'
         });
     } finally {
         connection.release();
     }
 });
 
-// 프로그램 개별 조회 API
+// 수업 개별 조회 API
 app.get('/api/programs/:id', authenticateToken, async (req, res) => {
     try {
         const [rows] = await pool.execute(`
@@ -998,7 +998,7 @@ app.get('/api/programs/:id', authenticateToken, async (req, res) => {
         `, [req.params.id]);
 
         if (!rows || rows.length === 0) {
-            return res.status(404).json({ message: '프로그램을 찾을 수 없습니다.' });
+            return res.status(404).json({ message: '수업을 찾을 수 없습니다.' });
         }
 
         const program = rows[0];
@@ -1006,7 +1006,7 @@ app.get('/api/programs/:id', authenticateToken, async (req, res) => {
 
         res.json(program);
     } catch (err) {
-        console.error('프로그램 조회 에러:', err);
+        console.error('수업 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
     }
 });
@@ -1052,7 +1052,7 @@ app.put('/api/programs/:id', authenticateToken, async (req, res) => {
             }
         }
 
-        // 프로그램 정보 업데이트
+        // 수업 정보 업데이트
         await connection.execute(
             'UPDATE programs SET name = ?, instructor_id = ?, monthly_price = ?, per_class_price = ? WHERE id = ?',
             [
@@ -1089,11 +1089,11 @@ app.put('/api/programs/:id', authenticateToken, async (req, res) => {
         await connection.commit();
         res.json({ 
             success: true, 
-            message: '프로그램이 성공적으로 수정되었습니다.'
+            message: '수업이 성공적으로 수정되었습니다.'
         });
     } catch (err) {
         await connection.rollback();
-        console.error('프로그램 수정 에러:', err);
+        console.error('수업 수정 에러:', err);
         res.status(500).json({ 
             success: false, 
             message: '서버 오류가 발생했습니다.'
@@ -1119,7 +1119,7 @@ app.delete('/api/programs/:id', authenticateToken, async (req, res) => {
             await connection.rollback();
             return res.status(404).json({
                 success: false,
-                message: '해당 프로그램을 찾을 수 없습니다.'
+                message: '해당 수업을 찾을 수 없습니다.'
             });
         }
         
@@ -1128,14 +1128,14 @@ app.delete('/api/programs/:id', authenticateToken, async (req, res) => {
         await connection.commit();
         res.json({
             success: true,
-            message: '프로그램이 성공적으로 삭제되었습니다.'
+            message: '수업이 성공적으로 삭제되었습니다.'
         });
     } catch (err) {
         await connection.rollback();
-        console.error('프로그램 삭제 에러:', err);
+        console.error('수업 삭제 에러:', err);
         res.status(500).json({
             success: false,
-            message: '프로그램 삭제 중 오류가 발생했습니다.'
+            message: '수업 삭제 중 오류가 발생했습니다.'
         });
     } finally {
         connection.release();

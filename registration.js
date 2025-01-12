@@ -75,7 +75,7 @@ async function loadPrograms() {
             programSelect.appendChild(option);
         });
     } catch (error) {
-        console.error('프로그램 목록 로드 실패:', error);
+        console.error('수업 목록 로드 실패:', error);
         API.handleApiError(error);
     }
 }
@@ -200,7 +200,7 @@ async function registerMember() {
     if (!formData.address) missingFields.push('주소');
     if (!formData.phone) missingFields.push('전화번호');
     if (!formData.program_id) {
-        alert('프로그램을 선택해주세요.');
+        alert('수업을 선택해주세요.');
         return;
     }
     if (!formData.start_date) missingFields.push('시작일');

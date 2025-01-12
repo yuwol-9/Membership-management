@@ -218,7 +218,7 @@ async function loadData() {
         });
 
         if (!programResponse.ok) {
-            throw new Error('프로그램별 통계 데이터 로드 실패');
+            throw new Error('수업별 통계 데이터 로드 실패');
         }
 
         const programStats = await programResponse.json();
@@ -245,9 +245,9 @@ function updateProgramChart(data) {
     programChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: data.map(item => item.name || '프로그램명 없음'),
+            labels: data.map(item => item.name || '수업명 없음'),
             datasets: [{
-                label: '프로그램별 매출 (원)',
+                label: '수업별 매출 (원)',
                 data: data.map(item => Number(item.revenue || 0)),
                 backgroundColor: colors.slice(0, data.length),
                 borderWidth: 1

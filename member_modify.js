@@ -269,11 +269,11 @@ async function addProgram() {
       }
 
       await API.addMemberProgram(memberId, programData);
-      alert('프로그램이 성공적으로 추가되었습니다.');
+      alert('수업이 성공적으로 추가되었습니다.');
       window.location.reload();
   } catch (error) {
-      console.error('프로그램 추가 실패:', error);
-      alert('프로그램 추가에 실패했습니다. 다시 시도해주세요.');
+      console.error('수업 추가 실패:', error);
+      alert('수업 추가에 실패했습니다. 다시 시도해주세요.');
   }
 }
 
@@ -290,7 +290,7 @@ function setupEventListeners() {
       deleteButton.addEventListener('click', deleteMember);
   }
 
-  // 프로그램 추가 버튼 이벤트
+  // 수업 추가 버튼 이벤트
   const addProgramButton = document.getElementById('add-program-btn');
   if (addProgramButton) {
       addProgramButton.addEventListener('click', addProgram);
