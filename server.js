@@ -213,13 +213,15 @@ app.post('/api/members', authenticateToken, async (req, res) => {
 
         // 수강 금액 계산
         let totalAmount = 0;
-        let remainingdays = 0;
+        let remainingDays = 0;
+
         if (duration_months > 0) {
             totalAmount = duration_months * programPrice[0].monthly_price;
-            remainingdays = total_classes;
+            const classesPerMonth = programPrice[0].classes_per_week * 4;
+            remainingDays = duration_months * classesPerMonth;
         } else {
             totalAmount = total_classes * programPrice[0].per_class_price;
-            remainingdays = total_classes;
+            remainingDays = total_classes;
         }
 
         // 수강 정보 저장
@@ -307,8 +309,8 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
         // 새로운 구독의 총 일수 계산
         let newTotalDays = duration_months > 0 ? duration_months * 30 : total_classes;
         let totalAmount = duration_months > 0 ? 
-            duration_months * programPrice[0].monthly_price : 
-            total_classes * programPrice[0].per_class_price;
+            duration_months * programInfo[0].monthly_price : 
+            total_classes * programInfo[0].per_class_price;
 
         // 기존 등록 정보 조회
         const [currentEnrollment] = await connection.execute(
@@ -510,12 +512,14 @@ app.post('/api/members/:id/programs', authenticateToken, async (req, res) => {
         // Calculate total amount
         let totalAmount = 0;
         let remainingDays = 0;
-        if (total_classes) {
+
+        if (duration_months > 0) {
+            totalAmount = duration_months * programPrice[0].monthly_price;
+            const classesPerMonth = programPrice[0].classes_per_week * 4;
+            remainingDays = duration_months * classesPerMonth;
+        } else {
             totalAmount = total_classes * programPrice[0].per_class_price;
             remainingDays = total_classes;
-        } else {
-            totalAmount = duration_months * programPrice[0].monthly_price;
-            remainingDays = duration_months * 30;
         }
 
         // Insert new enrollment
