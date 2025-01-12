@@ -77,6 +77,10 @@ function updateTable(members) {
 }
 
 function appendProgramDetails(row, program) {
+   const remaining = program.remaining_days;
+   const remainingDisplay = remaining !== undefined && remaining !== null ? `${remaining}일` : '-';
+   const remainingColor = remaining <= 0 ? 'red' : 
+                         remaining <= 3 ? '#E56736' : '';
     // 구독 정보 셀
     const subscriptionCell = document.createElement('td');
     const subscriptionDisplay = formatSubscription(program);
@@ -91,9 +95,8 @@ function appendProgramDetails(row, program) {
  
     // 남은 일수 셀
     const remainingCell = document.createElement('td');
-    remainingCell.textContent = program.remaining_days ? `${program.remaining_days}일` : '-';
-    remainingCell.style.color = program.remaining_days <= 0 ? 'red' : 
-                               program.remaining_days <= 3 ? '#E56736' : '';
+    remainingCell.textContent = remainingDisplay;
+    remainingCell.style.color = remainingColor;
     row.appendChild(remainingCell);
  
     // 결제 상태 셀
