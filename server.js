@@ -215,11 +215,11 @@ app.post('/api/members', authenticateToken, async (req, res) => {
         let totalAmount = 0;
         let remainingdays = 0;
         if (duration_months > 0) {
-            totalAmount = duration_months * programInfo[0].monthly_price;
-            remainingDays = total_classes;
+            totalAmount = duration_months * programPrice[0].monthly_price;
+            remainingdays = total_classes;
         } else {
-            totalAmount = total_classes * programInfo[0].per_class_price;
-            remainingDays = total_classes;
+            totalAmount = total_classes * programPrice[0].per_class_price;
+            remainingDdays = total_classes;
         }
 
         // 수강 정보 저장
