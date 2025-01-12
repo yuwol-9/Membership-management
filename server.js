@@ -327,24 +327,24 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
             totalAmount = duration_months * program.monthly_price;
             const classesPerMonth = program.classes_per_week * 4;
             const newTotalClasses = duration_months * classesPerMonth;
-            
+        
             if (currentEnrollment[0].total_classes && newTotalClasses < currentEnrollment[0].total_classes) {
                 throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
             }
-            
-            newRemainingDays = currentEnrollment[0].remaining_days + 
-                            (newTotalClasses - currentEnrollment[0].total_classes);
+        
+            const additionalClasses = newTotalClasses - currentEnrollment[0].total_classes;
+            newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
         } else if (total_classes > 0) {
             totalAmount = total_classes * program.per_class_price;
-            
+        
             if (currentEnrollment[0].total_classes && total_classes < currentEnrollment[0].total_classes) {
                 throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
             }
-            
-            newRemainingDays = currentEnrollment[0].remaining_days + 
-                            (total_classes - currentEnrollment[0].total_classes);
+        
+            const additionalClasses = total_classes - currentEnrollment[0].total_classes;
+            newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
         }
-
+        
         // 회원 기본 정보 업데이트
         await connection.execute(
             'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
