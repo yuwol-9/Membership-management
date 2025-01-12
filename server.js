@@ -219,7 +219,7 @@ app.post('/api/members', authenticateToken, async (req, res) => {
             remainingdays = total_classes;
         } else {
             totalAmount = total_classes * programPrice[0].per_class_price;
-            remainingDdays = total_classes;
+            remainingdays = total_classes;
         }
 
         // 수강 정보 저장
