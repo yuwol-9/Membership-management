@@ -253,7 +253,6 @@ app.post('/api/members', authenticateToken, async (req, res) => {
 
 app.get('/api/members', authenticateToken, async (req, res) => {
     try {
-        console.log('회원 목록 조회 API 호출됨');
         const [rows] = await pool.execute(`
             SELECT 
                 m.id,
@@ -263,32 +262,33 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                 m.birthdate,
                 m.address,
                 m.phone,
-                e.duration_months,
-                e.total_classes,
-                e.remaining_days,
-                e.payment_status,
-                e.start_date,
-                p.name as program_name,
-                p.monthly_price,
-                p.per_class_price,
-                e.total_amount
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id', e.id,
+                        'name', p.name,
+                        'duration_months', e.duration_months,
+                        'total_classes', e.total_classes,
+                        'remaining_days', e.remaining_days,
+                        'payment_status', e.payment_status,
+                        'start_date', e.start_date,
+                        'total_amount', e.total_amount,
+                        'monthly_price', p.monthly_price,
+                        'per_class_price', p.per_class_price
+                    )
+                ) as programs
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id
+            GROUP BY m.id
             ORDER BY m.created_at DESC
         `);
         
-        console.log('조회된 회원 데이터:', rows);
         res.json(rows);
     } catch (err) {
-        console.error('회원 목록 조회 상세 에러:', err);
-        res.status(500).json({ 
-            message: '서버 오류', 
-            error: err.message,
-            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-        });
+        console.error('회원 목록 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
     }
-});
+ });
 
 app.put('/api/members/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();

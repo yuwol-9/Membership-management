@@ -29,38 +29,115 @@ function updateTable(members) {
     members.forEach(member => {
         const tr = document.createElement('tr');
         
-        // 구독 정보 및 금액 계산
-        let subscriptionDisplay = '-';
-        let totalAmount = 0;
-
-        if (member.total_classes > 0) {
-            subscriptionDisplay = `${member.total_classes}회`;
-            totalAmount = member.total_amount || member.per_class_price * member.total_classes;
-        } else if (member.duration_months > 0) {
-            subscriptionDisplay = `${member.duration_months}개월`;
-            totalAmount = member.total_amount || member.monthly_price * member.duration_months;
-        }
-
-        tr.innerHTML = `
+        // 기본 정보 셀 생성
+        const basicInfo = `
             <td style="${member.remaining_days == 0 ? 'color: red;' : member.remaining_days <= 3 ? 'color: #E56736;' : ''}">${member.name || '-'}</td>
             <td>${member.phone || '-'}</td>
             <td>${formatDate(member.birthdate) || '-'}</td>
             <td>${member.age || '-'}</td>
             <td>${formatGender(member.gender) || '-'}</td>
             <td>${member.address || '-'}</td>
-            <td>${member.program_name || '-'}</td>
-            <td>${subscriptionDisplay}</td>
-            <td>${formatCurrency(totalAmount)}</td>
-            <td style="${member.remaining_days == 0 ? 'color: red;' : member.remaining_days <= 3 ? 'color: #E56736;' : ''}">${member.remaining_days !== undefined ? `${member.remaining_days}일` : '-'}</td>
-            <td>${formatPaymentStatus(member.payment_status) || '-'}</td>
-            <td>${formatDate(member.start_date) || '-'}</td>
-            <td>
-                <button onclick="location.href='회원정보수정.html?id=${member.id}'" class="btn-primary">수정</button>
-            </td>
         `;
+        tr.innerHTML = basicInfo;
+ 
+        // 프로그램 정보 셀 생성
+        const programs = member.programs || [];
+        const programCell = document.createElement('td');
+        
+        if (programs.length > 1) {
+            const select = document.createElement('select');
+            select.className = 'program-select';
+            
+            programs.forEach(program => {
+                const option = document.createElement('option');
+                option.value = program.id;
+                option.textContent = program.name;
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', (e) => {
+                const selectedProgram = programs.find(p => p.id === parseInt(e.target.value));
+                updateProgramDetails(tr, selectedProgram);
+            });
+            
+            programCell.appendChild(select);
+        } else if (programs.length === 1) {
+            programCell.textContent = programs[0].name || '-';
+        } else {
+            programCell.textContent = '-';
+        }
+        tr.appendChild(programCell);
+ 
+        // 초기 프로그램 상세 정보 표시
+        const initialProgram = programs[0] || {};
+        appendProgramDetails(tr, initialProgram);
+ 
         tbody.appendChild(tr);
     });
 }
+
+function appendProgramDetails(row, program) {
+    // 구독 정보 셀
+    const subscriptionCell = document.createElement('td');
+    const subscriptionDisplay = formatSubscription(program);
+    subscriptionCell.textContent = subscriptionDisplay;
+    row.appendChild(subscriptionCell);
+ 
+    // 총액 셀
+    const amountCell = document.createElement('td');
+    const totalAmount = calculateTotalAmount(program);
+    amountCell.textContent = formatCurrency(totalAmount);
+    row.appendChild(amountCell);
+ 
+    // 남은 일수 셀
+    const remainingCell = document.createElement('td');
+    remainingCell.textContent = program.remaining_days ? `${program.remaining_days}일` : '-';
+    remainingCell.style.color = program.remaining_days <= 0 ? 'red' : 
+                               program.remaining_days <= 3 ? '#E56736' : '';
+    row.appendChild(remainingCell);
+ 
+    // 결제 상태 셀
+    const paymentCell = document.createElement('td');
+    paymentCell.textContent = formatPaymentStatus(program.payment_status);
+    row.appendChild(paymentCell);
+ 
+    // 등록 날짜 셀
+    const dateCell = document.createElement('td');
+    dateCell.textContent = formatDate(program.start_date) || '-';
+    row.appendChild(dateCell);
+ 
+    // 수정 버튼 셀
+    const actionCell = document.createElement('td');
+    actionCell.innerHTML = `<button onclick="location.href='회원정보수정.html?id=${program.id}'" class="btn-primary">수정</button>`;
+    row.appendChild(actionCell);
+ }
+
+function updateProgramDetails(row, program) {
+    for (let i = 0; i < 6; i++) {
+        row.deleteCell(-1);
+    }
+    appendProgramDetails(row, program);
+ }
+ 
+function formatSubscription(program) {
+    if (!program) return '-';
+    if (program.total_classes > 0) {
+        return `${program.total_classes}회`;
+    } else if (program.duration_months > 0) {
+        return `${program.duration_months}개월`;
+    }
+    return '-';
+ }
+
+function calculateTotalAmount(program) {
+    if (!program) return 0;
+    if (program.total_classes > 0) {
+        return program.total_amount || program.per_class_price * program.total_classes;
+    } else if (program.duration_months > 0) {
+        return program.total_amount || program.monthly_price * program.duration_months;
+    }
+    return 0;
+ }
 
 function formatGender(gender) {
     if (!gender) return '-';
