@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await loadInstructors();
     } catch (error) {
-        console.error('강사 데이터 로드 실패:', error);
+        console.error('선생님 데이터 로드 실패:', error);
         API.handleApiError(error);
     }
 });
@@ -27,7 +27,7 @@ function updateTable(instructors) {
             <td>${instructor.phone || '-'}</td>
             <td>${formatCurrency(instructor.salary) || '-'}</td>
             <td>
-                <a href="강사정보수정.html?id=${instructor.id}"><button class="btn-primary">수정</button></a>
+                <a href="선생님정보수정.html?id=${instructor.id}"><button class="btn-primary">수정</button></a>
             </td>
         `;
         tbody.appendChild(tr);
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadInstructors();
         setupEventListeners();
     } catch (error) {
-        console.error('강사 데이터 로드 실패:', error);
+        console.error('선생님 데이터 로드 실패:', error);
         API.handleApiError(error);
     }
 });

@@ -460,7 +460,7 @@ async function updateProgram() {
             );
 
             if (!instructorExists) {
-                alert('등록되지 않은 강사입니다. 먼저 강사를 등록해주세요.');
+                alert('등록되지 않은 선생님입니다. 먼저 선생님을 등록해주세요.');
                 return;
             }
         }
