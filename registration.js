@@ -174,6 +174,7 @@ function calculateAge(birthdate) {
 }
 
 async function registerMember() {
+    const subscriptionType = document.getElementById('subscription-type');
     const subscriptionInput = document.getElementById('custom-subscription');
     const formData = {
         name: document.getElementById('name').value.trim(),
@@ -185,8 +186,8 @@ async function registerMember() {
         program_id: document.getElementById('program').value,
         start_date: document.getElementById('start_date').value,
         payment_status: selectedPaymentStatus,
-        duration_months: 0,
-        total_classes: 0
+        duration_months: subscriptionType.value === 'month' ? parseInt(subscriptionInput.value) : 0,
+        total_classes: subscriptionType.value === 'class' ? parseInt(subscriptionInput.value) : 0
     };
 
     // 필수 입력 필드 검증
@@ -213,7 +214,6 @@ async function registerMember() {
         return;
     }
 
-    const subscriptionType = document.getElementById('subscription-type');
     const totalClasses = parseInt(subscriptionInput.getAttribute('data-total-classes')) || 0;
 
     try {
