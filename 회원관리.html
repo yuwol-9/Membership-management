@@ -128,7 +128,19 @@
     .search-bar button:hover {
       background-color: #E56736;
     }
+    .show-all-btn {
+        background-color: #E56736;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 20px;
+        cursor: pointer;
+        margin-left: 10px;
+    }
 
+    .show-all-btn:hover {
+        background-color: #d55825;
+    }
     .member {
       display: flex;
       justify-content: space-between;
@@ -270,7 +282,8 @@
     <h1>회원 관리</h1>
     <div class="search-bar">
       <input type="text" placeholder="회원 검색">
-      <button>검색</button>
+      <button class="show-all-btn">전체 목록</button>
+      <button>검색</button>>
     </div>
     <div class = "member">
       <a href = "회원정보등록.html"><button>회원정보 등록</button></a>

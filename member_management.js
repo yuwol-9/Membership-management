@@ -100,6 +100,7 @@ function setupEventListeners() {
 
 function setupSearchFunction() {
     const searchInput = document.querySelector('.search-bar input');
+    const showAllButton = document.querySelector('.show-all-btn');
     const searchButton = document.querySelector('.search-bar button');
 
     if (searchInput && searchButton) {
@@ -111,6 +112,13 @@ function setupSearchFunction() {
             if (e.key === 'Enter') {
                 performSearch(searchInput.value);
             }
+        });
+    }
+    
+    if (showAllButton) {
+        showAllButton.addEventListener('click', async () => {
+            searchInput.value = '';
+            await loadMembers();
         });
     }
 }
