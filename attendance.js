@@ -112,18 +112,15 @@ function updateAttendanceTable(data) {
     Object.entries(memberAttendance).forEach(([memberName, attendance]) => {
         const tr = document.createElement('tr');
         
-        // 회원 이름 셀 추가
         const tdName = document.createElement('td');
         tdName.textContent = memberName;
         tr.appendChild(tdName);
 
-        // 날짜별 출석 체크박스 생성
         for (let day = 1; day <= daysInMonth; day++) {
             const td = document.createElement('td');
             const currentDate = new Date(year, month, day);
             const formattedDate = formatDate(currentDate);
             
-            // 일요일 처리
             if (currentDate.getDay() === 0) {
                 td.classList.add('sunday');
                 tr.appendChild(td);
@@ -133,22 +130,17 @@ function updateAttendanceTable(data) {
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             
-            // 출석 여부 확인
-            const isAttended = attendance.dates.some(date => {
-                const attendanceDate = new Date(date);
-                const attendanceDateStr = formatDate(attendanceDate);
-                return attendanceDateStr === formattedDate;
-            });
-            
+            const isAttended = attendance.dates.some(date => 
+                formatDate(new Date(date)) === formattedDate
+            );
             checkbox.checked = isAttended;
 
-            // 남은 수업 일수가 없는 경우 체크박스 비활성화
             if (attendance.remaining_days <= 0 && !isAttended) {
                 checkbox.disabled = true;
                 checkbox.title = '남은 수업 일수가 없습니다';
             }
 
-            // 체크박스 이벤트 리스너
+            // 여기가 핵심적으로 수정된 부분입니다
             checkbox.addEventListener('change', async (e) => {
                 try {
                     if (!attendance.enrollment_id) {
@@ -161,8 +153,33 @@ function updateAttendanceTable(data) {
                         is_present: checkbox.checked
                     };
 
-                    await API.checkAttendance(attendanceData);
-                    await loadAttendanceData(); // 전체 데이터 새로고침
+                    const response = await API.checkAttendance(attendanceData);
+                    
+                    // 성공적으로 출석이 처리되면 로컬 데이터도 업데이트
+                    if (checkbox.checked) {
+                        attendance.dates.push(formattedDate);
+                        attendance.remaining_days--;
+                    } else {
+                        attendance.dates = attendance.dates.filter(date => 
+                            formatDate(new Date(date)) !== formattedDate
+                        );
+                        attendance.remaining_days++;
+                    }
+
+                    // 출석 횟수와 남은 일수 업데이트
+                    const countCell = tr.querySelector('td:nth-last-child(2)');
+                    const remainingCell = tr.querySelector('td:nth-last-child(1)');
+                    
+                    countCell.textContent = attendance.dates.length;
+                    remainingCell.textContent = attendance.remaining_days;
+
+                    // 남은 일수에 따른 스타일 처리
+                    if (attendance.remaining_days === 0) {
+                        remainingCell.style.color = 'red';
+                    } else if (attendance.remaining_days <= 3) {
+                        remainingCell.style.color = '#E56736';
+                    }
+
                 } catch (error) {
                     console.error('출석 체크 실패:', error);
                     checkbox.checked = !checkbox.checked;
