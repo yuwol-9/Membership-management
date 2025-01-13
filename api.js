@@ -150,9 +150,21 @@ const API = {
         });
     },
 
-    getAttendanceList: async (filters = {}) => {
-        const queryString = new URLSearchParams(filters).toString();
-        return API.apiCall(`/attendance?${queryString}`);
+    getAttendanceList: async (params) => {
+        try {
+            const queryString = new URLSearchParams({
+                month: params.month,
+                year: params.year,
+                program_id: params.program_id
+            }).toString();
+            
+            const response = await API.apiCall(`/attendance?${queryString}`);
+            console.log('출석 데이터 응답:', response);  // 디버깅용
+            return response;
+        } catch (error) {
+            console.error('출석 데이터 조회 실패:', error);
+            throw error;
+        }
     },
 
     // Instructor APIs
@@ -202,6 +214,7 @@ const API = {
     getPrograms: async () => {
         try {
             const response = await API.apiCall('/programs');
+            console.log('프로그램 목록 원본 응답:', response);
             return response.map(program => ({
                 ...program,
                 monthlyPrice: parseInt(program.monthly_price),

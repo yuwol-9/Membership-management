@@ -915,22 +915,43 @@ app.post('/api/attendance', authenticateToken, async (req, res) => {
 
 app.get('/api/attendance', authenticateToken, async (req, res) => {
     try {
-        const { month, year } = req.query;
+        const { month, year, program_id } = req.query;
         const [rows] = await pool.execute(`
             SELECT 
                 m.name as member_name,
                 e.id as enrollment_id,
                 e.remaining_days,
                 a.attendance_date,
-                p.name as program_name
+                p.name as program_name,
+                p.id as program_id
             FROM members m
             JOIN enrollments e ON m.id = e.member_id
-            LEFT JOIN attendance a ON e.id = a.enrollment_id AND MONTH(a.attendance_date) = ? AND YEAR(a.attendance_date) = ?
-            LEFT JOIN programs p ON e.program_id = p.id
+            JOIN programs p ON e.program_id = p.id
+            LEFT JOIN attendance a ON e.id = a.enrollment_id 
+                AND MONTH(a.attendance_date) = ? 
+                AND YEAR(a.attendance_date) = ?
+            WHERE (? IS NULL OR p.id = ?)
             ORDER BY m.name, a.attendance_date
-        `, [month, year]);
+        `, [month, year, program_id, program_id]);
         
-        res.json(rows);
+        const memberAttendance = {};
+        rows.forEach(row => {
+            if (!memberAttendance[row.member_name]) {
+                memberAttendance[row.member_name] = {
+                    member_name: row.member_name,
+                    enrollment_id: row.enrollment_id,
+                    remaining_days: row.remaining_days,
+                    program_name: row.program_name,
+                    program_id: row.program_id,
+                    dates: []
+                };
+            }
+            if (row.attendance_date) {
+                memberAttendance[row.member_name].dates.push(row.attendance_date);
+            }
+        });
+
+        res.json(Object.values(memberAttendance));
     } catch (err) {
         console.error('출석 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });

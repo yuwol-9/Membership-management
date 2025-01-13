@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+
 async function initializeAttendance() {
     const today = new Date();
     const yearSelect = document.getElementById('year');
@@ -19,6 +20,7 @@ async function initializeAttendance() {
     monthSelect.value = today.getMonth();
 
     await loadPrograms();
+    await loadAttendanceData();
 }
 
 async function loadPrograms() {
@@ -36,9 +38,12 @@ async function loadPrograms() {
             programContainer.appendChild(div);
         });
 
-        // 첫 번째 프로그램 자동 선택
         if (programs.length > 0) {
-            await selectProgram(programs[0]);
+            selectedProgramId = programs[0].id;
+            const firstProgram = document.querySelector('.program-item');
+            if (firstProgram) {
+                firstProgram.classList.add('selected');
+            }
         }
     } catch (error) {
         console.error('프로그램 목록 로드 실패:', error);
@@ -69,15 +74,16 @@ async function loadAttendanceData() {
     if (!selectedProgramId) return;
 
     try {
-        const month = parseInt(document.getElementById('month').value);
+        const month = parseInt(document.getElementById('month').value) + 1;
         const year = parseInt(document.getElementById('year').value);
 
         const attendanceData = await API.getAttendanceList({
             program_id: selectedProgramId,
-            month: month + 1,
+            month: month,
             year: year
         });
 
+        console.log('출석 데이터:', attendanceData); // 디버깅용
         updateAttendanceTable(attendanceData);
     } catch (error) {
         console.error('출석 데이터 로드 실패:', error);
@@ -176,16 +182,19 @@ function updateAttendanceTable(data) {
 function updateTableHeader(daysInMonth) {
     const thead = document.querySelector('.attendance-table thead');
     thead.innerHTML = '';
+    
     const headerRow = document.createElement('tr');
     headerRow.innerHTML = `
         <th>회원 이름</th>
-        ${Array.from({length: daysInMonth}, (_, i) => `<th>${i + 1}일</th>`).join('')}
+        ${Array.from({length: daysInMonth}, (_, i) => {
+            const dayClass = new Date(document.getElementById('year').value, document.getElementById('month').value, i + 1).getDay() === 0 ? 'sunday' : '';
+            return `<th class="${dayClass}">${i + 1}일</th>`;
+        }).join('')}
         <th>출석횟수</th>
         <th>남은일수</th>
     `;
     thead.appendChild(headerRow);
 }
-
 function groupAttendanceByMember(data) {
     return data.reduce((acc, curr) => {
         if (!acc[curr.member_name]) {
