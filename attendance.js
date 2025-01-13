@@ -1,7 +1,9 @@
+// 전역 변수로 현재 선택된 프로그램 ID 관리
 let selectedProgramId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // 연도 선택 옵션 설정
         const yearSelect = document.getElementById('year');
         const currentYear = new Date().getFullYear();
         const startYear = 2024;
@@ -20,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        // 프로그램 목록을 먼저 로드하고 첫 번째 프로그램 선택
         await loadPrograms();
         setupEventListeners();
         
@@ -77,19 +80,24 @@ async function selectProgram(program) {
     await loadAttendanceData();
 }
 
+let cachedAttendanceData = {};
+
 async function loadAttendanceData() {
     try {
         const month = document.getElementById('month').value;
         const year = document.getElementById('year').value;
+        const cacheKey = `${selectedProgramId}-${year}-${month}`;
         
-        // 프로그램 ID를 포함하여 데이터 요청
-        const attendanceData = await API.getAttendanceList({
-            program_id: selectedProgramId,
-            month: parseInt(month) + 1,
-            year: year
-        });
+        if (!cachedAttendanceData[cacheKey]) {
+            const attendanceData = await API.getAttendanceList({
+                program_id: selectedProgramId,
+                month: parseInt(month) + 1,
+                year: year
+            });
+            cachedAttendanceData[cacheKey] = attendanceData;
+        }
         
-        updateAttendanceTable(attendanceData);
+        updateAttendanceTable(cachedAttendanceData[cacheKey]);
     } catch (error) {
         console.error('출석 데이터 로드 실패:', error);
         alert('출석 데이터를 불러오는데 실패했습니다.');
