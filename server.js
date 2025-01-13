@@ -290,28 +290,29 @@ app.get('/api/members', authenticateToken, async (req, res) => {
     }
  });
 
- app.put('/api/members/:id', authenticateToken, async (req, res) => {
+app.put('/api/members/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
 
         const memberId = req.params.id;
         const { 
+            // 회원 기본 정보
             name, gender, age, birthdate, address, phone,
-            program_id, duration_months, total_classes,
-            payment_status, start_date,
-            enrollment_id  // 특정 수강 정보의 ID
+            // 프로그램 구독 정보
+            enrollment_id, program_id, duration_months, total_classes,
+            payment_status, start_date
         } = req.body;
 
-        // 회원 기본 정보 업데이트
+        // 1. 회원 기본 정보 업데이트
         await connection.execute(
             'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
             [name, gender, age, birthdate, address, phone, memberId]
         );
 
-        // 수강 정보 수정이 요청된 경우
+        // 2. 프로그램 구독 정보 업데이트 (enrollment_id가 제공된 경우에만)
         if (enrollment_id && program_id) {
-            // 수업 정보 조회
+            // 프로그램 정보 조회
             const [programs] = await connection.execute(
                 'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
                 [program_id]
@@ -325,15 +326,15 @@ app.get('/api/members', authenticateToken, async (req, res) => {
 
             // 현재 수강 정보 조회
             const [currentEnrollment] = await connection.execute(
-                'SELECT id, duration_months, total_classes, remaining_days FROM enrollments WHERE id = ? AND member_id = ?',
-                [enrollment_id, memberId]
+                'SELECT duration_months, total_classes, remaining_days FROM enrollments WHERE id = ?',
+                [enrollment_id]
             );
 
             if (currentEnrollment.length === 0) {
-                throw new Error('해당 수강 정보를 찾을 수 없습니다.');
+                throw new Error('수강 정보를 찾을 수 없습니다.');
             }
 
-            // 새로운 구독의 총 금액과 남은 일수 계산
+            // 새로운 구독 정보 계산
             let totalAmount = 0;
             let newRemainingDays = 0;
 
@@ -342,13 +343,14 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                 const classesPerMonth = program.classes_per_week * 4;
                 const newTotalClasses = duration_months * classesPerMonth;
                 
-                const additionalClasses = newTotalClasses - (currentEnrollment[0].total_classes || 0);
-                newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
+                const currentClasses = currentEnrollment[0].total_classes || 0;
+                const usedClasses = currentClasses - currentEnrollment[0].remaining_days;
+                newRemainingDays = newTotalClasses - usedClasses;
             } else if (total_classes > 0) {
                 totalAmount = total_classes * program.per_class_price;
                 
-                const additionalClasses = total_classes - (currentEnrollment[0].total_classes || 0);
-                newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
+                const usedClasses = (currentEnrollment[0].total_classes || 0) - currentEnrollment[0].remaining_days;
+                newRemainingDays = total_classes - usedClasses;
             }
 
             // 수강 정보 업데이트
@@ -361,7 +363,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                     payment_status = ?,
                     start_date = ?,
                     total_amount = ?
-                WHERE id = ? AND member_id = ?`,
+                WHERE id = ?`,
                 [
                     program_id,
                     duration_months || null,
@@ -370,8 +372,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                     payment_status,
                     start_date,
                     totalAmount,
-                    enrollment_id,
-                    memberId
+                    enrollment_id
                 ]
             );
         }
@@ -447,10 +448,12 @@ app.delete('/api/members/:id', authenticateToken, async (req, res) => {
 // 회원 개별 조회 API 수정
 app.get('/api/members/:id', authenticateToken, async (req, res) => {
     try {
-        // 1. 먼저 회원 기본 정보 조회
+        const memberId = req.params.id;
+        const programId = req.query.program_id;
+
         const [memberRows] = await pool.execute(`
             SELECT * FROM members WHERE id = ?
-        `, [req.params.id]);
+        `, [memberId]);
 
         if (memberRows.length === 0) {
             return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
@@ -458,8 +461,7 @@ app.get('/api/members/:id', authenticateToken, async (req, res) => {
 
         const member = memberRows[0];
 
-        // 2. 해당 회원의 모든 수강 정보 조회
-        const [enrollmentRows] = await pool.execute(`
+        let enrollmentQuery = `
             SELECT 
                 e.*,
                 p.name as program_name,
@@ -468,12 +470,22 @@ app.get('/api/members/:id', authenticateToken, async (req, res) => {
             FROM enrollments e
             LEFT JOIN programs p ON e.program_id = p.id
             WHERE e.member_id = ?
-        `, [req.params.id]);
+        `;
+        
+        const queryParams = programId ? 
+            [memberId, programId] : 
+            [memberId];
+            
+        if (programId) {
+            enrollmentQuery += ` AND e.program_id = ?`;
+        }
 
-        // 3. 회원 정보에 수강 정보 추가
-        const memberData = {
+        const [enrollmentRows] = await pool.execute(enrollmentQuery, queryParams);
+
+        const responseData = {
             ...member,
-            enrollments: enrollmentRows.map(enrollment => ({
+            birthdate: member.birthdate ? member.birthdate.toISOString().split('T')[0] : null,
+            program_details: enrollmentRows.map(enrollment => ({
                 enrollment_id: enrollment.id,
                 program_id: enrollment.program_id,
                 program_name: enrollment.program_name,
@@ -481,14 +493,14 @@ app.get('/api/members/:id', authenticateToken, async (req, res) => {
                 total_classes: enrollment.total_classes,
                 remaining_days: enrollment.remaining_days,
                 payment_status: enrollment.payment_status,
-                start_date: enrollment.start_date,
+                start_date: enrollment.start_date ? enrollment.start_date.toISOString().split('T')[0] : null,
                 total_amount: enrollment.total_amount,
                 monthly_price: enrollment.monthly_price,
                 per_class_price: enrollment.per_class_price
             }))
         };
 
-        res.json(memberData);
+        res.json(responseData);
     } catch (err) {
         console.error('회원 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
