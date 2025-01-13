@@ -607,9 +607,11 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
             payment_status, start_date
         } = req.body;
 
-        // enrollment로 member_id와 현재 정보 찾기
+        // enrollment로 현재 정보 찾기
         const [enrollment] = await connection.execute(
-            'SELECT e.member_id, e.total_classes as original_total_classes, e.remaining_days, p.classes_per_week ' +
+            'SELECT e.member_id, e.total_classes as original_total_classes, ' +
+            'e.remaining_days, e.duration_months as original_duration_months, ' +
+            'p.classes_per_week ' +
             'FROM enrollments e ' +
             'JOIN programs p ON e.program_id = p.id ' +
             'WHERE e.id = ?',
@@ -639,10 +641,15 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
 
         // 새로운 총 수업 횟수 계산
         let newTotalClasses;
+        let finalDurationMonths = null;
+        let finalTotalClasses = null;
+
         if (duration_months > 0) {
             newTotalClasses = duration_months * program.classes_per_week * 4;
+            finalDurationMonths = duration_months;
         } else {
             newTotalClasses = total_classes;
+            finalTotalClasses = total_classes;
         }
 
         // 사용한 횟수가 새로운 총 횟수보다 많은지 체크
@@ -652,14 +659,7 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
 
         // 새로운 남은 일수 계산
         let newRemainingDays;
-        if (newTotalClasses <= currentRemainingDays) {
-            // 새로운 총 횟수가 더 적은 경우
-            newRemainingDays = newTotalClasses;
-        } else {
-            // 새로운 총 횟수가 더 많은 경우
-            const additionalClasses = Math.abs(newTotalClasses - originalTotalClasses);
-            newRemainingDays = currentRemainingDays + additionalClasses;
-        }
+        newRemainingDays = newTotalClasses - usedClasses;
 
         // 총 금액 계산
         let totalAmount;
@@ -688,9 +688,9 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
             WHERE id = ?`,
             [
                 program_id,
-                duration_months || null,
-                newTotalClasses || null,
-                newRemainingDays,
+                finalDurationMonths,
+                finalTotalClasses,
+                Math.round(newRemainingDays),
                 payment_status,
                 start_date,
                 totalAmount,
