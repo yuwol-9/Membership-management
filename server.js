@@ -475,12 +475,25 @@ app.get('/api/members/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/api/members/:id/programs', authenticateToken, async (req, res) => {
+app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
         
-        const memberId = req.params.id;
+        const enrollmentId = req.params.id;
+        
+        // 먼저 enrollment로 member_id를 찾습니다
+        const [enrollment] = await connection.execute(
+            'SELECT member_id FROM enrollments WHERE id = ?',
+            [enrollmentId]
+        );
+
+        if (enrollment.length === 0) {
+            throw new Error('등록 정보를 찾을 수 없습니다.');
+        }
+
+        const memberId = enrollment[0].member_id;
+        
         const { 
             program_id, 
             start_date, 

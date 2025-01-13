@@ -120,9 +120,9 @@ const API = {
         }
     },
 
-    addMemberProgram: async (memberId, programData) => {
+    addMemberProgram: async (enrollmentId, programData) => {
         try {
-            return await API.apiCall(`/members/${memberId}/programs`, {
+            return await API.apiCall(`/members/enrollment/${enrollmentId}/programs`, {
                 method: 'POST',
                 body: JSON.stringify(programData)
             });
