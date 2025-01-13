@@ -21,32 +21,44 @@ async function initializeAttendance() {
     yearSelect.value = today.getFullYear();
     monthSelect.value = today.getMonth();
 
-    await loadPrograms();
-    await loadAttendanceData();
+    try {
+        await loadPrograms();
+        
+        if (selectedProgramId) {
+            await loadAttendanceData();
+        }
+    } catch (error) {
+        console.error('초기화 중 오류:', error);
+        throw error;
+    }
 }
 
 async function loadPrograms() {
     try {
         const programs = await API.getPrograms();
         console.log('받아온 프로그램 목록:', programs);
+
         const programContainer = document.getElementById('program-items');
         programContainer.innerHTML = '';
         
-        programs.forEach(program => {
-            const div = document.createElement('div');
-            div.className = 'program-item';
-            div.textContent = program.name;
-            div.setAttribute('data-program-id', program.id);
-            div.onclick = () => selectProgram(program);
-            programContainer.appendChild(div);
-        });
+        if (programs && programs.length > 0) {
+            programs.forEach(program => {
+                const div = document.createElement('div');
+                div.className = 'program-item';
+                div.textContent = program.name;
+                div.setAttribute('data-program-id', program.id);
+                div.onclick = () => selectProgram(program);
+                programContainer.appendChild(div);
+            });
 
-        if (programs.length > 0) {
             selectedProgramId = programs[0].id;
             const firstProgram = document.querySelector('.program-item');
             if (firstProgram) {
                 firstProgram.classList.add('selected');
             }
+        } else {
+            console.log('프로그램이 없습니다.');
+            programContainer.innerHTML = '<div class="no-programs">등록된 프로그램이 없습니다.</div>';
         }
     } catch (error) {
         console.error('프로그램 목록 로드 실패:', error);
@@ -75,14 +87,20 @@ async function selectProgram(program) {
 }
 
 async function loadAttendanceData() {
-    if (!selectedProgramId) return;
+    if (!selectedProgramId) {
+        console.log('선택된 프로그램이 없습니다.');
+        return;
+    }
 
     try {
         const month = parseInt(document.getElementById('month').value) + 1;
         const year = parseInt(document.getElementById('year').value);
 
-        console.log('선택된 프로그램 ID:', selectedProgramId);  // 디버깅용 로그 추가
-        console.log('조회할 년월:', year, month);  // 디버깅용 로그 추가
+        console.log('출석 데이터 요청:', { 
+            program_id: selectedProgramId, 
+            month, 
+            year 
+        });
 
         const attendanceData = await API.getAttendanceList({
             program_id: selectedProgramId,
@@ -90,11 +108,11 @@ async function loadAttendanceData() {
             year: year
         });
 
-        console.log('출석 데이터:', attendanceData); // 디버깅용
+        console.log('받아온 출석 데이터:', attendanceData);
         updateAttendanceTable(attendanceData);
     } catch (error) {
         console.error('출석 데이터 로드 실패:', error);
-        alert('출석 데이터를 불러오는데 실패했습니다.');
+        throw error;
     }
 }
 
@@ -228,6 +246,11 @@ function setupEventListeners() {
     const yearSelect = document.getElementById('year');
     const monthSelect = document.getElementById('month');
 
-    yearSelect.addEventListener('change', loadAttendanceData);
-    monthSelect.addEventListener('change', loadAttendanceData);
+    yearSelect.addEventListener('change', async () => {
+        await loadAttendanceData();
+    });
+    
+    monthSelect.addEventListener('change', async () => {
+        await loadAttendanceData();
+    });
 }
