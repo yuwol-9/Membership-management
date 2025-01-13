@@ -316,6 +316,12 @@ function setupEventListeners() {
         deleteEnrollmentButton.addEventListener('click', deleteEnrollment);
     }
 
+    // 수업 추가 버튼 이벤트
+    const addProgramButton = document.getElementById('add-program-btn');
+    if (addProgramButton) {
+        addProgramButton.addEventListener('click', addProgram);
+    }
+
     // 생년월일 변경 시 나이 자동 계산
     const birthdateInput = document.getElementById('birthdate');
     if (birthdateInput) {
