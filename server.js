@@ -624,7 +624,12 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
 
         const memberId = enrollment[0].member_id;
         const currentRemainingDays = enrollment[0].remaining_days;
-        const originalTotalClasses = enrollment[0].original_total_classes;
+        let originalTotalClasses;
+        if (enrollment[0].duration_months) {
+            originalTotalClasses = enrollment[0].duration_months * enrollment[0].classes_per_week * 4;
+        } else {
+            originalTotalClasses = enrollment[0].total_classes;
+        }
         const usedClasses = originalTotalClasses - currentRemainingDays;
 
         // 프로그램 정보 조회
@@ -658,8 +663,7 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
         }
 
         // 새로운 남은 일수 계산
-        let newRemainingDays;
-        newRemainingDays = newTotalClasses - usedClasses;
+        const newRemainingDays = newTotalClasses - usedClasses;
 
         // 총 금액 계산
         let totalAmount;
@@ -690,7 +694,7 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
                 program_id,
                 finalDurationMonths,
                 finalTotalClasses,
-                Math.round(newRemainingDays),
+                newRemainingDays,
                 payment_status,
                 start_date,
                 totalAmount,
