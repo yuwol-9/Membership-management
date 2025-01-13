@@ -2,7 +2,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         // 연도 선택 옵션 설정
         const yearSelect = document.getElementById('year');
+        const monthSelect = document.getElementById('month');
         const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth(); // 0-indexed
         
         // 2024년부터 시작하도록 수정
         const startYear = 2024;
@@ -21,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 option.selected = true;
             }
         }
+        monthSelect.value = currentMonth;
         
         await loadAttendanceData();
         setupEventListeners();
