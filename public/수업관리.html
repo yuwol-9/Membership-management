@@ -166,6 +166,12 @@
             left: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            cursor: pointer; /* 클릭 가능함을 표시 */
+            transition: transform 0.2s ease; /* 호버 효과를 부드럽게 */
+        }
+
+        .class:hover {
+        transform: scale(1.02); /* 호버 시 살짝 커지는 효과 */
         }
 
         .class .time {
@@ -350,6 +356,25 @@
             padding: 10px;
             margin-bottom: 20px;
         }
+        .time-selection select {
+        width: 150px;
+        padding: 8px;
+        margin: 5px 0;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        }
+        .time-selection .time-period {
+        width: 80px;
+        }
+        .time-selection .time-hour {
+            width: 80px;
+        }
+        .time-selection .time-minute {
+            width: 80px;
+        }
+        .time-selection select:first-of-type {
+            width: 150px;
+        }
         .time-selection {
             position: relative;
             margin-bottom: 10px;
@@ -434,32 +459,6 @@
             margin-top: 20px;
         }
 
-
-        .preview-modal {
-            margin: 24px 0;
-            display: flex;
-            justify-content: center;
-        }
-        .preview-content {
-          height: 100px;
-          border: 1px solid #ddd;
-          background-color: #f9fafc;
-          margin: 10px 0; /* 미리보기 창과 닫기 버튼 사이 여백 */
-          overflow-y: auto; /* 내용 스크롤 가능 */
-        }
-        #preview-content .class {
-        position: absolute; /* 위치 고정 */
-        top: 10px; /* 항상 같은 위치 */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        padding: 10px;
-        background-color: #f2f4f6;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-        z-index: 100;
-      }
-
         .overlay {
             display: none;
             position: fixed;
@@ -499,8 +498,8 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             position: absolute;
-            top: 45px;
-            left: 0;
+            top: -80px;
+            left: -200px;
             z-index: 1000;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
@@ -528,6 +527,32 @@
             border-radius: 50%;
             border: 1px solid #ccc;
         }
+
+        .price-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin: 10px 0;
+    }
+
+    .price-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .price-input-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .price-input-group label {
+      font-size: 14px;
+      color: #666;
+    }
     </style>
 </head>
 <body>
@@ -592,28 +617,47 @@
         </div>
 
         <div class="modal" id="class-modal">
-          <div>
-            <h2>수업 추가</h2>
-            <div class="form-group">
-              <label>시간 선택</label>
-              <button class="button-time" onclick="openTimeModal()">시간 선택</button>
-          </div>
-
-                <label for="class-name">수업 이름</label>
+            <div>
+                <h2 id="modal-title">프로그램 추가</h2>
+                <div class="form-group">
+                    <label>시간 선택</label>
+                    <button class="button-time" onclick="openTimeModal()">시간 선택</button>
+                </div>
+        
+                <label for="class-name">프로그램 이름</label>
                 <textarea id="class-name" placeholder="예: 피트니스 + 힙합"></textarea>
-
+        
+                <div class="form-group">
+                    <label>프로그램 가격</label>
+                    <div class="price-inputs">
+                        <div class="price-input-group">
+                            <label for="monthly-price">개월 수강료 (원/월)</label>
+                            <input type="number" id="monthly-price" min="0" placeholder="예: 150000">
+                        </div>
+                        <div class="price-input-group">
+                            <label for="per-class-price">회당 수강료 (원/회)</label>
+                            <input type="number" id="per-class-price" min="0" placeholder="예: 50000">
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="form-group">
+                    <label for="classes-per-week">주간 수업 횟수</label>
+                    <input type="number" id="classes-per-week" min="1" max="7" value="1" placeholder="주 몇 회">
+                </div>
+        
                 <label for="class-details">특이사항</label>
                 <input type="text" id="class-details" placeholder="예: 주2회 (월/수)">
-
+        
                 <label for="instructor-name">선생님 이름</label>
                 <input type="text" id="instructor-name" placeholder="예: 박현우">
-            </div>
-            <div>
-                <label>수업 색상</label>
-                <div class="color-picker-container">
-                  <button id="color-picker-btn" onclick="toggleColorPalette()">수업 색상</button>
-                  <div class="color-options hidden" id="color-palette">
-                    <button class="color-option" style="background-color: #E56736;" data-color="#48cae4" onclick="selectColor('#48cae4')"></button>
+        
+                <div>
+                    <label>수업 색상</label>
+                    <div class="color-picker-container">
+                        <button id="color-picker-btn" onclick="toggleColorPalette()">수업 색상</button>
+                        <div class="color-options hidden" id="color-palette">
+                            <button class="color-option" style="background-color: #E56736;" data-color="#E56736" onclick="selectColor('#E56736')"></button>
                     <button class="color-option" style="background-color: #7950f2;" data-color="#7950f2" onclick="selectColor('#7950f2')"></button>
                     <button class="color-option" style="background-color: #f94144;" data-color="#f94144" onclick="selectColor('#f94144')"></button>
                     <button class="color-option" style="background-color: #f3722c;" data-color="#f3722c" onclick="selectColor('#f3722c')"></button>
@@ -639,65 +683,73 @@
                     <button class="color-option" style="background-color: #4895ef;" data-color="#4895ef" onclick="selectColor('#4895ef')"></button>
                     <button class="color-option" style="background-color: #48cae4;" data-color="#48cae4" onclick="selectColor('#48cae4')"></button>
                     <!-- 나머지 색상들 추가 -->
-                  </div>
-                  <div class="color-preview" id="color-preview" style="background-color: #E56736;"></div>
+                        </div>
+                        <div class="color-preview" id="color-preview" style="background-color: #E56736;"></div>
+                    </div>
                 </div>
-              </div>
-                    
-              <div>
-            <div class="modal-buttons">
-                <button onclick="addClass()">추가</button>
-                <button onclick="previewClass()">미리보기</button>
-                <button onclick="closeModal()">닫기</button>
+        
+                <div class="modal-buttons">
+                    <button id="submit-btn" onclick="handleSubmit()">추가</button>
+                    <button onclick="closeModal()">닫기</button>
+                </div>
             </div>
         </div>
-
-        <div class="modal" id="preview-modal">
-            <h2>미리보기</h2>
-            <div class="preview-content" id="preview-content"></div>
-            <div class="modal-buttons">
-                <button onclick="closePreview()">닫기</button>
+        
+        <!-- 시간 선택 모달 -->
+        <div class="modal" id="time-modal">
+            <h3>시간 선택</h3>
+            <div class="time-selection-container" id="time-selection-container">
+                <div class="time-selection" id="time-selection-0">
+                    <label for="day-0">요일</label>
+                    <select id="day-0">
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+        
+                    <label for="start-time-period-0">시작 시간</label>
+                    <select id="start-time-period-0" class="time-period">
+                        <option value="오전">오전</option>
+                        <option value="오후">오후</option>
+                    </select>
+                    <select id="start-time-hour-0" class="time-hour">
+                        <!-- 1-12시 옵션은 JavaScript로 동적 생성 -->
+                    </select>
+                    <select id="start-time-minute-0" class="time-minute">
+                        <!-- 0-59분 옵션은 JavaScript로 동적 생성 -->
+                    </select>
+        
+                    <label for="end-time-period-0">종료 시간</label>
+                    <select id="end-time-period-0" class="time-period">
+                        <option value="오전">오전</option>
+                        <option value="오후">오후</option>
+                    </select>
+                    <select id="end-time-hour-0" class="time-hour">
+                        <!-- 1-12시 옵션은 JavaScript로 동적 생성 -->
+                    </select>
+                    <select id="end-time-minute-0" class="time-minute">
+                        <!-- 0-59분 옵션은 JavaScript로 동적 생성 -->
+                    </select>
+                    <button class="remove-btn" onclick="removeTimeSelection(0)">一</button>
+                    <div class="divider"></div>
+                </div>
+            </div>
+            <button class="add-time-button" onclick="addTimeSelection()">다른시간선택</button>
+            <div class="button-group">
+                <button class="button button-time" onclick="confirmSelection()">확인</button>
+                <button class="button button-gray" onclick="closeTimeModal()">취소</button>
             </div>
         </div>
-        </div>
-
+        
+        <!-- 오버레이 -->
         <div class="overlay" id="modal-overlay"></div>
-        <div class="overlay" id="preview-overlay"></div>
-    </div>
+        <div class="overlay" id="overlay"></div>
 
-      <!-- 시간 선택 모달 -->
-      <div class="modal" id="time-modal">
-        <h3>시간 선택</h3>
-        <div class="time-selection-container" id="time-selection-container">
-            <div class="time-selection" id="time-selection-0">
-                <label for="day-0">요일</label>
-                <select id="day-0">
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
-                    <option value="Sunday">Sunday</option>
-                </select>
-                <label for="start-time-0">시작 시간</label>
-                <input type="time" id="start-time-0" class="start-time" step="600"> <!-- 10분 단위 제한 -->
-                <label for="end-time-0">종료 시간</label>
-                <input type="time" id="end-time-0" class="end-time" step="600"> <!-- 10분 단위 제한 -->
-                <button class="remove-btn" onclick="removeTimeSelection(0)">一</button>
-                <div class="divider"></div>
-            </div>
-        </div>
-        <button class="add-time-button" onclick="addTimeSelection()">다른시간선택</button>
-        <div class="button-group">
-            <button class="button button-time" onclick="confirmSelection()">확인</button>
-            <button class="button button-gray" onclick="closeTimeModal()">취소</button>
-        </div>
-    </div>
-
-    <!-- 오버레이 -->
-    <div class="overlay" id="overlay"></div>
-
-<script src="schedule.js"></script>
+    <script src="api.js"></script>
+    <script src="schedule.js"></script>
 </body>
 </html>
