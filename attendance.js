@@ -1,10 +1,26 @@
-console.log('attendance.js loaded');
-
 let selectedProgramId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        await initializeAttendance();
+        const yearSelect = document.getElementById('year');
+        const currentYear = new Date().getFullYear();
+        const startYear = 2024;
+        const endYear = 2028;
+        
+        yearSelect.innerHTML = '';
+        
+        for (let year = startYear; year <= endYear; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = `${year}년`;
+            yearSelect.appendChild(option);
+            
+            if (year === currentYear) {
+                option.selected = true;
+            }
+        }
+
+        await loadPrograms();
         setupEventListeners();
     } catch (error) {
         console.error('초기화 실패:', error);
@@ -12,32 +28,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-
-async function initializeAttendance() {
-    const today = new Date();
-    const yearSelect = document.getElementById('year');
-    const monthSelect = document.getElementById('month');
-    
-    yearSelect.value = today.getFullYear();
-    monthSelect.value = today.getMonth();
-
-    try {
-        await loadPrograms();
-        
-        if (selectedProgramId) {
-            await loadAttendanceData();
-        }
-    } catch (error) {
-        console.error('초기화 중 오류:', error);
-        throw error;
-    }
-}
-
 async function loadPrograms() {
     try {
         const programs = await API.getPrograms();
         console.log('받아온 프로그램 목록:', programs);
-
+        
         const programContainer = document.getElementById('program-items');
         programContainer.innerHTML = '';
         
@@ -56,9 +51,8 @@ async function loadPrograms() {
             if (firstProgram) {
                 firstProgram.classList.add('selected');
             }
-        } else {
-            console.log('프로그램이 없습니다.');
-            programContainer.innerHTML = '<div class="no-programs">등록된 프로그램이 없습니다.</div>';
+            
+            await loadAttendanceData();
         }
     } catch (error) {
         console.error('프로그램 목록 로드 실패:', error);
@@ -67,52 +61,32 @@ async function loadPrograms() {
 }
 
 async function selectProgram(program) {
-    try {
-        console.log('선택된 프로그램:', program);
-        selectedProgramId = program.id;
-
-        document.querySelectorAll('.program-item').forEach(item => {
-            item.classList.remove('selected');
-        });
-        const selectedItem = document.querySelector(`[data-program-id="${program.id}"]`);
-        if (selectedItem) {
-            selectedItem.classList.add('selected');
-        }
-
-        await loadAttendanceData();
-    } catch (error) {
-        console.error('프로그램 선택 중 오류:', error);
-        alert('프로그램 선택 중 오류가 발생했습니다.');
+    selectedProgramId = program.id;
+    document.querySelectorAll('.program-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    const selectedItem = document.querySelector(`[data-program-id="${program.id}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
     }
+    await loadAttendanceData();
 }
 
 async function loadAttendanceData() {
-    if (!selectedProgramId) {
-        console.log('선택된 프로그램이 없습니다.');
-        return;
-    }
-
     try {
-        const month = parseInt(document.getElementById('month').value) + 1;
-        const year = parseInt(document.getElementById('year').value);
-
-        console.log('출석 데이터 요청:', { 
-            program_id: selectedProgramId, 
-            month, 
-            year 
-        });
-
+        const month = document.getElementById('month').value;
+        const year = document.getElementById('year').value;
+        
         const attendanceData = await API.getAttendanceList({
             program_id: selectedProgramId,
-            month: month,
+            month: parseInt(month) + 1,
             year: year
         });
-
-        console.log('받아온 출석 데이터:', attendanceData);
+        
         updateAttendanceTable(attendanceData);
     } catch (error) {
         console.error('출석 데이터 로드 실패:', error);
-        throw error;
+        alert('출석 데이터를 불러오는데 실패했습니다.');
     }
 }
 
@@ -147,10 +121,9 @@ function updateAttendanceTable(data) {
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             
-            // 출석 여부 확인
-            const isAttended = attendance.dates.some(date => {
-                return date.split('T')[0] === formattedDate;
-            });
+            const isAttended = attendance.dates.some(date => 
+                date.split('T')[0] === formattedDate
+            );
             checkbox.checked = isAttended;
 
             if (attendance.remaining_days <= 0 && !isAttended) {
@@ -170,12 +143,38 @@ function updateAttendanceTable(data) {
                         is_present: checkbox.checked
                     };
 
-                    console.log('출석 데이터 전송:', attendanceData);
-
                     await API.checkAttendance(attendanceData);
+                    
+                    // UI 즉시 업데이트
+                    if (checkbox.checked) {
+                        attendance.dates.push(formattedDate);
+                        attendance.remaining_days--;
+                    } else {
+                        attendance.dates = attendance.dates.filter(date => 
+                            date.split('T')[0] !== formattedDate
+                        );
+                        attendance.remaining_days++;
+                    }
+                    
+                    // 출석 횟수와 남은 일수 업데이트
+                    const countCell = tr.querySelector('td:nth-last-child(2)');
+                    const remainingCell = tr.querySelector('td:nth-last-child(1)');
+                    
+                    countCell.textContent = attendance.dates.length;
+                    remainingCell.textContent = attendance.remaining_days;
+                    
+                    // 남은 일수 색상 업데이트
+                    if (attendance.remaining_days === 0) {
+                        remainingCell.style.color = 'red';
+                    } else if (attendance.remaining_days <= 3) {
+                        remainingCell.style.color = '#E56736';
+                    } else {
+                        remainingCell.style.color = '';
+                    }
+
                 } catch (error) {
                     console.error('출석 체크 실패:', error);
-                    checkbox.checked = !checkbox.checked; // 체크 상태 되돌리기
+                    checkbox.checked = !checkbox.checked;
                     alert(error.message || '출석 처리 중 오류가 발생했습니다.');
                 }
             });
@@ -184,7 +183,6 @@ function updateAttendanceTable(data) {
             tr.appendChild(td);
         }
 
-        // 출석 횟수와 남은 일수 표시
         const tdCount = document.createElement('td');
         tdCount.textContent = attendance.dates.length;
         tr.appendChild(tdCount);
@@ -192,7 +190,7 @@ function updateAttendanceTable(data) {
         const tdRemaining = document.createElement('td');
         const remainingDays = Math.max(0, attendance.remaining_days);
         tdRemaining.textContent = remainingDays;
-        if (remainingDays == 0) {
+        if (remainingDays === 0) {
             tdRemaining.style.color = 'red';
         } else if (remainingDays <= 3) {
             tdRemaining.style.color = '#E56736';
@@ -206,7 +204,6 @@ function updateAttendanceTable(data) {
 function updateTableHeader(daysInMonth) {
     const thead = document.querySelector('.attendance-table thead');
     thead.innerHTML = '';
-    
     const headerRow = document.createElement('tr');
     headerRow.innerHTML = `
         <th>회원 이름</th>
@@ -219,6 +216,12 @@ function updateTableHeader(daysInMonth) {
     `;
     thead.appendChild(headerRow);
 }
+
+function setupEventListeners() {
+    document.getElementById('year').addEventListener('change', loadAttendanceData);
+    document.getElementById('month').addEventListener('change', loadAttendanceData);
+}
+
 function groupAttendanceByMember(data) {
     return data.reduce((acc, curr) => {
         if (!acc[curr.member_name]) {
@@ -239,17 +242,4 @@ function groupAttendanceByMember(data) {
 
 function formatDate(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function setupEventListeners() {
-    const yearSelect = document.getElementById('year');
-    const monthSelect = document.getElementById('month');
-
-    yearSelect.addEventListener('change', async () => {
-        await loadAttendanceData();
-    });
-    
-    monthSelect.addEventListener('change', async () => {
-        await loadAttendanceData();
-    });
 }
