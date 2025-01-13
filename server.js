@@ -928,12 +928,10 @@ app.get('/api/attendance', authenticateToken, async (req, res) => {
             FROM members m
             JOIN enrollments e ON m.id = e.member_id
             JOIN programs p ON e.program_id = p.id
-            LEFT JOIN attendance a ON e.id = a.enrollment_id 
-                AND MONTH(a.attendance_date) = ? 
-                AND YEAR(a.attendance_date) = ?
+            LEFT JOIN attendance a ON e.id = a.enrollment_id
             WHERE (? IS NULL OR p.id = ?)
             ORDER BY m.name, a.attendance_date
-        `, [month, year, program_id, program_id]);
+        `, [program_id, program_id]);
 
         // 데이터 그룹화 및 출석 날짜 보존
         const memberAttendance = {};

@@ -111,11 +111,13 @@ function updateAttendanceTable(data) {
 
     Object.entries(memberAttendance).forEach(([memberName, attendance]) => {
         const tr = document.createElement('tr');
+        const checkboxes = []; // 회원별 체크박스 배열 추가
         
         const tdName = document.createElement('td');
         tdName.textContent = memberName;
         tr.appendChild(tdName);
 
+        // 날짜별 체크박스 생성
         for (let day = 1; day <= daysInMonth; day++) {
             const td = document.createElement('td');
             const currentDate = new Date(year, month, day);
@@ -135,12 +137,14 @@ function updateAttendanceTable(data) {
             );
             checkbox.checked = isAttended;
 
+            // 남은 횟수가 0이고 체크되지 않은 경우 비활성화
             if (attendance.remaining_days <= 0 && !isAttended) {
                 checkbox.disabled = true;
                 checkbox.title = '남은 수업 일수가 없습니다';
             }
 
-            // 여기가 핵심적으로 수정된 부분입니다
+            checkboxes.push(checkbox); // 체크박스 배열에 추가
+
             checkbox.addEventListener('change', async (e) => {
                 try {
                     if (!attendance.enrollment_id) {
@@ -155,7 +159,7 @@ function updateAttendanceTable(data) {
 
                     const response = await API.checkAttendance(attendanceData);
                     
-                    // 성공적으로 출석이 처리되면 로컬 데이터도 업데이트
+                    // 출석 상태에 따라 남은 일수 업데이트
                     if (checkbox.checked) {
                         attendance.dates.push(formattedDate);
                         attendance.remaining_days--;
@@ -173,8 +177,14 @@ function updateAttendanceTable(data) {
                     countCell.textContent = attendance.dates.length;
                     remainingCell.textContent = attendance.remaining_days;
 
-                    // 남은 일수에 따른 스타일 처리
-                    if (attendance.remaining_days === 0) {
+                    // 남은 일수가 0이 되면 모든 미체크 체크박스 비활성화
+                    if (attendance.remaining_days <= 0) {
+                        checkboxes.forEach(cb => {
+                            if (!cb.checked) {
+                                cb.disabled = true;
+                                cb.title = '남은 수업 일수가 없습니다';
+                            }
+                        });
                         remainingCell.style.color = 'red';
                     } else if (attendance.remaining_days <= 3) {
                         remainingCell.style.color = '#E56736';
