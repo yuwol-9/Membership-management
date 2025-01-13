@@ -607,9 +607,12 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
             payment_status, start_date
         } = req.body;
 
-        // 먼저 enrollment로 member_id를 찾습니다
+        // enrollment로 member_id와 현재 정보 찾기
         const [enrollment] = await connection.execute(
-            'SELECT member_id FROM enrollments WHERE id = ?',
+            'SELECT e.member_id, e.total_classes as original_total_classes, e.remaining_days, p.classes_per_week ' +
+            'FROM enrollments e ' +
+            'JOIN programs p ON e.program_id = p.id ' +
+            'WHERE e.id = ?',
             [enrollmentId]
         );
 
@@ -618,6 +621,9 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
         }
 
         const memberId = enrollment[0].member_id;
+        const currentRemainingDays = enrollment[0].remaining_days;
+        const originalTotalClasses = enrollment[0].original_total_classes;
+        const usedClasses = originalTotalClasses - currentRemainingDays;
 
         // 프로그램 정보 조회
         const [programs] = await connection.execute(
@@ -631,41 +637,36 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
 
         const program = programs[0];
 
-        const [currentEnrollment] = await connection.execute(
-            'SELECT duration_months, total_classes, remaining_days FROM enrollments WHERE id = ?',
-            [enrollmentId]
-        );
-
-        if (currentEnrollment.length === 0) {
-            throw new Error('현재 등록 정보를 찾을 수 없습니다.');
+        // 새로운 총 수업 횟수 계산
+        let newTotalClasses;
+        if (duration_months > 0) {
+            newTotalClasses = duration_months * program.classes_per_week * 4;
+        } else {
+            newTotalClasses = total_classes;
         }
 
-        // 새로운 구독의 총 금액과 남은 일수 계산
-        let totalAmount = 0;
-        let newRemainingDays = 0;
+        // 사용한 횟수가 새로운 총 횟수보다 많은지 체크
+        if (usedClasses > newTotalClasses) {
+            throw new Error('출석 횟수가 많아 수정할 수 없습니다.');
+        }
 
+        // 새로운 남은 일수 계산
+        let newRemainingDays;
+        if (newTotalClasses <= currentRemainingDays) {
+            // 새로운 총 횟수가 더 적은 경우
+            newRemainingDays = newTotalClasses;
+        } else {
+            // 새로운 총 횟수가 더 많은 경우
+            const additionalClasses = Math.abs(newTotalClasses - originalTotalClasses);
+            newRemainingDays = currentRemainingDays + additionalClasses;
+        }
+
+        // 총 금액 계산
+        let totalAmount;
         if (duration_months > 0) {
             totalAmount = duration_months * program.monthly_price;
-            const classesPerMonth = program.classes_per_week * 4;
-            const newTotalClasses = duration_months * classesPerMonth;
-            
-            if (currentEnrollment[0].total_classes && 
-                newTotalClasses < currentEnrollment[0].total_classes) {
-                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
-            }
-            
-            const additionalClasses = newTotalClasses - (currentEnrollment[0].total_classes || 0);
-            newRemainingDays = (currentEnrollment[0].remaining_days || 0) + additionalClasses;
-        } else if (total_classes > 0) {
+        } else {
             totalAmount = total_classes * program.per_class_price;
-            
-            if (currentEnrollment[0].total_classes && 
-                total_classes < currentEnrollment[0].total_classes) {
-                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
-            }
-            
-            const additionalClasses = total_classes - (currentEnrollment[0].total_classes || 0);
-            newRemainingDays = (currentEnrollment[0].remaining_days || 0) + additionalClasses;
         }
 
         // 회원 기본 정보 업데이트
@@ -688,7 +689,7 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
             [
                 program_id,
                 duration_months || null,
-                total_classes || null,
+                newTotalClasses || null,
                 newRemainingDays,
                 payment_status,
                 start_date,
