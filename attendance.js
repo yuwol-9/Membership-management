@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await loadPrograms();
         setupEventListeners();
+        
     } catch (error) {
         console.error('초기화 실패:', error);
         alert('데이터 로드에 실패했습니다.');
@@ -31,8 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadPrograms() {
     try {
         const programs = await API.getPrograms();
-        console.log('받아온 프로그램 목록:', programs);
-        
         const programContainer = document.getElementById('program-items');
         programContainer.innerHTML = '';
         
@@ -46,12 +45,14 @@ async function loadPrograms() {
                 programContainer.appendChild(div);
             });
 
+            // 첫 번째 프로그램을 기본 선택
             selectedProgramId = programs[0].id;
             const firstProgram = document.querySelector('.program-item');
             if (firstProgram) {
                 firstProgram.classList.add('selected');
             }
             
+            // 선택된 프로그램의 출석 데이터 로드
             await loadAttendanceData();
         }
     } catch (error) {
@@ -62,6 +63,8 @@ async function loadPrograms() {
 
 async function selectProgram(program) {
     selectedProgramId = program.id;
+    
+    // UI 업데이트
     document.querySelectorAll('.program-item').forEach(item => {
         item.classList.remove('selected');
     });
@@ -69,6 +72,8 @@ async function selectProgram(program) {
     if (selectedItem) {
         selectedItem.classList.add('selected');
     }
+    
+    // 선택된 프로그램의 출석 데이터 로드
     await loadAttendanceData();
 }
 
@@ -77,6 +82,7 @@ async function loadAttendanceData() {
         const month = document.getElementById('month').value;
         const year = document.getElementById('year').value;
         
+        // 프로그램 ID를 포함하여 데이터 요청
         const attendanceData = await API.getAttendanceList({
             program_id: selectedProgramId,
             month: parseInt(month) + 1,
@@ -103,15 +109,18 @@ function updateAttendanceTable(data) {
     Object.entries(memberAttendance).forEach(([memberName, attendance]) => {
         const tr = document.createElement('tr');
         
+        // 회원 이름 셀 추가
         const tdName = document.createElement('td');
         tdName.textContent = memberName;
         tr.appendChild(tdName);
 
+        // 날짜별 출석 체크박스 생성
         for (let day = 1; day <= daysInMonth; day++) {
             const td = document.createElement('td');
             const currentDate = new Date(year, month, day);
             const formattedDate = formatDate(currentDate);
             
+            // 일요일 처리
             if (currentDate.getDay() === 0) {
                 td.classList.add('sunday');
                 tr.appendChild(td);
@@ -121,17 +130,19 @@ function updateAttendanceTable(data) {
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             
+            // 출석 여부 확인
             const isAttended = attendance.dates.some(date => 
                 date.split('T')[0] === formattedDate
             );
             checkbox.checked = isAttended;
 
-            if (attendance.remaining_days <= 0) {
-                checkbox.disabled = !isAttended;
-                checkbox.title = isAttended ? '' : '남은 수업 일수가 없습니다';
+            // 남은 수업 일수가 없는 경우 체크박스 비활성화
+            if (attendance.remaining_days <= 0 && !isAttended) {
+                checkbox.disabled = true;
+                checkbox.title = '남은 수업 일수가 없습니다';
             }
-            
 
+            // 체크박스 이벤트 리스너
             checkbox.addEventListener('change', async (e) => {
                 try {
                     if (!attendance.enrollment_id) {
@@ -145,47 +156,7 @@ function updateAttendanceTable(data) {
                     };
 
                     await API.checkAttendance(attendanceData);
-                    
-                    // UI 즉시 업데이트
-                    if (checkbox.checked) {
-                        attendance.dates.push(formattedDate);
-                        attendance.remaining_days--;
-                    } else {
-                        attendance.dates = attendance.dates.filter(date => 
-                            date.split('T')[0] !== formattedDate
-                        );
-                        attendance.remaining_days++;
-                    }
-                    
-                    // 출석 횟수와 남은 일수 업데이트
-                    const countCell = tr.querySelector('td:nth-last-child(2)');
-                    const remainingCell = tr.querySelector('td:nth-last-child(1)');
-                    
-                    countCell.textContent = attendance.dates.length;
-                    remainingCell.textContent = attendance.remaining_days;
-
-                    if (attendance.remaining_days <= 0) {
-                        tr.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                            if (!cb.checked) {
-                                cb.disabled = true;
-                                cb.title = '남은 수업 일수가 없습니다';
-                            }
-                        });
-                    } else {
-                        tr.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                            cb.disabled = false;
-                            cb.title = '';
-                        });
-                    }
-                    
-                    if (attendance.remaining_days === 0) {
-                        remainingCell.style.color = 'red';
-                    } else if (attendance.remaining_days <= 3) {
-                        remainingCell.style.color = '#E56736';
-                    } else {
-                        remainingCell.style.color = '';
-                    }
-
+                    await loadAttendanceData(); // 전체 데이터 새로고침
                 } catch (error) {
                     console.error('출석 체크 실패:', error);
                     checkbox.checked = !checkbox.checked;
@@ -197,6 +168,7 @@ function updateAttendanceTable(data) {
             tr.appendChild(td);
         }
 
+        // 출석 횟수와 남은 일수 표시
         const tdCount = document.createElement('td');
         tdCount.textContent = attendance.dates.length;
         tr.appendChild(tdCount);
@@ -222,18 +194,15 @@ function updateTableHeader(daysInMonth) {
     headerRow.innerHTML = `
         <th>회원 이름</th>
         ${Array.from({length: daysInMonth}, (_, i) => {
-            const dayClass = new Date(document.getElementById('year').value, document.getElementById('month').value, i + 1).getDay() === 0 ? 'sunday' : '';
+            const day = new Date(document.getElementById('year').value, 
+                               document.getElementById('month').value, i + 1);
+            const dayClass = day.getDay() === 0 ? 'sunday' : '';
             return `<th class="${dayClass}">${i + 1}일</th>`;
         }).join('')}
         <th>출석횟수</th>
         <th>남은일수</th>
     `;
     thead.appendChild(headerRow);
-}
-
-function setupEventListeners() {
-    document.getElementById('year').addEventListener('change', loadAttendanceData);
-    document.getElementById('month').addEventListener('change', loadAttendanceData);
 }
 
 function groupAttendanceByMember(data) {
@@ -256,4 +225,9 @@ function groupAttendanceByMember(data) {
 
 function formatDate(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function setupEventListeners() {
+    document.getElementById('year').addEventListener('change', loadAttendanceData);
+    document.getElementById('month').addEventListener('change', loadAttendanceData);
 }
