@@ -244,18 +244,12 @@ function groupAttendanceByMember(data) {
             acc[curr.member_name] = {
                 enrollment_id: curr.enrollment_id,
                 remaining_days: curr.remaining_days,
-                dates: []
+                dates: curr.attendance_dates || []
             };
         }
-        
-        if (curr.attendance_date) {
-            acc[curr.member_name].dates.push(curr.attendance_date);
-        }
-        
         return acc;
     }, {});
 }
-
 function formatDate(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }

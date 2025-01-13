@@ -922,7 +922,7 @@ app.get('/api/attendance', authenticateToken, async (req, res) => {
                 m.name as member_name,
                 e.id as enrollment_id,
                 e.remaining_days,
-                a.attendance_date,
+                GROUP_CONCAT(a.attendance_date) as attendance_dates,
                 p.name as program_name,
                 p.id as program_id
             FROM members m
@@ -930,28 +930,18 @@ app.get('/api/attendance', authenticateToken, async (req, res) => {
             JOIN programs p ON e.program_id = p.id
             LEFT JOIN attendance a ON e.id = a.enrollment_id
             WHERE (? IS NULL OR p.id = ?)
-            ORDER BY m.name, a.attendance_date
+            GROUP BY m.name, e.id, e.remaining_days, p.name, p.id
+            ORDER BY m.name
         `, [program_id, program_id]);
 
-        // 데이터 그룹화 및 출석 날짜 보존
-        const memberAttendance = {};
-        rows.forEach(row => {
-            if (!memberAttendance[row.member_name]) {
-                memberAttendance[row.member_name] = {
-                    member_name: row.member_name,
-                    enrollment_id: row.enrollment_id,
-                    remaining_days: row.remaining_days,
-                    program_name: row.program_name,
-                    program_id: row.program_id,
-                    dates: []
-                };
-            }
-            if (row.attendance_date) {
-                memberAttendance[row.member_name].dates.push(row.attendance_date);
-            }
-        });
+        // 출석 날짜 데이터 처리
+        const processedData = rows.map(row => ({
+            ...row,
+            attendance_dates: row.attendance_dates ? row.attendance_dates.split(',') : [],
+            dates: row.attendance_dates ? row.attendance_dates.split(',') : []
+        }));
 
-        res.json(Object.values(memberAttendance));
+        res.json(processedData);
     } catch (err) {
         console.error('출석 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
