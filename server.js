@@ -489,37 +489,59 @@ app.post('/api/members/:id/programs', authenticateToken, async (req, res) => {
             total_classes 
         } = req.body;
 
-        // Get program price information
-        const [programPrice] = await connection.execute(
-            'SELECT monthly_price, per_class_price FROM programs WHERE id = ?',
+        // 프로그램 정보 조회
+        const [programs] = await connection.execute(
+            'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
             [program_id]
         );
 
-        // Calculate total amount
+        if (programs.length === 0) {
+            throw new Error('프로그램 정보를 찾을 수 없습니다.');
+        }
+
+        const program = programs[0];
+
+        // 총 금액과 남은 일수 계산
         let totalAmount = 0;
         let remainingDays = 0;
 
         if (duration_months > 0) {
-            totalAmount = duration_months * programPrice[0].monthly_price;
-            const classesPerMonth = programPrice[0].classes_per_week * 4;
+            totalAmount = duration_months * program.monthly_price;
+            const classesPerMonth = program.classes_per_week * 4;
             remainingDays = duration_months * classesPerMonth;
         } else {
-            totalAmount = total_classes * programPrice[0].per_class_price;
+            totalAmount = total_classes * program.per_class_price;
             remainingDays = total_classes;
         }
 
-        // Insert new enrollment
-        await connection.execute(
+        // 새로운 enrollment 추가
+        const [result] = await connection.execute(
             'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [memberId, program_id, duration_months || null, total_classes || null, remainingDays, payment_status, start_date, totalAmount]
+            [
+                memberId,
+                program_id,
+                duration_months || null,
+                total_classes || null,
+                remainingDays,
+                payment_status,
+                start_date,
+                totalAmount
+            ]
         );
 
         await connection.commit();
-        res.status(201).json({ message: '수업이 성공적으로 추가되었습니다.' });
+        res.json({ 
+            success: true,
+            message: '프로그램이 성공적으로 추가되었습니다.',
+            enrollmentId: result.insertId
+        });
     } catch (err) {
         await connection.rollback();
-        console.error('수업 추가 에러:', err);
-        res.status(500).json({ message: '서버 오류' });
+        console.error('프로그램 추가 중 오류:', err);
+        res.status(500).json({ 
+            success: false,
+            message: err.message || '서버 오류가 발생했습니다.'
+        });
     } finally {
         connection.release();
     }

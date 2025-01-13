@@ -121,10 +121,15 @@ const API = {
     },
 
     addMemberProgram: async (memberId, programData) => {
-        return API.apiCall(`/members/${memberId}/programs`, {
-            method: 'POST',
-            body: JSON.stringify(programData)
-        });
+        try {
+            return await API.apiCall(`/members/${memberId}/programs`, {
+                method: 'POST',
+                body: JSON.stringify(programData)
+            });
+        } catch (error) {
+            console.error('프로그램 추가 실패:', error);
+            throw error;
+        }
     },
 
     deleteEnrollment: async (enrollmentId) => {
