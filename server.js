@@ -609,8 +609,8 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
 
         // enrollment로 현재 정보 찾기
         const [enrollment] = await connection.execute(
-            'SELECT e.member_id, e.total_classes as original_total_classes, ' +
-            'e.remaining_days, e.duration_months as original_duration_months, ' +
+            'SELECT e.member_id, e.duration_months, e.total_classes, ' +
+            'e.remaining_days, ' +
             'p.classes_per_week ' +
             'FROM enrollments e ' +
             'JOIN programs p ON e.program_id = p.id ' +
@@ -618,31 +618,24 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
             [enrollmentId]
         );
 
-        if (enrollment.length === 0) {
-            throw new Error('등록 정보를 찾을 수 없습니다.');
-        }
+        console.log('Current enrollment data:', enrollment[0]);  // 디버깅
 
         const memberId = enrollment[0].member_id;
         const currentRemainingDays = enrollment[0].remaining_days;
         let originalTotalClasses;
+
+        // 원래 총 수업 횟수 계산
         if (enrollment[0].duration_months) {
             originalTotalClasses = enrollment[0].duration_months * enrollment[0].classes_per_week * 4;
         } else {
             originalTotalClasses = enrollment[0].total_classes;
         }
+
+        console.log('Original total classes:', originalTotalClasses);  // 디버깅
+        console.log('Current remaining days:', currentRemainingDays);  // 디버깅
+
         const usedClasses = originalTotalClasses - currentRemainingDays;
-
-        // 프로그램 정보 조회
-        const [programs] = await connection.execute(
-            'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
-            [program_id]
-        );
-
-        if (programs.length === 0) {
-            throw new Error('프로그램 정보를 찾을 수 없습니다.');
-        }
-
-        const program = programs[0];
+        console.log('Used classes:', usedClasses);  // 디버깅
 
         // 새로운 총 수업 횟수 계산
         let newTotalClasses;
@@ -657,6 +650,8 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
             finalTotalClasses = total_classes;
         }
 
+        console.log('New total classes:', newTotalClasses);  // 디버깅
+
         // 사용한 횟수가 새로운 총 횟수보다 많은지 체크
         if (usedClasses > newTotalClasses) {
             throw new Error('출석 횟수가 많아 수정할 수 없습니다.');
@@ -664,7 +659,7 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
 
         // 새로운 남은 일수 계산
         const newRemainingDays = newTotalClasses - usedClasses;
-
+        console.log('New remaining days:', newRemainingDays);  // 디버깅
         // 총 금액 계산
         let totalAmount;
         if (duration_months > 0) {
