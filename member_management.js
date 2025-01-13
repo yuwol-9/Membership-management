@@ -44,40 +44,60 @@ function updateTable(members) {
             tooltipText = `${lowDaysProgram.name} 수업의 남은 일수가 ${lowDaysProgram.remaining_days}회입니다.`;
         }
         
-        const nameCell = document.createElement('td');
-        nameCell.style.color = nameColor;
-        nameCell.textContent = member.name || '-';
         if (tooltipText) {
-            nameCell.style.position = 'relative';
-            nameCell.style.cursor = 'pointer';
-            
-            nameCell.addEventListener('mouseover', (e) => {
+            tr.style.position = 'relative';
+            tr.style.cursor = 'pointer';
+
+            tr.addEventListener('mouseover', (e) => {
+                // Remove any existing tooltips
+                const existingTooltip = document.querySelector('.tooltip');
+                if (existingTooltip) {
+                    existingTooltip.remove();
+                }
+
                 const tooltip = document.createElement('div');
                 tooltip.className = 'tooltip';
                 tooltip.textContent = tooltipText;
                 tooltip.style.position = 'absolute';
                 tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
                 tooltip.style.color = 'white';
-                tooltip.style.padding = '5px 10px';
+                tooltip.style.padding = '8px 12px';
                 tooltip.style.borderRadius = '4px';
-                tooltip.style.fontSize = '12px';
+                tooltip.style.fontSize = '14px';
                 tooltip.style.whiteSpace = 'nowrap';
                 tooltip.style.zIndex = '1000';
-                tooltip.style.top = '100%';
-                tooltip.style.left = '0';
                 
-                nameCell.appendChild(tooltip);
+                // Position the tooltip near the cursor
+                const rect = tr.getBoundingClientRect();
+                const scrollTop = window.scrollY;
+                tooltip.style.top = (e.clientY - rect.top + 20) + 'px';
+                tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+                
+                tr.appendChild(tooltip);
             });
             
-            nameCell.addEventListener('mouseout', () => {
-                const tooltip = nameCell.querySelector('.tooltip');
+            tr.addEventListener('mousemove', (e) => {
+                const tooltip = tr.querySelector('.tooltip');
+                if (tooltip) {
+                    const rect = tr.getBoundingClientRect();
+                    tooltip.style.top = (e.clientY - rect.top + 20) + 'px';
+                    tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+                }
+            });
+
+            tr.addEventListener('mouseout', () => {
+                const tooltip = tr.querySelector('.tooltip');
                 if (tooltip) {
                     tooltip.remove();
                 }
             });
         }
-        
+
+        const nameCell = document.createElement('td');
+        nameCell.style.color = nameColor;
+        nameCell.textContent = member.name || '-';
         tr.appendChild(nameCell);
+        
         tr.innerHTML += `
             <td>${member.phone || '-'}</td>
             <td>${formatDate(member.birthdate) || '-'}</td>
@@ -85,7 +105,7 @@ function updateTable(members) {
             <td>${formatGender(member.gender) || '-'}</td>
             <td>${member.address || '-'}</td>
         `;
- 
+        
         const programCell = document.createElement('td');
         
         if (programs.length > 1) {
