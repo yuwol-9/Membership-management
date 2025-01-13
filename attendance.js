@@ -126,10 +126,11 @@ function updateAttendanceTable(data) {
             );
             checkbox.checked = isAttended;
 
-            if (attendance.remaining_days <= 0 && !isAttended) {
-                checkbox.disabled = true;
-                checkbox.title = '남은 수업 일수가 없습니다';
+            if (attendance.remaining_days <= 0) {
+                checkbox.disabled = !isAttended;
+                checkbox.title = isAttended ? '' : '남은 수업 일수가 없습니다';
             }
+            
 
             checkbox.addEventListener('change', async (e) => {
                 try {
@@ -162,8 +163,21 @@ function updateAttendanceTable(data) {
                     
                     countCell.textContent = attendance.dates.length;
                     remainingCell.textContent = attendance.remaining_days;
+
+                    if (attendance.remaining_days <= 0) {
+                        tr.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                            if (!cb.checked) {
+                                cb.disabled = true;
+                                cb.title = '남은 수업 일수가 없습니다';
+                            }
+                        });
+                    } else {
+                        tr.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                            cb.disabled = false;
+                            cb.title = '';
+                        });
+                    }
                     
-                    // 남은 일수 색상 업데이트
                     if (attendance.remaining_days === 0) {
                         remainingCell.style.color = 'red';
                     } else if (attendance.remaining_days <= 3) {
