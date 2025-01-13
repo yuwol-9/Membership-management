@@ -444,50 +444,51 @@ app.delete('/api/members/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// 회원 개별 조회 API 수정
 app.get('/api/members/:id', authenticateToken, async (req, res) => {
     try {
-        // 회원 기본 정보와 모든 수강 정보를 함께 조회
-        const [memberInfo] = await pool.execute(`
-            SELECT 
-                m.*,
-                JSON_ARRAYAGG(
-                    JSON_OBJECT(
-                        'enrollment_id', e.id,
-                        'program_id', e.program_id,
-                        'duration_months', e.duration_months,
-                        'total_classes', e.total_classes,
-                        'remaining_days', e.remaining_days,
-                        'payment_status', e.payment_status,
-                        'start_date', e.start_date,
-                        'total_amount', e.total_amount,
-                        'program_name', p.name,
-                        'monthly_price', p.monthly_price,
-                        'per_class_price', p.per_class_price
-                    )
-                ) as enrollments
-            FROM members m
-            LEFT JOIN enrollments e ON m.id = e.member_id
-            LEFT JOIN programs p ON e.program_id = p.id
-            WHERE m.id = ?
-            GROUP BY m.id
+        // 1. 먼저 회원 기본 정보 조회
+        const [memberRows] = await pool.execute(`
+            SELECT * FROM members WHERE id = ?
         `, [req.params.id]);
 
-        if (!memberInfo) {
+        if (memberRows.length === 0) {
             return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
         }
 
-        // JSON_ARRAYAGG 결과 파싱
-        if (memberInfo.enrollments) {
-            memberInfo.enrollments = JSON.parse(memberInfo.enrollments);
-            // null 값을 가진 객체 제거
-            memberInfo.enrollments = memberInfo.enrollments.filter(enrollment => 
-                enrollment.enrollment_id !== null
-            );
-        } else {
-            memberInfo.enrollments = [];
-        }
+        const member = memberRows[0];
 
-        res.json(memberInfo);
+        // 2. 해당 회원의 모든 수강 정보 조회
+        const [enrollmentRows] = await pool.execute(`
+            SELECT 
+                e.*,
+                p.name as program_name,
+                p.monthly_price,
+                p.per_class_price
+            FROM enrollments e
+            LEFT JOIN programs p ON e.program_id = p.id
+            WHERE e.member_id = ?
+        `, [req.params.id]);
+
+        // 3. 회원 정보에 수강 정보 추가
+        const memberData = {
+            ...member,
+            enrollments: enrollmentRows.map(enrollment => ({
+                enrollment_id: enrollment.id,
+                program_id: enrollment.program_id,
+                program_name: enrollment.program_name,
+                duration_months: enrollment.duration_months,
+                total_classes: enrollment.total_classes,
+                remaining_days: enrollment.remaining_days,
+                payment_status: enrollment.payment_status,
+                start_date: enrollment.start_date,
+                total_amount: enrollment.total_amount,
+                monthly_price: enrollment.monthly_price,
+                per_class_price: enrollment.per_class_price
+            }))
+        };
+
+        res.json(memberData);
     } catch (err) {
         console.error('회원 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
