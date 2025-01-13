@@ -609,8 +609,8 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
 
         // enrollment로 현재 정보 찾기
         const [enrollment] = await connection.execute(
-            'SELECT e.member_id, e.total_classes as original_total_classes, ' +
-            'e.remaining_days, e.duration_months as original_duration_months, ' +
+            'SELECT e.member_id, e.duration_months, e.total_classes, ' +
+            'e.remaining_days, ' +
             'p.classes_per_week ' +
             'FROM enrollments e ' +
             'JOIN programs p ON e.program_id = p.id ' +
@@ -626,12 +626,15 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
         }
 
         const memberId = enrollment[0].member_id;
-        const currentRemainingDays = enrollment[0].remaining_days;
+        const currentRemainingDays = enrollment[0].remaining_days || 0;
         let originalTotalClasses;
-        if (enrollment[0].duration_months) {
+
+        if (enrollment[0].duration_months > 0) {
             originalTotalClasses = enrollment[0].duration_months * enrollment[0].classes_per_week * 4;
-        } else {
+        } else if (enrollment[0].total_classes > 0) {
             originalTotalClasses = enrollment[0].total_classes;
+        } else {
+            originalTotalClasses = 0;
         }
         console.log('Original total classes:', originalTotalClasses);  // 디버깅
         console.log('Current remaining days:', currentRemainingDays);  // 디버깅
