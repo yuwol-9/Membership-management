@@ -299,10 +299,10 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
         const { 
             name, gender, age, birthdate, address, phone,
             program_id, duration_months, total_classes,
-            payment_status, start_date 
+            payment_status, start_date,
+            enrollment_id
         } = req.body;
 
-        // 수업 정보 조회
         const [programs] = await connection.execute(
             'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
             [program_id]
@@ -314,65 +314,69 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
 
         const program = programs[0];
 
-        const [currentEnrollment] = await connection.execute(
-            'SELECT duration_months, total_classes, remaining_days FROM enrollments WHERE member_id = ?',
-            [memberId]
-        );
-
-        // 새로운 구독의 총 금액과 남은 일수 계산
-        let totalAmount = 0;
-        let newRemainingDays = 0;
-
-        if (duration_months > 0) {
-            totalAmount = duration_months * program.monthly_price;
-            const classesPerMonth = program.classes_per_week * 4;
-            const newTotalClasses = duration_months * classesPerMonth;
-        
-            if (currentEnrollment[0].total_classes && newTotalClasses < currentEnrollment[0].total_classes) {
-                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
-            }
-        
-            const additionalClasses = newTotalClasses - currentEnrollment[0].total_classes;
-            newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
-        } else if (total_classes > 0) {
-            totalAmount = total_classes * program.per_class_price;
-        
-            if (currentEnrollment[0].total_classes && total_classes < currentEnrollment[0].total_classes) {
-                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
-            }
-        
-            const additionalClasses = total_classes - currentEnrollment[0].total_classes;
-            newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
-        }
-
-        // 회원 기본 정보 업데이트
         await connection.execute(
             'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
             [name, gender, age, birthdate, address, phone, memberId]
         );
 
-        // 수강 정보 업데이트
-        await connection.execute(
-            `UPDATE enrollments 
-            SET program_id = ?, 
-                duration_months = ?,
-                total_classes = ?,
-                remaining_days = ?,
-                payment_status = ?,
-                start_date = ?,
-                total_amount = ?
-            WHERE member_id = ?`,
-            [
-                program_id,
-                duration_months || null,
-                total_classes || null,
-                newRemainingDays,
-                payment_status,
-                start_date,
-                totalAmount,
-                memberId
-            ]
-        );
+        if (enrollment_id) {
+            const [currentEnrollment] = await connection.execute(
+                'SELECT duration_months, total_classes, remaining_days FROM enrollments WHERE id = ? AND member_id = ?',
+                [enrollment_id, memberId]
+            );
+
+            if (currentEnrollment.length === 0) {
+                throw new Error('해당 수강 정보를 찾을 수 없습니다.');
+            }
+
+            let totalAmount = 0;
+            let newRemainingDays = 0;
+
+            if (duration_months > 0) {
+                totalAmount = duration_months * program.monthly_price;
+                const classesPerMonth = program.classes_per_week * 4;
+                const newTotalClasses = duration_months * classesPerMonth;
+            
+                if (currentEnrollment[0].total_classes && newTotalClasses < currentEnrollment[0].total_classes) {
+                    throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
+                }
+            
+                const additionalClasses = newTotalClasses - (currentEnrollment[0].total_classes || 0);
+                newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
+            } else if (total_classes > 0) {
+                totalAmount = total_classes * program.per_class_price;
+            
+                if (currentEnrollment[0].total_classes && total_classes < currentEnrollment[0].total_classes) {
+                    throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
+                }
+            
+                const additionalClasses = total_classes - (currentEnrollment[0].total_classes || 0);
+                newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
+            }
+
+            await connection.execute(
+                `UPDATE enrollments 
+                SET program_id = ?, 
+                    duration_months = ?,
+                    total_classes = ?,
+                    remaining_days = ?,
+                    payment_status = ?,
+                    start_date = ?,
+                    total_amount = ?
+                WHERE id = ? AND member_id = ?`,
+                [
+                    program_id,
+                    duration_months || null,
+                    total_classes || null,
+                    newRemainingDays,
+                    payment_status,
+                    start_date,
+                    totalAmount,
+                    enrollment_id,
+                    memberId
+                ]
+            );
+        }
 
         await connection.commit();
         res.json({ 
