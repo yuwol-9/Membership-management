@@ -77,6 +77,9 @@ async function loadAttendanceData() {
         const month = parseInt(document.getElementById('month').value) + 1;
         const year = parseInt(document.getElementById('year').value);
 
+        console.log('선택된 프로그램 ID:', selectedProgramId);  // 디버깅용 로그 추가
+        console.log('조회할 년월:', year, month);  // 디버깅용 로그 추가
+
         const attendanceData = await API.getAttendanceList({
             program_id: selectedProgramId,
             month: month,

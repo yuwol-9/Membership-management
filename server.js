@@ -916,6 +916,8 @@ app.post('/api/attendance', authenticateToken, async (req, res) => {
 app.get('/api/attendance', authenticateToken, async (req, res) => {
     try {
         const { month, year, program_id } = req.query;
+        console.log('요청받은 출석 조회 파라미터:', { month, year, program_id });  // 디버깅용 로그 추가
+
         const [rows] = await pool.execute(`
             SELECT 
                 m.name as member_name,
@@ -933,6 +935,7 @@ app.get('/api/attendance', authenticateToken, async (req, res) => {
             WHERE (? IS NULL OR p.id = ?)
             ORDER BY m.name, a.attendance_date
         `, [month, year, program_id, program_id]);
+        console.log('출석 데이터 rows 결과:', rows);  // 디버깅용 로그 추가
         
         const memberAttendance = {};
         rows.forEach(row => {
