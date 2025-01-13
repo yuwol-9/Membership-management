@@ -297,85 +297,82 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
 
         const memberId = req.params.id;
         const { 
-            // 회원 기본 정보
             name, gender, age, birthdate, address, phone,
-            // 프로그램 구독 정보
-            enrollment_id, program_id, duration_months, total_classes,
+            program_id, duration_months, total_classes,
             payment_status, start_date
         } = req.body;
 
-        // 1. 회원 기본 정보 업데이트
+        // 수업 정보 조회
+        const [programs] = await connection.execute(
+            'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
+            [program_id]
+        );
+
+        if (programs.length === 0) {
+            throw new Error('수업 정보를 찾을 수 없습니다.');
+        }
+
+        const program = programs[0];
+
+        const [currentEnrollment] = await connection.execute(
+            'SELECT duration_months, total_classes, remaining_days FROM enrollments WHERE member_id = ?',
+            [memberId]
+        );
+
+        // 새로운 구독의 총 금액과 남은 일수 계산
+        let totalAmount = 0;
+        let newRemainingDays = 0;
+
+        if (duration_months > 0) {
+            totalAmount = duration_months * program.monthly_price;
+            const classesPerMonth = program.classes_per_week * 4;
+            const newTotalClasses = duration_months * classesPerMonth;
+        
+            if (currentEnrollment[0].total_classes && newTotalClasses < currentEnrollment[0].total_classes) {
+                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
+            }
+        
+            const additionalClasses = newTotalClasses - currentEnrollment[0].total_classes;
+            newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
+        } else if (total_classes > 0) {
+            totalAmount = total_classes * program.per_class_price;
+        
+            if (currentEnrollment[0].total_classes && total_classes < currentEnrollment[0].total_classes) {
+                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
+            }
+        
+            const additionalClasses = total_classes - currentEnrollment[0].total_classes;
+            newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
+        }
+
+        // 회원 기본 정보 업데이트
         await connection.execute(
             'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
             [name, gender, age, birthdate, address, phone, memberId]
         );
 
-        // 2. 프로그램 구독 정보 업데이트 (enrollment_id가 제공된 경우에만)
-        if (enrollment_id && program_id) {
-            // 프로그램 정보 조회
-            const [programs] = await connection.execute(
-                'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
-                [program_id]
-            );
-
-            if (programs.length === 0) {
-                throw new Error('수업 정보를 찾을 수 없습니다.');
-            }
-
-            const program = programs[0];
-
-            // 현재 수강 정보 조회
-            const [currentEnrollment] = await connection.execute(
-                'SELECT duration_months, total_classes, remaining_days FROM enrollments WHERE id = ?',
-                [enrollment_id]
-            );
-
-            if (currentEnrollment.length === 0) {
-                throw new Error('수강 정보를 찾을 수 없습니다.');
-            }
-
-            // 새로운 구독 정보 계산
-            let totalAmount = 0;
-            let newRemainingDays = 0;
-
-            if (duration_months > 0) {
-                totalAmount = duration_months * program.monthly_price;
-                const classesPerMonth = program.classes_per_week * 4;
-                const newTotalClasses = duration_months * classesPerMonth;
-                
-                const currentClasses = currentEnrollment[0].total_classes || 0;
-                const usedClasses = currentClasses - currentEnrollment[0].remaining_days;
-                newRemainingDays = newTotalClasses - usedClasses;
-            } else if (total_classes > 0) {
-                totalAmount = total_classes * program.per_class_price;
-                
-                const usedClasses = (currentEnrollment[0].total_classes || 0) - currentEnrollment[0].remaining_days;
-                newRemainingDays = total_classes - usedClasses;
-            }
-
-            // 수강 정보 업데이트
-            await connection.execute(
-                `UPDATE enrollments 
-                SET program_id = ?, 
-                    duration_months = ?,
-                    total_classes = ?,
-                    remaining_days = ?,
-                    payment_status = ?,
-                    start_date = ?,
-                    total_amount = ?
-                WHERE id = ?`,
-                [
-                    program_id,
-                    duration_months || null,
-                    total_classes || null,
-                    newRemainingDays,
-                    payment_status,
-                    start_date,
-                    totalAmount,
-                    enrollment_id
-                ]
-            );
-        }
+        // 수강 정보 업데이트
+        await connection.execute(
+            `UPDATE enrollments 
+            SET program_id = ?, 
+                duration_months = ?,
+                total_classes = ?,
+                remaining_days = ?,
+                payment_status = ?,
+                start_date = ?,
+                total_amount = ?
+            WHERE member_id = ?`,
+            [
+                program_id,
+                duration_months || null,
+                total_classes || null,
+                newRemainingDays,
+                payment_status,
+                start_date,
+                totalAmount,
+                memberId
+            ]
+        );
 
         await connection.commit();
         res.json({ 
@@ -445,62 +442,33 @@ app.delete('/api/members/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// 회원 개별 조회 API 수정
+// 회원 개별 조회
 app.get('/api/members/:id', authenticateToken, async (req, res) => {
     try {
-        const memberId = req.params.id;
-        const programId = req.query.program_id;
+        const [rows] = await pool.execute(`
+            SELECT 
+                m.*,
+                e.program_id,
+                e.duration_months,
+                e.total_classes,
+                e.remaining_days,
+                e.payment_status,
+                e.start_date,
+                p.name as program_name,
+                p.monthly_price,
+                p.per_class_price,
+                e.total_amount
+            FROM members m
+            LEFT JOIN enrollments e ON m.id = e.member_id
+            LEFT JOIN programs p ON e.program_id = p.id
+            WHERE m.id = ?
+        `, [req.params.id]);
 
-        const [memberRows] = await pool.execute(`
-            SELECT * FROM members WHERE id = ?
-        `, [memberId]);
-
-        if (memberRows.length === 0) {
+        if (rows.length === 0) {
             return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
         }
 
-        const member = memberRows[0];
-
-        let enrollmentQuery = `
-            SELECT 
-                e.*,
-                p.name as program_name,
-                p.monthly_price,
-                p.per_class_price
-            FROM enrollments e
-            LEFT JOIN programs p ON e.program_id = p.id
-            WHERE e.member_id = ?
-        `;
-        
-        const queryParams = programId ? 
-            [memberId, programId] : 
-            [memberId];
-            
-        if (programId) {
-            enrollmentQuery += ` AND e.program_id = ?`;
-        }
-
-        const [enrollmentRows] = await pool.execute(enrollmentQuery, queryParams);
-
-        const responseData = {
-            ...member,
-            birthdate: member.birthdate ? member.birthdate.toISOString().split('T')[0] : null,
-            program_details: enrollmentRows.map(enrollment => ({
-                enrollment_id: enrollment.id,
-                program_id: enrollment.program_id,
-                program_name: enrollment.program_name,
-                duration_months: enrollment.duration_months,
-                total_classes: enrollment.total_classes,
-                remaining_days: enrollment.remaining_days,
-                payment_status: enrollment.payment_status,
-                start_date: enrollment.start_date ? enrollment.start_date.toISOString().split('T')[0] : null,
-                total_amount: enrollment.total_amount,
-                monthly_price: enrollment.monthly_price,
-                per_class_price: enrollment.per_class_price
-            }))
-        };
-
-        res.json(responseData);
+        res.json(rows[0]);
     } catch (err) {
         console.error('회원 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
