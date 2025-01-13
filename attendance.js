@@ -80,24 +80,19 @@ async function selectProgram(program) {
     await loadAttendanceData();
 }
 
-let cachedAttendanceData = {};
-
 async function loadAttendanceData() {
     try {
         const month = document.getElementById('month').value;
         const year = document.getElementById('year').value;
-        const cacheKey = `${selectedProgramId}-${year}-${month}`;
         
-        if (!cachedAttendanceData[cacheKey]) {
-            const attendanceData = await API.getAttendanceList({
-                program_id: selectedProgramId,
-                month: parseInt(month) + 1,
-                year: year
-            });
-            cachedAttendanceData[cacheKey] = attendanceData;
-        }
+        // 프로그램 ID를 포함하여 데이터 요청
+        const attendanceData = await API.getAttendanceList({
+            program_id: selectedProgramId,
+            month: parseInt(month) + 1,
+            year: year
+        });
         
-        updateAttendanceTable(cachedAttendanceData[cacheKey]);
+        updateAttendanceTable(attendanceData);
     } catch (error) {
         console.error('출석 데이터 로드 실패:', error);
         alert('출석 데이터를 불러오는데 실패했습니다.');
@@ -139,9 +134,12 @@ function updateAttendanceTable(data) {
             checkbox.type = 'checkbox';
             
             // 출석 여부 확인
-            const isAttended = attendance.dates.some(date => 
-                date.split('T')[0] === formattedDate
-            );
+            const isAttended = attendance.dates.some(date => {
+                const attendanceDate = new Date(date);
+                const attendanceDateStr = formatDate(attendanceDate);
+                return attendanceDateStr === formattedDate;
+            });
+            
             checkbox.checked = isAttended;
 
             // 남은 수업 일수가 없는 경우 체크박스 비활성화
