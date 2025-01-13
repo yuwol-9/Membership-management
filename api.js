@@ -104,8 +104,8 @@ const API = {
         });
     },
 
-    deleteMember: async (id) => {
-        return API.apiCall(`/members/${id}`, {
+    deleteMember: async (enrollmentId) => {
+        return API.apiCall(`/members/enrollment/${enrollmentId}`, {
             method: 'DELETE'
         });
     },
@@ -124,6 +124,12 @@ const API = {
         return API.apiCall(`/members/${memberId}/programs`, {
             method: 'POST',
             body: JSON.stringify(programData)
+        });
+    },
+
+    deleteEnrollment: async (enrollmentId) => {
+        return API.apiCall(`/enrollments/${enrollmentId}`, {
+            method: 'DELETE'
         });
     },
 

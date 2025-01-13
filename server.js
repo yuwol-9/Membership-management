@@ -475,41 +475,6 @@ app.get('/api/members/:id', authenticateToken, async (req, res) => {
     }
 });
 
-app.get('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
-    try {
-        const enrollmentId = req.params.id;
-        
-        const [rows] = await pool.execute(`
-            SELECT 
-                m.*,
-                e.id as enrollment_id,
-                e.program_id,
-                e.duration_months,
-                e.total_classes,
-                e.remaining_days,
-                e.payment_status,
-                e.start_date,
-                p.name as program_name,
-                p.monthly_price,
-                p.per_class_price,
-                e.total_amount
-            FROM members m
-            JOIN enrollments e ON m.id = e.member_id
-            LEFT JOIN programs p ON e.program_id = p.id
-            WHERE e.id = ?
-        `, [enrollmentId]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ message: '회원 정보를 찾을 수 없습니다.' });
-        }
-
-        res.json(rows[0]);
-    } catch (err) {
-        console.error('회원 조회 에러:', err);
-        res.status(500).json({ message: '서버 오류' });
-    }
-});
-
 app.post('/api/members/:id/programs', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -555,6 +520,134 @@ app.post('/api/members/:id/programs', authenticateToken, async (req, res) => {
         await connection.rollback();
         console.error('수업 추가 에러:', err);
         res.status(500).json({ message: '서버 오류' });
+    } finally {
+        connection.release();
+    }
+});
+
+app.get('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
+    try {
+        const enrollmentId = req.params.id;
+        
+        const [rows] = await pool.execute(`
+            SELECT 
+                m.*,
+                e.id as enrollment_id,
+                e.program_id,
+                e.duration_months,
+                e.total_classes,
+                e.remaining_days,
+                e.payment_status,
+                e.start_date,
+                p.name as program_name,
+                p.monthly_price,
+                p.per_class_price,
+                e.total_amount
+            FROM members m
+            JOIN enrollments e ON m.id = e.member_id
+            LEFT JOIN programs p ON e.program_id = p.id
+            WHERE e.id = ?
+        `, [enrollmentId]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '회원 정보를 찾을 수 없습니다.' });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('회원 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+app.delete('/api/enrollments/:id', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const enrollmentId = req.params.id;
+        
+        // 해당 수업의 출석 기록 삭제
+        await connection.execute(
+            'DELETE FROM attendance WHERE enrollment_id = ?',
+            [enrollmentId]
+        );
+
+        // 수강 정보 삭제
+        await connection.execute(
+            'DELETE FROM enrollments WHERE id = ?',
+            [enrollmentId]
+        );
+
+        await connection.commit();
+        res.json({ 
+            success: true,
+            message: '수업이 성공적으로 삭제되었습니다.'
+        });
+    } catch (err) {
+        await connection.rollback();
+        console.error('수업 삭제 중 오류 발생:', err);
+        res.status(500).json({ 
+            success: false,
+            message: '서버 오류가 발생했습니다.',
+            error: process.env.NODE_ENV === 'development' ? err.message : '내부 서버 오류'
+        });
+    } finally {
+        connection.release();
+    }
+});
+
+app.delete('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const enrollmentId = req.params.id;
+        
+        const [enrollment] = await connection.execute(
+            'SELECT member_id FROM enrollments WHERE id = ?',
+            [enrollmentId]
+        );
+
+        if (enrollment.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: '수강 정보를 찾을 수 없습니다.' });
+        }
+
+        const memberId = enrollment[0].member_id;
+
+        // 해당 회원의 모든 출석 기록 삭제
+        await connection.execute(`
+            DELETE a FROM attendance a
+            INNER JOIN enrollments e ON a.enrollment_id = e.id
+            WHERE e.member_id = ?
+        `, [memberId]);
+
+        // 모든 수강 정보 삭제
+        await connection.execute(
+            'DELETE FROM enrollments WHERE member_id = ?',
+            [memberId]
+        );
+
+        // 회원 정보 삭제
+        await connection.execute(
+            'DELETE FROM members WHERE id = ?',
+            [memberId]
+        );
+
+        await connection.commit();
+        res.json({ 
+            success: true,
+            message: '회원이 성공적으로 삭제되었습니다.'
+        });
+    } catch (err) {
+        await connection.rollback();
+        console.error('회원 삭제 중 오류 발생:', err);
+        res.status(500).json({ 
+            success: false,
+            message: '서버 오류가 발생했습니다.',
+            error: process.env.NODE_ENV === 'development' ? err.message : '내부 서버 오류'
+        });
     } finally {
         connection.release();
     }
