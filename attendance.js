@@ -2,15 +2,24 @@ let selectedProgramId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        setupYearSelect();
-        setupMonthSelect();
-        await loadPrograms();
+        await initializeAttendance();
         setupEventListeners();
     } catch (error) {
-        console.error('출석 데이터 로드 실패:', error);
-        API.handleApiError(error);
+        console.error('초기화 실패:', error);
+        alert('데이터 로드에 실패했습니다.');
     }
 });
+
+async function initializeAttendance() {
+    const today = new Date();
+    const yearSelect = document.getElementById('year');
+    const monthSelect = document.getElementById('month');
+    
+    yearSelect.value = today.getFullYear();
+    monthSelect.value = today.getMonth();
+
+    await loadPrograms();
+}
 
 async function loadPrograms() {
     try {
@@ -22,50 +31,53 @@ async function loadPrograms() {
             const div = document.createElement('div');
             div.className = 'program-item';
             div.textContent = program.name;
-            div.dataset.programId = program.id;
+            div.setAttribute('data-program-id', program.id);
             div.onclick = () => selectProgram(program);
             programContainer.appendChild(div);
         });
 
         // 첫 번째 프로그램 자동 선택
         if (programs.length > 0) {
-            selectProgram(programs[0]);
+            await selectProgram(programs[0]);
         }
     } catch (error) {
         console.error('프로그램 목록 로드 실패:', error);
-        alert('프로그램 목록을 불러오는데 실패했습니다.');
+        throw error;
     }
 }
 
 async function selectProgram(program) {
-    selectedProgramId = program.id;
-    
-    // UI 업데이트
-    document.querySelectorAll('.program-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    const selectedItem = document.querySelector(`[data-program-id="${program.id}"]`);
-    if (selectedItem) {
-        selectedItem.classList.add('selected');
-    }
+    try {
+        selectedProgramId = program.id;
 
-    // 선택된 프로그램의 출석부 데이터 로드
-    await loadAttendanceData();
+        document.querySelectorAll('.program-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        const selectedItem = document.querySelector(`[data-program-id="${program.id}"]`);
+        if (selectedItem) {
+            selectedItem.classList.add('selected');
+        }
+
+        await loadAttendanceData();
+    } catch (error) {
+        console.error('프로그램 선택 중 오류:', error);
+        alert('프로그램 선택 중 오류가 발생했습니다.');
+    }
 }
 
 async function loadAttendanceData() {
     if (!selectedProgramId) return;
 
     try {
-        const month = document.getElementById('month').value;
-        const year = document.getElementById('year').value;
-        
+        const month = parseInt(document.getElementById('month').value);
+        const year = parseInt(document.getElementById('year').value);
+
         const attendanceData = await API.getAttendanceList({
-            month: parseInt(month) + 1,
-            year: year,
-            program_id: selectedProgramId
+            program_id: selectedProgramId,
+            month: month + 1,
+            year: year
         });
-        
+
         updateAttendanceTable(attendanceData);
     } catch (error) {
         console.error('출석 데이터 로드 실패:', error);
@@ -197,6 +209,9 @@ function formatDate(date) {
 }
 
 function setupEventListeners() {
-    document.getElementById('year').addEventListener('change', loadAttendanceData);
-    document.getElementById('month').addEventListener('change', loadAttendanceData);
+    const yearSelect = document.getElementById('year');
+    const monthSelect = document.getElementById('month');
+
+    yearSelect.addEventListener('change', loadAttendanceData);
+    monthSelect.addEventListener('change', loadAttendanceData);
 }
