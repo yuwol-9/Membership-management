@@ -173,7 +173,6 @@ function updateAttendanceTable(data) {
                     console.log('출석 데이터 전송:', attendanceData);
 
                     await API.checkAttendance(attendanceData);
-                    await loadAttendanceData(); // 데이터 새로고침
                 } catch (error) {
                     console.error('출석 체크 실패:', error);
                     checkbox.checked = !checkbox.checked; // 체크 상태 되돌리기
