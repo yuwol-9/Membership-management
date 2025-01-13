@@ -29,19 +29,63 @@ function updateTable(members) {
     members.forEach(member => {
         const tr = document.createElement('tr');
         
-        // 기본 정보 셀 생성
-        const basicInfo = `
-            <td style="${member.remaining_days == 0 ? 'color: red;' : member.remaining_days <= 3 ? 'color: #E56736;' : ''}">${member.name || '-'}</td>
+        const programs = member.programs || [];
+        const lowDaysProgram = programs.find(p => p.remaining_days <= 3);
+        const zeroDaysProgram = programs.find(p => p.remaining_days === 0);
+        
+        let nameColor = '';
+        let tooltipText = '';
+        
+        if (zeroDaysProgram) {
+            nameColor = 'red';
+            tooltipText = `${zeroDaysProgram.name} 수업의 결제일입니다.`;
+        } else if (lowDaysProgram) {
+            nameColor = '#E56736';
+            tooltipText = `${lowDaysProgram.name} 수업의 남은 일수가 ${lowDaysProgram.remaining_days}회입니다.`;
+        }
+        
+        const nameCell = document.createElement('td');
+        nameCell.style.color = nameColor;
+        nameCell.textContent = member.name || '-';
+        if (tooltipText) {
+            nameCell.style.position = 'relative';
+            nameCell.style.cursor = 'pointer';
+            
+            nameCell.addEventListener('mouseover', (e) => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = tooltipText;
+                tooltip.style.position = 'absolute';
+                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                tooltip.style.color = 'white';
+                tooltip.style.padding = '5px 10px';
+                tooltip.style.borderRadius = '4px';
+                tooltip.style.fontSize = '12px';
+                tooltip.style.whiteSpace = 'nowrap';
+                tooltip.style.zIndex = '1000';
+                tooltip.style.top = '100%';
+                tooltip.style.left = '0';
+                
+                nameCell.appendChild(tooltip);
+            });
+            
+            nameCell.addEventListener('mouseout', () => {
+                const tooltip = nameCell.querySelector('.tooltip');
+                if (tooltip) {
+                    tooltip.remove();
+                }
+            });
+        }
+        
+        tr.appendChild(nameCell);
+        tr.innerHTML += `
             <td>${member.phone || '-'}</td>
             <td>${formatDate(member.birthdate) || '-'}</td>
             <td>${member.age || '-'}</td>
             <td>${formatGender(member.gender) || '-'}</td>
             <td>${member.address || '-'}</td>
         `;
-        tr.innerHTML = basicInfo;
  
-        // 프로그램 정보 셀 생성
-        const programs = member.programs || [];
         const programCell = document.createElement('td');
         
         if (programs.length > 1) {
@@ -68,7 +112,6 @@ function updateTable(members) {
         }
         tr.appendChild(programCell);
  
-        // 초기 프로그램 상세 정보 표시
         const initialProgram = programs[0] || {};
         appendProgramDetails(tr, initialProgram);
  
