@@ -98,7 +98,7 @@ const API = {
     },
 
     updateMember: async (id, memberData) => {
-        return API.apiCall(`/members/${id}`, {
+        return API.apiCall(`/members/enrollment/${id}`, {
             method: 'PUT',
             body: JSON.stringify(memberData)
         });

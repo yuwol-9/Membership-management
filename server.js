@@ -595,6 +595,125 @@ app.get('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
     }
 });
 
+app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const enrollmentId = req.params.id;
+        const { 
+            name, gender, age, birthdate, address, phone,
+            program_id, duration_months, total_classes,
+            payment_status, start_date
+        } = req.body;
+
+        // 먼저 enrollment로 member_id를 찾습니다
+        const [enrollment] = await connection.execute(
+            'SELECT member_id FROM enrollments WHERE id = ?',
+            [enrollmentId]
+        );
+
+        if (enrollment.length === 0) {
+            throw new Error('등록 정보를 찾을 수 없습니다.');
+        }
+
+        const memberId = enrollment[0].member_id;
+
+        // 프로그램 정보 조회
+        const [programs] = await connection.execute(
+            'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
+            [program_id]
+        );
+
+        if (programs.length === 0) {
+            throw new Error('프로그램 정보를 찾을 수 없습니다.');
+        }
+
+        const program = programs[0];
+
+        const [currentEnrollment] = await connection.execute(
+            'SELECT duration_months, total_classes, remaining_days FROM enrollments WHERE id = ?',
+            [enrollmentId]
+        );
+
+        if (currentEnrollment.length === 0) {
+            throw new Error('현재 등록 정보를 찾을 수 없습니다.');
+        }
+
+        // 새로운 구독의 총 금액과 남은 일수 계산
+        let totalAmount = 0;
+        let newRemainingDays = 0;
+
+        if (duration_months > 0) {
+            totalAmount = duration_months * program.monthly_price;
+            const classesPerMonth = program.classes_per_week * 4;
+            const newTotalClasses = duration_months * classesPerMonth;
+            
+            if (currentEnrollment[0].total_classes && 
+                newTotalClasses < currentEnrollment[0].total_classes) {
+                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
+            }
+            
+            const additionalClasses = newTotalClasses - (currentEnrollment[0].total_classes || 0);
+            newRemainingDays = (currentEnrollment[0].remaining_days || 0) + additionalClasses;
+        } else if (total_classes > 0) {
+            totalAmount = total_classes * program.per_class_price;
+            
+            if (currentEnrollment[0].total_classes && 
+                total_classes < currentEnrollment[0].total_classes) {
+                throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
+            }
+            
+            const additionalClasses = total_classes - (currentEnrollment[0].total_classes || 0);
+            newRemainingDays = (currentEnrollment[0].remaining_days || 0) + additionalClasses;
+        }
+
+        // 회원 기본 정보 업데이트
+        await connection.execute(
+            'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
+            [name, gender, age, birthdate, address, phone, memberId]
+        );
+
+        // 수강 정보 업데이트
+        await connection.execute(
+            `UPDATE enrollments 
+            SET program_id = ?, 
+                duration_months = ?,
+                total_classes = ?,
+                remaining_days = ?,
+                payment_status = ?,
+                start_date = ?,
+                total_amount = ?
+            WHERE id = ?`,
+            [
+                program_id,
+                duration_months || null,
+                total_classes || null,
+                newRemainingDays,
+                payment_status,
+                start_date,
+                totalAmount,
+                enrollmentId
+            ]
+        );
+
+        await connection.commit();
+        res.json({ 
+            success: true,
+            message: '회원 정보가 성공적으로 수정되었습니다.'
+        });
+    } catch (err) {
+        await connection.rollback();
+        console.error('회원 정보 수정 중 오류:', err);
+        res.status(400).json({ 
+            success: false,
+            message: err.message || '회원 정보 수정 중 오류가 발생했습니다.'
+        });
+    } finally {
+        connection.release();
+    }
+});
+
 app.delete('/api/enrollments/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
