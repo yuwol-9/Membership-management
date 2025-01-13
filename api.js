@@ -111,7 +111,13 @@ const API = {
     },
 
     getMember: async (id) => {
-        return API.apiCall(`/members/${id}`);
+        try {
+            const response = await API.apiCall(`/members/enrollment/${id}`);
+            return response;
+        } catch (error) {
+            console.error('회원 조회 실패:', error);
+            throw error;
+        }
     },
 
     addMemberProgram: async (memberId, programData) => {

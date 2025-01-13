@@ -475,6 +475,41 @@ app.get('/api/members/:id', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
+    try {
+        const enrollmentId = req.params.id;
+        
+        const [rows] = await pool.execute(`
+            SELECT 
+                m.*,
+                e.id as enrollment_id,
+                e.program_id,
+                e.duration_months,
+                e.total_classes,
+                e.remaining_days,
+                e.payment_status,
+                e.start_date,
+                p.name as program_name,
+                p.monthly_price,
+                p.per_class_price,
+                e.total_amount
+            FROM members m
+            JOIN enrollments e ON m.id = e.member_id
+            LEFT JOIN programs p ON e.program_id = p.id
+            WHERE e.id = ?
+        `, [enrollmentId]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '회원 정보를 찾을 수 없습니다.' });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('회원 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 app.post('/api/members/:id/programs', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
