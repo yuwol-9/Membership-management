@@ -1,3 +1,5 @@
+console.log('attendance.js loaded');
+
 let selectedProgramId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -26,6 +28,7 @@ async function initializeAttendance() {
 async function loadPrograms() {
     try {
         const programs = await API.getPrograms();
+        console.log('받아온 프로그램 목록:', programs);
         const programContainer = document.getElementById('program-items');
         programContainer.innerHTML = '';
         
@@ -53,6 +56,7 @@ async function loadPrograms() {
 
 async function selectProgram(program) {
     try {
+        console.log('선택된 프로그램:', program);
         selectedProgramId = program.id;
 
         document.querySelectorAll('.program-item').forEach(item => {
