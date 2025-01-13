@@ -1,6 +1,4 @@
-// attendance.js
 let selectedProgramId = null;
-let selectedMemberId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -14,18 +12,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function initializeAttendance() {
     setupYearSelect();
+    setupMonthSelect();
     await loadPrograms();
-    
-    // 현재 월 설정
-    const currentMonth = new Date().getMonth();
-    document.getElementById('month').value = currentMonth;
 }
 
 function setupYearSelect() {
     const yearSelect = document.getElementById('year');
     const currentYear = new Date().getFullYear();
     
-    // 2024년부터 현재 연도+3년까지 옵션 생성
     const startYear = 2024;
     const endYear = currentYear + 3;
     
@@ -34,33 +28,36 @@ function setupYearSelect() {
         const option = document.createElement('option');
         option.value = year;
         option.textContent = `${year}년`;
+        if (year === currentYear) {
+            option.selected = true;
+        }
         yearSelect.appendChild(option);
     }
-    
-    yearSelect.value = currentYear;
+}
+
+function setupMonthSelect() {
+    const monthSelect = document.getElementById('month');
+    const currentMonth = new Date().getMonth();
+    monthSelect.value = currentMonth;
 }
 
 async function loadPrograms() {
     try {
         const programs = await API.getPrograms();
-        updateProgramList(programs);
+        const programList = document.getElementById('program-list');
+        programList.innerHTML = '';
+        
+        programs.forEach(program => {
+            const div = document.createElement('div');
+            div.className = 'program-item';
+            div.textContent = program.name;
+            div.onclick = () => selectProgram(program);
+            programList.appendChild(div);
+        });
     } catch (error) {
         console.error('프로그램 목록 로드 실패:', error);
         throw error;
     }
-}
-
-function updateProgramList(programs) {
-    const programSelect = document.getElementById('program-select');
-    programSelect.innerHTML = '';
-    
-    programs.forEach(program => {
-        const div = document.createElement('div');
-        div.className = 'program-item';
-        div.textContent = program.name;
-        div.onclick = () => selectProgram(program);
-        programSelect.appendChild(div);
-    });
 }
 
 async function selectProgram(program) {
@@ -72,59 +69,13 @@ async function selectProgram(program) {
     });
     event.target.classList.add('selected');
 
-    // 회원 목록 표시
-    const memberList = document.querySelector('.member-list');
-    memberList.style.display = 'block';
-    
-    // 해당 프로그램의 회원 목록 로드
-    await loadProgramMembers(program.id);
-}
-
-async function loadProgramMembers(programId) {
-    try {
-        const members = await API.getMembers();
-        const programMembers = members.filter(member => 
-            member.programs.some(p => p.id === programId)
-        );
-        
-        updateMemberList(programMembers);
-    } catch (error) {
-        console.error('회원 목록 로드 실패:', error);
-        alert('회원 목록을 불러오는데 실패했습니다.');
-    }
-}
-
-function updateMemberList(members) {
-    const memberList = document.getElementById('member-list-content');
-    memberList.innerHTML = '';
-
-    members.forEach(member => {
-        const div = document.createElement('div');
-        div.className = 'member-item';
-        div.textContent = member.name;
-        div.onclick = () => selectMember(member);
-        memberList.appendChild(div);
-    });
-}
-
-async function selectMember(member) {
-    selectedMemberId = member.id;
-
-    // UI 업데이트
-    document.querySelectorAll('.member-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    event.target.classList.add('selected');
-
-    // 출석부 표시
+    // 출석부 표시 및 데이터 로드
     document.querySelector('.attendance-content').style.display = 'block';
-
-    // 출석 데이터 로드
     await loadAttendanceData();
 }
 
 async function loadAttendanceData() {
-    if (!selectedProgramId || !selectedMemberId) return;
+    if (!selectedProgramId) return;
 
     try {
         const year = document.getElementById('year').value;
@@ -133,7 +84,6 @@ async function loadAttendanceData() {
         const attendanceData = await API.getAttendanceList({
             month: parseInt(month) + 1,
             year: year,
-            member_id: selectedMemberId,
             program_id: selectedProgramId
         });
 
@@ -157,7 +107,7 @@ function updateAttendanceTable(data) {
     const tbody = table.querySelector('tbody');
     tbody.innerHTML = '';
 
-    // 회원별 출석 데이터 생성
+    // 회원별 출석 데이터 그룹화
     const memberAttendance = {};
     data.forEach(record => {
         if (!memberAttendance[record.member_name]) {
@@ -187,7 +137,6 @@ function updateAttendanceTable(data) {
             const currentDate = new Date(year, month, day);
             const formattedDate = formatDate(currentDate);
             
-            // 일요일인 경우
             if (currentDate.getDay() === 0) {
                 td.classList.add('sunday');
                 tr.appendChild(td);
@@ -197,25 +146,18 @@ function updateAttendanceTable(data) {
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             
-            // 출석 여부 확인
-            const isAttended = attendance.dates.some(date => {
-                return date.split('T')[0] === formattedDate;
-            });
+            const isAttended = attendance.dates.some(date => 
+                date.split('T')[0] === formattedDate
+            );
             checkbox.checked = isAttended;
 
-            // 남은 수업 일수가 0이고 미출석인 경우 체크박스 비활성화
             if (attendance.remaining_days <= 0 && !isAttended) {
                 checkbox.disabled = true;
                 checkbox.title = '남은 수업 일수가 없습니다';
             }
 
-            // 체크박스 이벤트 리스너
             checkbox.addEventListener('change', async (e) => {
                 try {
-                    if (!attendance.enrollment_id) {
-                        throw new Error('수강 정보를 찾을 수 없습니다.');
-                    }
-
                     const attendanceData = {
                         enrollment_id: attendance.enrollment_id,
                         attendance_date: formattedDate,
@@ -223,10 +165,10 @@ function updateAttendanceTable(data) {
                     };
 
                     await API.checkAttendance(attendanceData);
-                    await loadAttendanceData(); // 데이터 새로고침
+                    await loadAttendanceData();
                 } catch (error) {
                     console.error('출석 체크 실패:', error);
-                    checkbox.checked = !checkbox.checked; // 체크 상태 되돌리기
+                    checkbox.checked = !checkbox.checked;
                     alert(error.message || '출석 처리 중 오류가 발생했습니다.');
                 }
             });
@@ -243,7 +185,7 @@ function updateTableHeader(daysInMonth) {
     const thead = document.querySelector('.attendance-table thead');
     const headerRow = document.createElement('tr');
     headerRow.innerHTML = `<th>회원 이름</th>`;
-
+    
     for (let day = 1; day <= daysInMonth; day++) {
         headerRow.innerHTML += `<th>${day}일</th>`;
     }
@@ -257,6 +199,34 @@ function formatDate(date) {
 }
 
 function setupEventListeners() {
-    document.getElementById('year').addEventListener('change', loadAttendanceData);
-    document.getElementById('month').addEventListener('change', loadAttendanceData);
+    const yearSelect = document.getElementById('year');
+    const monthSelect = document.getElementById('month');
+
+    yearSelect.addEventListener('change', loadAttendanceData);
+    monthSelect.addEventListener('change', loadAttendanceData);
+
+    // 페이지 로드시 현재 날짜 설정
+    const today = new Date();
+    yearSelect.value = today.getFullYear();
+    monthSelect.value = today.getMonth();
+
+    // 초기 연도 선택 옵션 설정
+    const currentYear = today.getFullYear();
+    const startYear = 2024;
+    const endYear = currentYear + 3;
+
+    yearSelect.innerHTML = '';
+    for (let year = startYear; year <= endYear; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = `${year}년`;
+        if (year === currentYear) {
+            option.selected = true;
+        }
+        yearSelect.appendChild(option);
+    }
+
+    // 현재 월 설정
+    const currentMonth = today.getMonth();
+    monthSelect.value = currentMonth;
 }
