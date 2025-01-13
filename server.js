@@ -290,7 +290,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
     }
  });
 
-app.put('/api/members/:id', authenticateToken, async (req, res) => {
+ app.put('/api/members/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
@@ -300,28 +300,32 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
             name, gender, age, birthdate, address, phone,
             program_id, duration_months, total_classes,
             payment_status, start_date,
-            enrollment_id
+            enrollment_id  // 특정 수강 정보의 ID
         } = req.body;
 
-        const [programs] = await connection.execute(
-            'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
-            [program_id]
-        );
-
-        if (programs.length === 0) {
-            throw new Error('수업 정보를 찾을 수 없습니다.');
-        }
-
-        const program = programs[0];
-
+        // 회원 기본 정보 업데이트
         await connection.execute(
             'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
             [name, gender, age, birthdate, address, phone, memberId]
         );
 
-        if (enrollment_id) {
+        // 수강 정보 수정이 요청된 경우
+        if (enrollment_id && program_id) {
+            // 수업 정보 조회
+            const [programs] = await connection.execute(
+                'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
+                [program_id]
+            );
+
+            if (programs.length === 0) {
+                throw new Error('수업 정보를 찾을 수 없습니다.');
+            }
+
+            const program = programs[0];
+
+            // 현재 수강 정보 조회
             const [currentEnrollment] = await connection.execute(
-                'SELECT duration_months, total_classes, remaining_days FROM enrollments WHERE id = ? AND member_id = ?',
+                'SELECT id, duration_months, total_classes, remaining_days FROM enrollments WHERE id = ? AND member_id = ?',
                 [enrollment_id, memberId]
             );
 
@@ -329,6 +333,7 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
                 throw new Error('해당 수강 정보를 찾을 수 없습니다.');
             }
 
+            // 새로운 구독의 총 금액과 남은 일수 계산
             let totalAmount = 0;
             let newRemainingDays = 0;
 
@@ -336,24 +341,17 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
                 totalAmount = duration_months * program.monthly_price;
                 const classesPerMonth = program.classes_per_week * 4;
                 const newTotalClasses = duration_months * classesPerMonth;
-            
-                if (currentEnrollment[0].total_classes && newTotalClasses < currentEnrollment[0].total_classes) {
-                    throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
-                }
-            
+                
                 const additionalClasses = newTotalClasses - (currentEnrollment[0].total_classes || 0);
                 newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
             } else if (total_classes > 0) {
                 totalAmount = total_classes * program.per_class_price;
-            
-                if (currentEnrollment[0].total_classes && total_classes < currentEnrollment[0].total_classes) {
-                    throw new Error('기존 등록된 횟수보다 적게 수정할 수 없습니다.');
-                }
-            
+                
                 const additionalClasses = total_classes - (currentEnrollment[0].total_classes || 0);
                 newRemainingDays = currentEnrollment[0].remaining_days + additionalClasses;
             }
 
+            // 수강 정보 업데이트
             await connection.execute(
                 `UPDATE enrollments 
                 SET program_id = ?, 
@@ -446,33 +444,50 @@ app.delete('/api/members/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// 회원 개별 조회
 app.get('/api/members/:id', authenticateToken, async (req, res) => {
     try {
-        const [rows] = await pool.execute(`
+        // 회원 기본 정보와 모든 수강 정보를 함께 조회
+        const [memberInfo] = await pool.execute(`
             SELECT 
                 m.*,
-                e.program_id,
-                e.duration_months,
-                e.total_classes,
-                e.remaining_days,
-                e.payment_status,
-                e.start_date,
-                p.name as program_name,
-                p.monthly_price,
-                p.per_class_price,
-                e.total_amount
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'enrollment_id', e.id,
+                        'program_id', e.program_id,
+                        'duration_months', e.duration_months,
+                        'total_classes', e.total_classes,
+                        'remaining_days', e.remaining_days,
+                        'payment_status', e.payment_status,
+                        'start_date', e.start_date,
+                        'total_amount', e.total_amount,
+                        'program_name', p.name,
+                        'monthly_price', p.monthly_price,
+                        'per_class_price', p.per_class_price
+                    )
+                ) as enrollments
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id
             WHERE m.id = ?
+            GROUP BY m.id
         `, [req.params.id]);
 
-        if (rows.length === 0) {
+        if (!memberInfo) {
             return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
         }
 
-        res.json(rows[0]);
+        // JSON_ARRAYAGG 결과 파싱
+        if (memberInfo.enrollments) {
+            memberInfo.enrollments = JSON.parse(memberInfo.enrollments);
+            // null 값을 가진 객체 제거
+            memberInfo.enrollments = memberInfo.enrollments.filter(enrollment => 
+                enrollment.enrollment_id !== null
+            );
+        } else {
+            memberInfo.enrollments = [];
+        }
+
+        res.json(memberInfo);
     } catch (err) {
         console.error('회원 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
