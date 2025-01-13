@@ -180,8 +180,8 @@ function setupEventListeners() {
 
 function setupSearchFunction() {
     const searchInput = document.querySelector('.search-bar input');
-    const showAllButton = document.querySelector('.search-bar button.show-all');
-    const searchButton = document.querySelector('.search-bar button.search');
+    const showAllButton = document.querySelector('.search-bar .show-all-button');
+    const searchButton = document.querySelector('.search-bar .search-button');
 
     if (searchInput && searchButton) {
         searchButton.addEventListener('click', () => {
