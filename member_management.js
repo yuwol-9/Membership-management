@@ -30,18 +30,22 @@ function updateTable(members) {
         const tr = document.createElement('tr');
         
         const programs = member.programs || [];
-        const lowDaysProgram = programs.find(p => p.remaining_days <= 3);
-        const zeroDaysProgram = programs.find(p => p.remaining_days === 0);
-        
+        const sortedPrograms = [...programs].sort((a, b) => 
+            (a.remaining_days || 0) - (b.remaining_days || 0)
+        );
+
         let nameColor = '';
         let tooltipText = '';
+
+        const zeroDaysProgram = sortedPrograms.find(p => p.remaining_days === 0);
+        const lowestDaysProgram = sortedPrograms.find(p => p.remaining_days > 0 && p.remaining_days <= 3);
         
         if (zeroDaysProgram) {
             nameColor = 'red';
             tooltipText = `${zeroDaysProgram.name} 수업의 결제일입니다.`;
         } else if (lowDaysProgram) {
             nameColor = '#E56736';
-            tooltipText = `${lowDaysProgram.name} 수업의 남은 일수가 ${lowDaysProgram.remaining_days}회입니다.`;
+            tooltipText = `${lowestDaysProgram.name} 수업의 남은 일수가 ${lowestDaysProgram.remaining_days}회입니다.`;
         }
         
         if (tooltipText) {
@@ -297,12 +301,24 @@ function sortMembers(members, type) {
             members.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             break;
         case '남은 횟수':
-            members.sort((a, b) => (a.remaining_days || 0) - (b.remaining_days || 0));
+            members.sort((a, b) => {
+                const aPrograms = a.programs || [];
+                const bPrograms = b.programs || [];
+                const aMinDays = aPrograms.length > 0 ? 
+                    Math.min(...aPrograms.map(p => p.remaining_days || 0)) : 0;
+                const bMinDays = bPrograms.length > 0 ? 
+                    Math.min(...bPrograms.map(p => p.remaining_days || 0)) : 0;
+                return aMinDays - bMinDays;
+            });
             break;
         case '결제 상태':
             members.sort((a, b) => {
                 const statusOrder = { 'paid': 1, 'unpaid': 0 };
-                return statusOrder[a.payment_status] - statusOrder[b.payment_status];
+                const aPrograms = a.programs || [];
+                const bPrograms = b.programs || [];
+                const aHasUnpaid = aPrograms.some(p => p.payment_status === 'unpaid');
+                const bHasUnpaid = bPrograms.some(p => p.payment_status === 'unpaid');
+                return (aHasUnpaid ? 0 : 1) - (bHasUnpaid ? 0 : 1);
             });
             break;
     }
