@@ -248,12 +248,10 @@ function createClassElement(data) {
     const [endHour, endMinute] = endTime.split(':').map(Number);
 
     const startPositionMinutes = (startHour - 10) * 110 + startMinute + 80;
-    
-    const totalStartMinutes = startHour * 60 + startMinute;
-    const totalEndMinutes = endHour * 60 + endMinute;
-    const diffMinutes = totalEndMinutes - totalStartMinutes;
-    
-    const durationMinutes = Math.round(diffMinutes * (110 / 60));
+    const durationMinutes = (endHour - startHour) * 110 + (endMinute - startMinute);
+
+    const formattedStartTime = `${startTime.split(':')[0]}:${startTime.split(':')[1]}`;
+    const formattedEndTime = `${endTime.split(':')[0]}:${endTime.split(':')[1]}`;
 
     const classElement = document.createElement('div');
     classElement.classList.add('class');
