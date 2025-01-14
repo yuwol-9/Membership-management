@@ -199,6 +199,12 @@ app.post('/api/members', authenticateToken, async (req, res) => {
             duration_months, total_classes 
         } = req.body;
 
+        console.log('Registration Input:', {
+            duration_months,
+            total_classes,
+            program_id
+        });
+
         // 회원 기본 정보 저장
         const [memberResult] = await connection.execute(
             'INSERT INTO members (name, gender, age, birthdate, address, phone) VALUES (?, ?, ?, ?, ?, ?)',
@@ -217,6 +223,8 @@ app.post('/api/members', authenticateToken, async (req, res) => {
 
         const program = programs[0];
 
+        console.log('Program Info:', program);
+
         // 수강 금액과 남은 일수 계산
         let totalAmount = 0;
         let remainingDays = 0;
@@ -225,10 +233,28 @@ app.post('/api/members', authenticateToken, async (req, res) => {
             totalAmount = duration_months * program.monthly_price;
             const classesPerMonth = program.classes_per_week * 4;
             remainingDays = duration_months * classesPerMonth;
+            console.log('Monthly Calculation:', {
+                duration_months,
+                classesPerMonth,
+                remainingDays
+            });
         } else if (total_classes > 0) {
             totalAmount = total_classes * program.per_class_price;
             remainingDays = total_classes;
+            console.log('Class-based Calculation:', {
+                total_classes,
+                remainingDays
+            });
         }
+
+        if (remainingDays <= 0) {
+            throw new Error('남은 수업 횟수가 올바르지 않습니다.');
+        }
+
+        console.log('Final Calculation:', {
+            totalAmount,
+            remainingDays
+        });
 
         // 수강 정보 저장
         const [enrollmentResult] = await connection.execute(
