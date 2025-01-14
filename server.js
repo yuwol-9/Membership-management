@@ -1038,30 +1038,35 @@ app.get('/api/statistics/program', authenticateToken, async (req, res) => {
 // Dashboard API
 app.get('/api/dashboard', authenticateToken, async (req, res) => {
     try {
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const currentDate = new Date();
+        const currentDay = dayNames[currentDate.getDay()];
+
         const [totalMembers] = await pool.execute('SELECT COUNT(*) as count FROM members');
         const [totalClasses] = await pool.execute('SELECT COUNT(*) as count FROM programs');
-        const [todaySchedule] = await pool.execute(`
-            SELECT p.name 
+        const [monthlyRevenue] = await connection.execute(`
+            SELECT SUM(total_amount) as total 
+            FROM enrollments 
+            WHERE MONTH(start_date) = MONTH(CURRENT_DATE())
+            AND YEAR(start_date) = YEAR(CURRENT_DATE())`
+        );
+        const [todayClasses] = await connection.execute(`
+            SELECT DISTINCT p.name 
             FROM programs p 
             JOIN class_schedules cs ON p.id = cs.program_id 
             WHERE cs.day = ?
-        `, [today]);
+            ORDER BY cs.start_time ASC
+        `, [currentDay]);
 
-        const todayClassName = todaySchedule.length > 0 
-        ? todaySchedule.map(schedule => schedule.name).join(', ')
-        : "수업이 없습니다";
-
-        const [monthlyRevenue] = await pool.execute(`
-            SELECT SUM(e.total_amount) as total 
-            FROM enrollments e 
-            WHERE MONTH(e.start_date) = MONTH(CURRENT_DATE())
-        `);
+        const todayClassName = todayClasses.length > 0 
+            ? todayClasses.map(cls => cls.name).join(', ')
+            : "수업이 없습니다";
 
         res.json({
             totalMembers: totalMembers[0].count,
             totalClasses: totalClasses[0].count,
-            todayClassName: todayClassName,
-            monthlyRevenue: monthlyRevenue[0].total || 0
+            monthlyRevenue: monthlyRevenue[0].total || 0,
+            todayClassName: todayClassName
         });
     } catch (err) {
         console.error('대시보드 데이터 조회 에러:', err);
