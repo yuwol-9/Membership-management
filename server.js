@@ -501,12 +501,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             total_classes 
         } = req.body;
 
-        console.log('프로그램 추가 요청 데이터:', {
-            duration_months,
-            total_classes,
-            program_id
-        });
-
+        // 프로그램 정보 조회
         const [programs] = await connection.execute(
             'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
             [program_id]
@@ -517,7 +512,6 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         }
 
         const program = programs[0];
-        console.log('프로그램 정보:', program);
 
         // 총 금액과 남은 일수 계산
         let totalAmount = 0;
@@ -527,18 +521,9 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             totalAmount = duration_months * program.monthly_price;
             const classesPerMonth = program.classes_per_week * 4;
             remainingDays = duration_months * classesPerMonth;
-            console.log('개월 수 기반 계산:', {
-                duration_months,
-                classesPerMonth,
-                remainingDays
-            });
-        } else if (total_classes > 0) {
+        } else {
             totalAmount = total_classes * program.per_class_price;
             remainingDays = total_classes;
-            console.log('횟수 기반 계산:', {
-                total_classes,
-                remainingDays
-            });
         }
 
         // 새로운 enrollment 추가
@@ -560,7 +545,8 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         res.json({ 
             success: true,
             message: '프로그램이 성공적으로 추가되었습니다.',
-            enrollmentId: result.insertId
+            enrollmentId: result.insertId,
+            redirect: '/회원관리.html'
         });
     } catch (err) {
         await connection.rollback();
@@ -751,6 +737,21 @@ app.delete('/api/enrollments/:id', authenticateToken, async (req, res) => {
         await connection.beginTransaction();
 
         const enrollmentId = req.params.id;
+
+        const [enrollments] = await connection.execute(`
+            SELECT COUNT(*) as total_enrollments 
+            FROM enrollments e1
+            JOIN enrollments e2 ON e1.member_id = e2.member_id
+            WHERE e1.id = ?
+        `, [enrollmentId]);
+
+        if (enrollments[0].total_enrollments <= 1) {
+            await connection.rollback();
+            return res.status(400).json({ 
+                success: false,
+                message: '마지막 수업은 삭제할 수 없습니다. 회원을 삭제하시려면 회원 삭제 기능을 이용해주세요.'
+            });
+        }
         
         // 해당 수업의 출석 기록 삭제
         await connection.execute(

@@ -246,7 +246,6 @@ async function deleteMember() {
     }
 }
 
-// 머라도 추가하기 redeploy~
 async function addProgram() {
   try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -271,7 +270,7 @@ async function addProgram() {
 
       await API.addMemberProgram(memberId, programData);
       alert('수업이 성공적으로 추가되었습니다.');
-      window.location.reload();
+      window.location.href = '/회원관리.html';
   } catch (error) {
       console.error('수업 추가 실패:', error);
       alert('수업 추가에 실패했습니다. 다시 시도해주세요.');
