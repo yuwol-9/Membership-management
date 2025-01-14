@@ -279,13 +279,14 @@ function createClassElement(data) {
 }
 
 function calculatePixelPosition(hour, minute) {
-    const hourOffset = (hour - 10) * 110;
-    const minuteOffset = (minute / 60) * 110;
-    return hourOffset + minuteOffset;
+    const baseHour = 10;
+    const pixelsPerHour = 100;
+    const totalMinutes = ((hour - baseHour) * 60) + minute;
+    return (totalMinutes / 60) * pixelsPerHour;
 }
 
 function calculatePixelHeight(startMinutes, endMinutes) {
-    const pixelsPerHour = 110;
+    const pixelsPerHour = 100;
     const minuteDifference = endMinutes - startMinutes;
     return (minuteDifference / 60) * pixelsPerHour;
 }
