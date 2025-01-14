@@ -176,6 +176,23 @@ async function addProgram() {
           payment_status: selectedPaymentStatus
       };
 
+      if (!programData.program_id) {
+          alert('수업을 선택해주세요.');
+          return;
+      }
+      if (!programData.start_date) {
+        alert('등록 날짜를 선택해주세요.');
+        return;
+      }
+      if (!programData.payment_status) {
+        alert('결제 상태를 골라주세요.');
+        return;
+      };
+      if (!subscriptionInput || !subscriptionInput.value) {
+          alert('구독 기간/횟수를 입력해주세요.');
+          return;
+      }
+
       if (subscriptionType.value === 'month') {
           programData.duration_months = parseInt(subscriptionInput.value);
           programData.total_classes = null;

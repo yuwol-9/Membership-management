@@ -204,6 +204,29 @@ async function updateMember(event) {
             total_classes: 0
         };
 
+        const missingFields = [];
+        if (!formData.name) missingFields.push('이름');
+        if (!formData.gender) missingFields.push('성별');
+        if (!formData.birthdate) missingFields.push('생년월일');
+        if (!formData.age) missingFields.push('나이');
+        if (!formData.address) missingFields.push('주소');
+        if (!formData.phone) missingFields.push('전화번호');
+        if (!formData.program_id) {
+            alert('수업을 선택해주세요.');
+            return;
+        }
+        if (!formData.start_date) missingFields.push('시작일');
+        if (!formData.payment_status) missingFields.push('결제상태');
+        if (!subscriptionInput || !subscriptionInput.value) {
+            alert('구독 기간/횟수를 입력해주세요.');
+            return;
+        }
+
+        if (missingFields.length > 0) {
+            alert(`다음 정보를 입력해주세요:\n${missingFields.join('\n')}`);
+            return;
+        }
+
         // 구독 유형에 따른 데이터 설정
         if (subscriptionType.value === 'month') {
             formData.duration_months = parseInt(subscriptionInput.value);
