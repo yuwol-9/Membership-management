@@ -2,9 +2,20 @@ const API = {
     API_BASE_URL: 'https://membership-management-production.up.railway.app/api',
 
     // Token management
-    getToken: () => localStorage.getItem('token'),
+    getToken: () => {
+        const sessionToken = sessionStorage.getItem('token');
+        if (sessionToken) return sessionToken;
+        
+        return localStorage.getItem('token');
+    },
     setToken: (token) => localStorage.setItem('token', token),
-    removeToken: () => localStorage.removeItem('token'),
+    removeToken: () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isLoggedIn');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('isLoggedIn');
+    },
+
 
     // API calls with authentication
     apiCall: async (endpoint, options = {}) => {

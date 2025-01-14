@@ -6,26 +6,35 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const username = loginForm.querySelector('input[name="username"]').value;
         const password = loginForm.querySelector('input[name="password"]').value;
+        const keepLoggedIn = loginForm.querySelector('#keepLoggedIn').checked;
 
         try {
             console.log('로그인 시도중...');
             const result = await API.login(username, password);
             console.log('로그인 성공');
             
-            localStorage.setItem('isLoggedIn', 'true');
+            if (keepLoggedIn) {
+                // 로컬 스토리지에 저장 (브라우저를 닫아도 유지)
+                localStorage.setItem('token', result.token);
+                localStorage.setItem('isLoggedIn', 'true');
+            } else {
+                // 세션 스토리지에 저장 (브라우저를 닫으면 삭제)
+                sessionStorage.setItem('token', result.token);
+                sessionStorage.setItem('isLoggedIn', 'true');
+                // 로컬 스토리지에서 기존 데이터 제거
+                localStorage.removeItem('token');
+                localStorage.removeItem('isLoggedIn');
+            }
             
-            setTimeout(() => {
-                console.log('홈페이지로 이동 시도');
-                window.location.href = '/홈페이지.html';
-            }, 100);
+            window.location.href = '/홈페이지.html';
             
         } catch (error) {
             console.error('로그인 실패:', error);
             alert('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
         }
     });
-
-    if (API.getToken() && localStorage.getItem('isLoggedIn')) {
+    
+    if (API.getToken() && (localStorage.getItem('isLoggedIn') || sessionStorage.getItem('isLoggedIn'))) {
         window.location.href = '/홈페이지.html';
     }
 });

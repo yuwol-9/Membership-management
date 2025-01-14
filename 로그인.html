@@ -98,10 +98,13 @@
     <form id="loginForm">
       <input type="text" name="username" placeholder="아이디를 입력하세요" required>
       <input type="password" name="password" placeholder="비밀번호를 입력하세요" required>
+      <div class="checkbox-container" style="display: flex; align-items: center; margin: 10px 0;">
+        <input type="checkbox" id="keepLoggedIn" name="keepLoggedIn" style="width: auto; margin-right: 8px;">
+        <label for="keepLoggedIn" style="font-size: 14px; color: #666;">로그인 유지</label>
+      </div>
       <button type="submit">로그인</button>
     </form>
     <div class="footer">
-      <p>계정이 없으신가요? <a href="#">회원가입</a></p>
       <p><a href="#">비밀번호 찾기</a></p>
     </div>
   </div>
