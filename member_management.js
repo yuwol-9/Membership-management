@@ -223,11 +223,6 @@ function appendProgramDetails(row, program) {
     if (existingCells[startIndex + 5]) {
         existingCells[startIndex + 5].textContent = formatDate(selectedProgram.start_date) || '-';
     }
-
-    // 수정 버튼 셀 업데이트
-    if (existingCells[startIndex + 6]) {
-        existingCells[startIndex + 6].innerHTML = `<button onclick="location.href='회원정보수정.html?id=${selectedProgram.id}'" class="btn-primary">수정</button>`;
-    }
 }
  
 function formatSubscription(program) {
