@@ -1,5 +1,5 @@
 let selectedProgram = '';
-let selectedPaymentStatus = 'unpaid';
+let selectedPaymentStatus = '';
 let programs = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -11,6 +11,9 @@ async function initializeForm() {
     try {
         programs = await API.getPrograms();
         updateProgramSelect();
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('start_date').value = today;
         
         const urlParams = new URLSearchParams(window.location.search);
         const memberId = urlParams.get('id');
