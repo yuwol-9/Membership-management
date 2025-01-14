@@ -264,7 +264,7 @@ async function addProgram() {
           programData.duration_months = parseInt(subscriptionInput.value);
           programData.total_classes = null;
       } else {
-          programData.duration_months = 1;
+          programData.duration_months = null;
           programData.total_classes = parseInt(subscriptionInput.value);
       }
 
