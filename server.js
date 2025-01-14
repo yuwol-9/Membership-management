@@ -271,6 +271,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                 m.birthdate,
                 m.address,
                 m.phone,
+                m.created_at,
                 JSON_ARRAYAGG(
                     JSON_OBJECT(
                         'id', e.id,
@@ -289,7 +290,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id
-            GROUP BY m.id
+            GROUP BY m.id, m.created_at
             ORDER BY m.created_at DESC
         `);
         

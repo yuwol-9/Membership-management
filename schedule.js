@@ -247,10 +247,11 @@ function createClassElement(data) {
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);
 
-    const startPositionMinutes = calculatePixelPosition(startHour, startMinute);
-    const totalStartMinutes = startHour * 60 + startMinute;
-    const totalEndMinutes = endHour * 60 + endMinute;
-    const durationMinutes = calculatePixelHeight(totalStartMinutes, totalEndMinutes)
+    const startPositionMinutes = (startHour - 10) * 110 + startMinute + 80;
+    const durationMinutes = (endHour - startHour) * 108 + (endMinute - startMinute);
+
+    const formattedStartTime = `${startTime.split(':')[0]}:${startTime.split(':')[1]}`;
+    const formattedEndTime = `${endTime.split(':')[0]}:${endTime.split(':')[1]}`;
 
     const classElement = document.createElement('div');
     classElement.classList.add('class');
@@ -264,7 +265,7 @@ function createClassElement(data) {
 
     classElement.innerHTML = `
         <div class="time">
-            ${formatTime(startTime)} ~ ${formatTime(endTime)}
+            ${formattedStartTime} ~ ${formattedEndTime}
         </div>
         <div class="content" style="background-color: ${color};">
             <div class="name" style="white-space: pre-wrap;">${className}</div>
@@ -276,25 +277,6 @@ function createClassElement(data) {
     `;
 
     return classElement;
-}
-
-function calculatePixelPosition(hour, minute) {
-    const baseHour = 10;
-    const pixelsPerHour = 100;
-    const totalMinutes = ((hour - baseHour) * 60) + minute;
-    return (totalMinutes / 60) * pixelsPerHour;
-}
-
-function calculatePixelHeight(startMinutes, endMinutes) {
-    const pixelsPerHour = 100;
-    const minuteDifference = endMinutes - startMinutes;
-    return (minuteDifference / 60) * pixelsPerHour;
-}
-
-
-function formatTime(time) {
-    const [hour, minute] = time.split(':').map(Number);
-    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
 function openModal() {
