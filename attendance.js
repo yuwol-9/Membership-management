@@ -178,17 +178,17 @@ function updateAttendanceTable(data) {
                     remainingCell.textContent = attendance.remaining_days;
 
                     // 남은 일수가 0이 되면 모든 미체크 체크박스 비활성화
-                    if (attendance.remaining_days <= 0) {
-                        checkboxes.forEach(cb => {
-                            if (!cb.checked) {
-                                cb.disabled = true;
-                                cb.title = '남은 수업 일수가 없습니다';
-                            }
-                        });
-                        remainingCell.style.color = 'red';
-                    } else if (attendance.remaining_days <= 3) {
-                        remainingCell.style.color = '#E56736';
-                    }
+                    checkboxes.forEach(cb => {
+                        if (attendance.remaining_days <= 0) {
+                            cb.disabled = !cb.checked;
+                            cb.title = cb.disabled ? '남은 수업 일수가 없습니다' : '';
+                            remainingCell.style.color = 'red';
+                        } else {
+                            cb.disabled = false;
+                            cb.title = '';
+                            remainingCell.style.color = attendance.remaining_days <= 3 ? '#E56736' : '';
+                        }
+                    });
 
                 } catch (error) {
                     console.error('출석 체크 실패:', error);
