@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // 로그인 상태 확인
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const token = API.getToken();
+    const isLoggedIn = localStorage.getItem('isLoggedIn') || sessionStorage.getItem('isLoggedIn');
+    
+    if (!token || !isLoggedIn) {
         window.location.href = '로그인.html';
         return;
     }
@@ -17,8 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error('대시보드 통계 로드 실패:', error);
-        // 인증 오류인 경우 로그인 페이지로 리다이렉트
         if (error.message.includes('인증')) {
+            API.removeToken();
             window.location.href = '로그인.html';
             return;
         }

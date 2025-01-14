@@ -4,9 +4,20 @@ const API = {
     // Token management
     getToken: () => {
         const sessionToken = sessionStorage.getItem('token');
-        if (sessionToken) return sessionToken;
+        if (sessionToken) {
+            if (sessionStorage.getItem('isLoggedIn')) {
+                return sessionToken;
+            }
+        }
         
-        return localStorage.getItem('token');
+        const localToken = localStorage.getItem('token');
+        if (localToken) {
+            if (localStorage.getItem('isLoggedIn')) {
+                return localToken;
+            }
+        }
+        
+        return null;
     },
     setToken: (token) => localStorage.setItem('token', token),
     removeToken: () => {

@@ -26,15 +26,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('isLoggedIn');
             }
             
-            window.location.href = '/홈페이지.html';
+            setTimeout(() => {
+                window.location.href = '홈페이지.html';
+            }, 100);
             
         } catch (error) {
             console.error('로그인 실패:', error);
             alert('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
         }
     });
+
+    const token = API.getToken();
+    const isLoggedIn = localStorage.getItem('isLoggedIn') || sessionStorage.getItem('isLoggedIn');
     
-    if (API.getToken() && (localStorage.getItem('isLoggedIn') || sessionStorage.getItem('isLoggedIn'))) {
-        window.location.href = '/홈페이지.html';
+    if (token && isLoggedIn) {
+        window.location.href = '홈페이지.html';
+        return;
     }
 });
