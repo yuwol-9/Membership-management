@@ -43,7 +43,7 @@ function updateTable(members) {
         if (zeroDaysProgram) {
             nameColor = 'red';
             tooltipText = `${zeroDaysProgram.name} 수업의 결제일입니다.`;
-        } else if (lowDaysProgram) {
+        } else if (lowestDaysProgram) {
             nameColor = '#E56736';
             tooltipText = `${lowestDaysProgram.name} 수업의 남은 일수가 ${lowestDaysProgram.remaining_days}회입니다.`;
         }
