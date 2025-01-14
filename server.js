@@ -230,10 +230,19 @@ app.post('/api/members', authenticateToken, async (req, res) => {
             remainingDays = total_classes;
         }
 
-        // 수강 정보 저장
         const [enrollmentResult] = await connection.execute(
-            'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [memberResult.insertId, program_id, duration_months || null, total_classes || null, remainingDays, payment_status, start_date, totalAmount]
+            'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount, original_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                memberResult.insertId, 
+                program_id, 
+                duration_months || null, 
+                total_classes || null, 
+                remainingDays, 
+                payment_status, 
+                start_date, 
+                totalAmount,
+                totalAmount
+            ]
         );
 
         await connection.commit();
@@ -245,7 +254,7 @@ app.post('/api/members', authenticateToken, async (req, res) => {
     } catch (err) {
         await connection.rollback();
         console.error('회원 등록 에러:', err);
-        res.status(500).json({ message: '서버 오류' });
+        res.status(500).json({ message: err.message || '서버 오류' });
     } finally {
         connection.release();
     }
