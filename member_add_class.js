@@ -64,17 +64,6 @@ function fillMemberData(memberData) {
 
     document.getElementById('address').value = memberData.address || '';
     document.getElementById('address').disabled = true;
-
-    document.getElementById('program').value = '';
-    const customSubscription = document.getElementById('custom-subscription');
-    if (customSubscription) {
-        customSubscription.value = '';
-    }
-    document.getElementById('start_date').value = '';
-    
-    setPaymentStatus('unpaid');
-    
-    document.getElementById('amount-display').innerText = '결제 금액: 0원';
 }
 
 function updateProgramSelection() {
