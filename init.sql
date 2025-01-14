@@ -82,3 +82,6 @@ CREATE TABLE IF NOT EXISTS attendance (
     attendance_date DATE NOT NULL,
     FOREIGN KEY (enrollment_id) REFERENCES enrollments(id) ON DELETE CASCADE
 );
+
+ALTER TABLE enrollments 
+ADD COLUMN original_amount INT NOT NULL DEFAULT 0 AFTER total_amount;

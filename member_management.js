@@ -156,10 +156,10 @@ function appendProgramDetails(row, program) {
  
     // 총액 셀
     const amountCell = document.createElement('td');
-    const totalAmount = calculateTotalAmount(program);
-    amountCell.textContent = formatCurrency(totalAmount);
+    const displayAmount = program.original_amount || calculateAmount(program);
+    amountCell.textContent = formatCurrency(displayAmount);
     row.appendChild(amountCell);
- 
+    
     // 남은 일수 셀
     const remainingCell = document.createElement('td');
     remainingCell.textContent = remainingDisplay;
@@ -202,7 +202,7 @@ function appendProgramDetails(row, program) {
     }
 
     if (existingCells[startIndex + 2]) {
-        existingCells[startIndex + 2].textContent = formatCurrency(calculateTotalAmount(selectedProgram));
+        existingCells[startIndex + 2].textContent = formatCurrency(selectedProgram.original_amount || calculateAmount(selectedProgram));
     }
 
     // 남은 일수 셀 업데이트
@@ -251,15 +251,18 @@ function formatSubscription(program) {
     return '-';
  }
 
-function calculateTotalAmount(program) {
+ function calculateAmount(program) {
     if (!program) return 0;
+    if (program.original_amount !== undefined) {
+        return program.original_amount;
+    }
     if (program.total_classes > 0) {
-        return program.total_amount || program.per_class_price * program.total_classes;
+        return program.per_class_price * program.total_classes;
     } else if (program.duration_months > 0) {
-        return program.total_amount || program.monthly_price * program.duration_months;
+        return program.monthly_price * program.duration_months;
     }
     return 0;
- }
+}
 
 function formatGender(gender) {
     if (!gender) return '-';

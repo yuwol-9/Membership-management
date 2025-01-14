@@ -272,6 +272,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                         'payment_status', e.payment_status,
                         'start_date', e.start_date,
                         'total_amount', e.total_amount,
+                        'original_amount', e.original_amount,
                         'monthly_price', p.monthly_price,
                         'per_class_price', p.per_class_price
                     )
@@ -288,7 +289,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
         console.error('회원 목록 조회 에러:', err);
         res.status(500).json({ message: '서버 오류' });
     }
- });
+});
 
 app.put('/api/members/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
@@ -483,7 +484,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         const enrollmentId = req.params.id;
         
         const [enrollment] = await connection.execute(
-            'SELECT e.member_id, e.remaining_days, e.total_amount, e.program_id, p.classes_per_week ' +
+            'SELECT e.member_id, e.remaining_days, e.total_amount, e.original_amount, e.program_id, p.classes_per_week ' +
             'FROM enrollments e ' +
             'JOIN programs p ON e.program_id = p.id ' +
             'WHERE e.id = ?',
@@ -497,6 +498,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         const memberId = enrollment[0].member_id;
         const currentRemainingDays = enrollment[0].remaining_days || 0;
         const currentTotalAmount = enrollment[0].total_amount || 0;
+        const currentOriginalAmount = enrollment[0].original_amount || currentTotalAmount; // 기존 original_amount가 없으면 total_amount 사용
         
         const { 
             program_id, 
@@ -534,19 +536,19 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         const program = programs[0];
 
         let newTotalClasses;
-        let newTotalAmount;
+        let newAmount;
 
         if (duration_months > 0) {
             const classesPerMonth = program.classes_per_week * 4;
             newTotalClasses = duration_months * classesPerMonth;
-            newTotalAmount = duration_months * program.monthly_price;
+            newAmount = duration_months * program.monthly_price;
         } else {
             newTotalClasses = total_classes;
-            newTotalAmount = total_classes * program.per_class_price;
+            newAmount = total_classes * program.per_class_price;
         }
 
         if (is_extension) {
-            const finalTotalAmount = currentTotalAmount + newTotalAmount;
+            const finalTotalAmount = currentTotalAmount + newAmount;
             const finalRemainingDays = currentRemainingDays + newTotalClasses;
             
             await connection.execute(
@@ -562,7 +564,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             );
         } else {
             await connection.execute(
-                'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount, original_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
                     memberId,
                     program_id,
@@ -571,7 +573,8 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
                     newTotalClasses,
                     payment_status,
                     start_date,
-                    newTotalAmount
+                    newAmount,
+                    newAmount
                 ]
             );
         }
