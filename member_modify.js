@@ -246,6 +246,7 @@ async function deleteMember() {
     }
 }
 
+// 머라도 추가하기 redeploy~
 async function addProgram() {
   try {
       const urlParams = new URLSearchParams(window.location.search);
