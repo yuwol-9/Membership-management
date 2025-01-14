@@ -483,7 +483,10 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         const enrollmentId = req.params.id;
         
         const [enrollment] = await connection.execute(
-            'SELECT member_id FROM enrollments WHERE id = ?',
+            'SELECT e.member_id, e.remaining_days, e.total_amount, e.program_id, p.classes_per_week ' +
+            'FROM enrollments e ' +
+            'JOIN programs p ON e.program_id = p.id ' +
+            'WHERE e.id = ?',
             [enrollmentId]
         );
 
@@ -492,6 +495,8 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         }
 
         const memberId = enrollment[0].member_id;
+        const currentRemainingDays = enrollment[0].remaining_days || 0;
+        const currentTotalAmount = enrollment[0].total_amount || 0;
         
         const { 
             program_id, 
@@ -517,7 +522,6 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             }
         }
 
-        // 프로그램 정보 조회
         const [programs] = await connection.execute(
             'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
             [program_id]
@@ -529,44 +533,58 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
 
         const program = programs[0];
 
-        // 총 금액과 남은 일수 계산
-        let totalAmount = 0;
-        let remainingDays = 0;
+        let newTotalClasses;
+        let newTotalAmount;
 
         if (duration_months > 0) {
-            totalAmount = duration_months * program.monthly_price;
             const classesPerMonth = program.classes_per_week * 4;
-            remainingDays = duration_months * classesPerMonth;
+            newTotalClasses = duration_months * classesPerMonth;
+            newTotalAmount = duration_months * program.monthly_price;
         } else {
-            totalAmount = total_classes * program.per_class_price;
-            remainingDays = total_classes;
+            newTotalClasses = total_classes;
+            newTotalAmount = total_classes * program.per_class_price;
         }
 
-        // 새로운 enrollment 추가
-        const [result] = await connection.execute(
-            'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [
-                memberId,
-                program_id,
-                duration_months || null,
-                total_classes || null,
-                remainingDays,
-                payment_status,
-                start_date,
-                totalAmount
-            ]
-        );
+        if (is_extension) {
+            const finalTotalAmount = currentTotalAmount + newTotalAmount;
+            const finalRemainingDays = currentRemainingDays + newTotalClasses;
+            
+            await connection.execute(
+                `UPDATE enrollments 
+                SET remaining_days = ?,
+                    total_amount = ?
+                WHERE id = ?`,
+                [
+                    finalRemainingDays,
+                    finalTotalAmount,
+                    enrollmentId
+                ]
+            );
+        } else {
+            await connection.execute(
+                'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    memberId,
+                    program_id,
+                    duration_months || null,
+                    total_classes || null,
+                    newTotalClasses,
+                    payment_status,
+                    start_date,
+                    newTotalAmount
+                ]
+            );
+        }
 
         await connection.commit();
         res.json({ 
             success: true,
-            message: is_extension ? '수업이 성공적으로 연장되었습니다.' : '수업이 성공적으로 추가되었습니다.',
-            enrollmentId: result.insertId,
+            message: is_extension ? '프로그램이 성공적으로 연장되었습니다.' : '프로그램이 성공적으로 추가되었습니다.',
             redirect: '/회원관리.html'
         });
     } catch (err) {
         await connection.rollback();
-        console.error('프로그램 추가 중 오류:', err);
+        console.error('프로그램 추가/연장 중 오류:', err);
         res.status(500).json({ 
             success: false,
             message: err.message || '서버 오류가 발생했습니다.'
