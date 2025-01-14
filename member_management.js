@@ -178,8 +178,13 @@ function appendProgramDetails(row, program) {
  
     // 수정 버튼 셀
     const actionCell = document.createElement('td');
-    actionCell.innerHTML = `<button onclick="location.href='회원정보수정.html?id=${program.id}'" class="btn-primary">수정</button>`;
+    actionCell.innerHTML = `<button onclick="location.href='회원정보수정.html?id=${program.id}'" class="btn-primary">수정/연장</button>`;
     row.appendChild(actionCell);
+
+    // 수업 추가 버튼 셀
+    const addClassCell = document.createElement('td');
+    addClassCell.innerHTML = `<button onclick="location.href='회원수업추가.html?id=${program.id}'" class="btn-primary">추가</button>`;
+    row.appendChild(addClassCell);
  }
 
 function updateProgramDetails(row, program) {

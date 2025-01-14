@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수업 추가</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    
+    .all-container {
+      display: block;
+    }
+    
+    .logo-container {
+      max-width: 400px;
+      align-items: right;
+      padding: 0 55px;
+      margin: 20px;
+      margin-left: 280px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: row;
+      gap: 40px;
+      width: 900px;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .column {
+      flex: 1;
+      text-align: left;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #E56736;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+      width: 430px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .custom-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .custom-input-group select,
+    .custom-input-group input {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .subscription {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      padding: 10px;
+    }
+
+    .subscription button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background-color: #EE8B59;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .subscription button:hover {
+      background-color: #C33A20;
+      color: white;
+    }
+
+    .payment-status {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+
+    .payment-status button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background-color: #EE8B59;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .payment-status button:hover {
+      background-color: #C33A20;
+    }
+
+    .payment-status button.selected {
+      background-color: #C33A20;
+    }
+
+    .amount {
+      margin-top: 15px;
+      font-size: 16px;
+      color: black;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 40px;
+      margin-top: 20px;
+    }
+
+    .btn-primary {
+      background-color: #E56736;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      flex: 1;
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      background-color: #cc4c24;
+    }
+
+    .btn-cancel {
+      background-color: #6c757d;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      flex: 1;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn-cancel:hover {
+      background-color: #5a6268;
+    }
+
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn-delete:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="all-container">
+    <div class="logo-container">
+      <a href="홈페이지.html">
+        <img src="image/로고_black.png" width="330" height="55">
+      </a>
+    </div>
+    <div class="container">
+      <div class="column">
+        <h1>회원 기본 정보</h1>
+        <form id="edit-form">
+          <div class="form-group">
+            <label for="name">이름</label>
+            <input type="text" id="name" disabled placeholder="이름을 입력하세요">
+          </div>
+          <div class="form-group">
+            <label for="phone">전화번호</label>
+            <input type="tel" id="phone" disabled placeholder="전화번호를 입력하세요">
+          </div>
+          <div class="form-group">
+            <label for="birthdate">생년월일</label>
+            <input type="date" id="birthdate" disabled>
+          </div>
+          <div class="form-group">
+            <label for="age">나이</label>
+            <input type="number" id="age" disabled placeholder="나이를 입력하세요">
+          </div>
+          <div class="form-group">
+            <label for="gender">성별</label>
+            <select id="gender" disabled>
+              <option value="">선택하세요</option>
+              <option value="male">남성</option>
+              <option value="female">여성</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="address">주소</label>
+            <input type="text" id="address" disabled placeholder="주소를 입력하세요">
+          </div>
+        </form>
+      </div>
+      <div class="column">
+        <h1>수업 및 구독 정보</h1>
+        <form>
+          <div class="form-group">
+            <label>수업 선택</label>
+            <select id="program" onchange="updateProgramSelection()" disabled>
+              <option value="">수업을 선택하세요.</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>구독 기간</label>
+            <div class="subscription">
+              <button type="button" onclick="setSubscription('1개월')">1개월</button>
+              <button type="button" onclick="setSubscription('3개월')">3개월</button>
+              <button type="button" onclick="enableCustomInput()">직접입력</button>
+            </div>
+            <div class="subscription">
+              <button type="button" onclick="setSubscription('8회')">8회</button>
+              <button type="button" onclick="setSubscription('12회')">12회</button>
+              <button type="button" onclick="setSubscription('15회')">15회</button>
+            </div>
+            <div class="custom-input-group" style="margin-top: 10px; display: none;">
+              <select id="subscription-type" style="width: 30%;" onchange="updateSubscriptionPlaceholder()">
+                <option value="month">개월</option>
+                <option value="class">횟수</option>
+              </select>
+              <input type="number" id="custom-subscription" placeholder="개월 수 입력" style="width: 70%;" oninput="calculateAmount()" min="1">
+            </div>
+          </div>
+          <div class="amount" id="amount-display">결제 금액: 0원</div>
+          <div class="form-group">
+            <label>결제 상태</label>
+            <div class="payment-status">
+              <button type="button" class="status-btn" data-status="paid" onclick="setPaymentStatus('paid')">완납</button>
+              <button type="button" class="status-btn" data-status="unpaid" onclick="setPaymentStatus('unpaid')">미납</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="start_date">등록 날짜</label>
+            <input type="date" id="start_date" required>
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-primary" id="add-program-btn">수업 추가</button>
+            <a href="회원관리.html" class="btn-cancel">나가기</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="api.js"></script>
+  <script src="member_modify.js"></script>
+</body>
+</html>
