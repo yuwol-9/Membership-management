@@ -1044,13 +1044,14 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
 
         const [totalMembers] = await pool.execute('SELECT COUNT(*) as count FROM members');
         const [totalClasses] = await pool.execute('SELECT COUNT(*) as count FROM programs');
-        const [monthlyRevenue] = await connection.execute(`
+        const [monthlyRevenue] = await pool.execute(`
             SELECT SUM(total_amount) as total 
             FROM enrollments 
             WHERE MONTH(start_date) = MONTH(CURRENT_DATE())
             AND YEAR(start_date) = YEAR(CURRENT_DATE())`
         );
-        const [todayClasses] = await connection.execute(`
+
+        const [todayClasses] = await pool.execute(`
             SELECT DISTINCT p.name 
             FROM programs p 
             JOIN class_schedules cs ON p.id = cs.program_id 
