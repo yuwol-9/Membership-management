@@ -53,7 +53,11 @@ function fillMemberData(memberData) {
     document.getElementById('age').value = memberData.age || '';
     document.getElementById('gender').value = memberData.gender || '';
     document.getElementById('address').value = memberData.address || '';
-    document.getElementById('program').value = memberData.program_id || '';
+    const programSelect = document.getElementById('program');
+    programSelect.innerHTML = `<option value="${memberData.program_id}">${memberData.program_name}</option>`;
+    programSelect.value = memberData.program_id;
+    programSelect.disabled = true; 
+    
     document.getElementById('start_date').value = memberData.start_date ? memberData.start_date.split('T')[0] : '';
     
     // 결제 상태 설정
