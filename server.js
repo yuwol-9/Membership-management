@@ -1258,6 +1258,19 @@ app.delete('/api/programs', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
+
+        const [enrollments] = await connection.execute(
+            'SELECT COUNT(*) as count FROM enrollments e ' +
+            'INNER JOIN members m ON e.member_id = m.id'
+        );
+
+        if (enrollments[0].count > 0) {
+            await connection.rollback();
+            return res.status(400).json({
+                success: false,
+                message: '수업을 등록한 회원이 있어 초기화할 수 없습니다.'
+            });
+        }
         
         // 수업 관련 모든 데이터 삭제
         await connection.execute('DELETE FROM class_schedules');
@@ -1420,6 +1433,19 @@ app.delete('/api/programs/:id', authenticateToken, async (req, res) => {
         
         const { id } = req.params;
         
+        const [enrollments] = await connection.execute(
+            'SELECT COUNT(*) as count FROM enrollments WHERE program_id = ?',
+            [id]
+        );
+
+        if (enrollments[0].count > 0) {
+            await connection.rollback();
+            return res.status(400).json({
+                success: false,
+                message: '수업을 등록한 회원이 있어 삭제할 수 없습니다.'
+            });
+        }
+
         const [program] = await connection.execute(
             'SELECT id FROM programs WHERE id = ?',
             [id]
