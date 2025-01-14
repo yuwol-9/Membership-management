@@ -501,6 +501,19 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             total_classes 
         } = req.body;
 
+        const [existingEnrollment] = await connection.execute(
+            'SELECT id FROM enrollments WHERE member_id = ? AND program_id = ?',
+            [memberId, program_id]
+        );
+
+        if (existingEnrollment.length > 0) {
+            await connection.rollback();
+            return res.status(400).json({
+                success: false,
+                message: '이미 추가된 수업입니다. 수정/연장을 이용해주세요.'
+            });
+        }
+
         // 프로그램 정보 조회
         const [programs] = await connection.execute(
             'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
