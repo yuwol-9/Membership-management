@@ -197,8 +197,12 @@ async function addProgram() {
       alert('수업이 성공적으로 추가되었습니다.');
       window.location.href = '/회원관리.html';
   } catch (error) {
-      console.error('수업 추가 실패:', error);
-      alert('수업 추가에 실패했습니다. 다시 시도해주세요.');
+    if (error.message.includes('이미 추가된 수업')) {
+        alert(error.message);
+    } else {
+        console.error('수업 추가 실패:', error);
+        alert('수업 추가에 실패했습니다. 다시 시도해주세요.');
+    }
   }
 }
 

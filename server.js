@@ -498,20 +498,23 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             start_date, 
             payment_status,
             duration_months,
-            total_classes 
+            total_classes,
+            is_extension
         } = req.body;
 
-        const [existingEnrollment] = await connection.execute(
-            'SELECT id FROM enrollments WHERE member_id = ? AND program_id = ?',
-            [memberId, program_id]
-        );
+        if (!is_extension) {
+            const [existingEnrollment] = await connection.execute(
+                'SELECT id FROM enrollments WHERE member_id = ? AND program_id = ?',
+                [memberId, program_id]
+            );
 
-        if (existingEnrollment.length > 0) {
-            await connection.rollback();
-            return res.status(400).json({
-                success: false,
-                message: '이미 추가된 수업입니다. 수정/연장을 이용해주세요.'
-            });
+            if (existingEnrollment.length > 0) {
+                await connection.rollback();
+                return res.status(400).json({
+                    success: false,
+                    message: '이미 추가된 수업입니다. 수정/연장을 이용해주세요.'
+                });
+            }
         }
 
         // 프로그램 정보 조회
@@ -557,7 +560,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         await connection.commit();
         res.json({ 
             success: true,
-            message: '프로그램이 성공적으로 추가되었습니다.',
+            message: is_extension ? '수업이 성공적으로 연장되었습니다.' : '수업이 성공적으로 추가되었습니다.',
             enrollmentId: result.insertId,
             redirect: '/회원관리.html'
         });
