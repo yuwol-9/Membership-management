@@ -49,7 +49,7 @@ function updateDashboardCards(stats) {
                 }).format(totalRevenue);
                 break;
             case '오늘 스케줄':
-                valueElement.textContent = `${stats.todayAttendance}회 수업`;
+                valueElement.textContent = stats.todayClassName;
                 break;
         }
     });

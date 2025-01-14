@@ -1040,9 +1040,16 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
     try {
         const [totalMembers] = await pool.execute('SELECT COUNT(*) as count FROM members');
         const [totalClasses] = await pool.execute('SELECT COUNT(*) as count FROM programs');
-        const [todayAttendance] = await pool.execute(
-            'SELECT COUNT(*) as count FROM attendance WHERE DATE(attendance_date) = CURDATE()'
-        );
+        const [todaySchedule] = await pool.execute(`
+            SELECT p.name 
+            FROM programs p 
+            JOIN class_schedules cs ON p.id = cs.program_id 
+            WHERE cs.day = ?
+        `, [today]);
+
+        const todayClassName = todaySchedule.length > 0 
+        ? todaySchedule.map(schedule => schedule.name).join(', ')
+        : "수업이 없습니다";
 
         const [monthlyRevenue] = await pool.execute(`
             SELECT SUM(e.total_amount) as total 
@@ -1053,7 +1060,7 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
         res.json({
             totalMembers: totalMembers[0].count,
             totalClasses: totalClasses[0].count,
-            todayAttendance: todayAttendance[0].count,
+            todayClassName: todayClassName,
             monthlyRevenue: monthlyRevenue[0].total || 0
         });
     } catch (err) {
