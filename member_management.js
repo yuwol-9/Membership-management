@@ -22,10 +22,7 @@ async function loadMembers() {
     }
 }
 
-let memberData = [];
-
 function updateTable(members) {
-    memberData = members;
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
     
@@ -198,14 +195,6 @@ function appendProgramDetails(row, program) {
     const programSelect = programCell.querySelector('select');
     if (programSelect) {
         programSelect.value = selectedProgram.id;
-        
-        programSelect.onchange = function(e) {
-            const programs = memberData.programs;
-            const selected = programs.find(p => p.id.toString() === e.target.value);
-            if (selected) {
-                updateProgramDetails(row, selected);
-            }
-        };
     }
     
     if (existingCells[startIndex + 1]) {
@@ -233,6 +222,22 @@ function appendProgramDetails(row, program) {
     // 등록 날짜 셀 업데이트
     if (existingCells[startIndex + 5]) {
         existingCells[startIndex + 5].textContent = formatDate(selectedProgram.start_date) || '-';
+    }
+
+    // 수정/연장 버튼 셀 업데이트
+    if (existingCells[startIndex + 6]) {
+        const modifyButton = existingCells[startIndex + 6].querySelector('button');
+        if (modifyButton) {
+            modifyButton.onclick = () => location.href = `회원정보수정.html?id=${selectedProgram.id}`;
+        }
+    }
+
+    // 추가 버튼 셀 업데이트
+    if (existingCells[startIndex + 7]) {
+        const addButton = existingCells[startIndex + 7].querySelector('button');
+        if (addButton) {
+            addButton.onclick = () => location.href = `회원수업추가.html?id=${selectedProgram.id}`;
+        }
     }
 }
  
