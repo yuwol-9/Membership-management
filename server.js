@@ -1052,11 +1052,14 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
         );
 
         const [todayClasses] = await pool.execute(`
-            SELECT DISTINCT p.name 
-            FROM programs p 
-            JOIN class_schedules cs ON p.id = cs.program_id 
-            WHERE cs.day = ?
-            ORDER BY cs.start_time ASC
+            SELECT name 
+            FROM (
+                SELECT DISTINCT p.name, cs.start_time
+                FROM programs p 
+                JOIN class_schedules cs ON p.id = cs.program_id 
+                WHERE cs.day = ?
+                ORDER BY cs.start_time ASC
+            ) as ordered_classes
         `, [currentDay]);
 
         const todayClassName = todayClasses.length > 0 
