@@ -604,13 +604,14 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
         const { 
             name, gender, age, birthdate, address, phone,
             program_id, duration_months, total_classes,
-            payment_status, start_date
+            payment_status, start_date,
+            is_extension
         } = req.body;
 
         // enrollment로 현재 정보 찾기
         const [enrollment] = await connection.execute(
             'SELECT e.member_id, e.duration_months, e.total_classes, ' +
-            'e.remaining_days, ' +
+            'e.remaining_days, e.total_amount, ' +
             'p.classes_per_week ' +
             'FROM enrollments e ' +
             'JOIN programs p ON e.program_id = p.id ' +
@@ -618,29 +619,13 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
             [enrollmentId]
         );
 
-        console.log('Current enrollment data:', enrollment[0]);  // 디버깅
-
-
         if (enrollment.length === 0) {
             throw new Error('등록 정보를 찾을 수 없습니다.');
         }
 
         const memberId = enrollment[0].member_id;
         const currentRemainingDays = enrollment[0].remaining_days || 0;
-        let originalTotalClasses;
-
-        if (enrollment[0].duration_months > 0) {
-            originalTotalClasses = enrollment[0].duration_months * enrollment[0].classes_per_week * 4;
-        } else if (enrollment[0].total_classes > 0) {
-            originalTotalClasses = enrollment[0].total_classes;
-        } else {
-            originalTotalClasses = 0;
-        }
-        console.log('Original total classes:', originalTotalClasses);  // 디버깅
-        console.log('Current remaining days:', currentRemainingDays);  // 디버깅
-
-        const usedClasses = originalTotalClasses - currentRemainingDays;
-        console.log('Used classes:', usedClasses);  // 디버깅
+        const currentTotalAmount = enrollment[0].total_amount || 0;
 
         // 프로그램 정보 조회
         const [programs] = await connection.execute(
@@ -654,77 +639,79 @@ app.put('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
 
         const program = programs[0];
 
-        // 새로운 총 수업 횟수 계산
+        // 새로운 총 수업 횟수와 금액 계산
         let newTotalClasses;
         let finalDurationMonths = null;
         let finalTotalClasses = null;
+        let newTotalAmount;
 
         if (duration_months > 0) {
             newTotalClasses = duration_months * program.classes_per_week * 4;
             finalDurationMonths = duration_months;
+            newTotalAmount = duration_months * program.monthly_price;
         } else {
             newTotalClasses = total_classes;
             finalTotalClasses = total_classes;
-        }
-        console.log('New total classes:', newTotalClasses);  // 디버깅
-
-        // 사용한 횟수가 새로운 총 횟수보다 많은지 체크
-        if (usedClasses > newTotalClasses) {
-            throw new Error('출석 횟수가 많아 수정할 수 없습니다.');
+            newTotalAmount = total_classes * program.per_class_price;
         }
 
-        // 새로운 남은 일수 계산
-        const newRemainingDays = newTotalClasses - usedClasses;
-        console.log('New remaining days:', newRemainingDays);  // 디버깅
-
-        // 총 금액 계산
-        let totalAmount;
-        if (duration_months > 0) {
-            totalAmount = duration_months * program.monthly_price;
+        if (is_extension) {
+            newTotalAmount += currentTotalAmount;
+            const newRemainingDays = currentRemainingDays + newTotalClasses;
+            
+            await connection.execute(
+                `UPDATE enrollments 
+                SET remaining_days = ?,
+                    total_amount = ?
+                WHERE id = ?`,
+                [
+                    newRemainingDays,
+                    newTotalAmount,
+                    enrollmentId
+                ]
+            );
         } else {
-            totalAmount = total_classes * program.per_class_price;
+            // 회원 기본 정보 업데이트
+            await connection.execute(
+                'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
+                [name, gender, age, birthdate, address, phone, memberId]
+            );
+
+            // 수강 정보 업데이트
+            await connection.execute(
+                `UPDATE enrollments 
+                SET program_id = ?, 
+                    duration_months = ?,
+                    total_classes = ?,
+                    remaining_days = ?,
+                    payment_status = ?,
+                    start_date = ?,
+                    total_amount = ?
+                WHERE id = ?`,
+                [
+                    program_id,
+                    finalDurationMonths,
+                    finalTotalClasses,
+                    newTotalClasses,
+                    payment_status,
+                    start_date,
+                    newTotalAmount,
+                    enrollmentId
+                ]
+            );
         }
-
-        // 회원 기본 정보 업데이트
-        await connection.execute(
-            'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
-            [name, gender, age, birthdate, address, phone, memberId]
-        );
-
-        // 수강 정보 업데이트
-        await connection.execute(
-            `UPDATE enrollments 
-            SET program_id = ?, 
-                duration_months = ?,
-                total_classes = ?,
-                remaining_days = ?,
-                payment_status = ?,
-                start_date = ?,
-                total_amount = ?
-            WHERE id = ?`,
-            [
-                program_id,
-                finalDurationMonths,
-                finalTotalClasses,
-                newRemainingDays,
-                payment_status,
-                start_date,
-                totalAmount,
-                enrollmentId
-            ]
-        );
 
         await connection.commit();
         res.json({ 
             success: true,
-            message: '회원 정보가 성공적으로 수정되었습니다.'
+            message: is_extension ? '수업이 성공적으로 연장되었습니다.' : '회원 정보가 성공적으로 수정되었습니다.'
         });
     } catch (err) {
         await connection.rollback();
-        console.error('회원 정보 수정 중 오류:', err);
+        console.error('회원 정보 수정/연장 중 오류:', err);
         res.status(400).json({ 
             success: false,
-            message: err.message || '회원 정보 수정 중 오류가 발생했습니다.'
+            message: err.message || '회원 정보 수정/연장 중 오류가 발생했습니다.'
         });
     } finally {
         connection.release();

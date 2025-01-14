@@ -84,7 +84,7 @@ function fillMemberData(memberData) {
         customSubscription.value = memberData.duration_months;
         updateSubscriptionPlaceholder();
     }
-    
+
     // 금액 계산
     calculateAmount();
 }
@@ -284,8 +284,22 @@ async function addProgram() {
           member_id: memberId,
           program_id: document.getElementById('program').value,
           start_date: document.getElementById('start_date').value,
-          payment_status: selectedPaymentStatus
+          payment_status: selectedPaymentStatus,
+          is_extension: true
       };
+
+      if (!programData.start_date) {
+        alert('등록 날짜를 선택해주세요.');
+        return;
+      }
+      if (!programData.payment_status) {
+        alert('결제 상태를 골라주세요.');
+        return;
+      }
+      if (!subscriptionInput || !subscriptionInput.value) {
+        alert('구독 기간/횟수를 입력해주세요.');
+        return;
+      }
 
       if (subscriptionType.value === 'month') {
           programData.duration_months = parseInt(subscriptionInput.value);
@@ -296,11 +310,11 @@ async function addProgram() {
       }
 
       await API.addMemberProgram(memberId, programData);
-      alert('수업이 성공적으로 추가되었습니다.');
+      alert('수업이 성공적으로 연장되었습니다.');
       window.location.href = '/회원관리.html';
   } catch (error) {
-      console.error('수업 추가 실패:', error);
-      alert('수업 추가에 실패했습니다. 다시 시도해주세요.');
+      console.error('수업 연장 실패:', error);
+      alert('수업 연장에 실패했습니다. 다시 시도해주세요.');
   }
 }
 
