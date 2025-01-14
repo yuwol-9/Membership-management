@@ -187,12 +187,49 @@ function appendProgramDetails(row, program) {
     row.appendChild(addClassCell);
  }
 
-function updateProgramDetails(row, program) {
-    for (let i = 0; i < 6; i++) {
-        row.deleteCell(-1);
+function updateProgramDetails(row, selectedProgram) {
+    const existingCells = row.cells;
+    const startIndex = 6; // 프로그램 정보가 시작되는 셀의 인덱스
+    
+    // 프로그램 이름 셀 업데이트
+    if (existingCells[startIndex]) {
+        existingCells[startIndex].textContent = selectedProgram.name || '-';
     }
-    appendProgramDetails(row, program);
- }
+
+    // 구독 정보 셀 업데이트
+    if (existingCells[startIndex + 1]) {
+        existingCells[startIndex + 1].textContent = formatSubscription(selectedProgram);
+    }
+
+    // 결제 금액 셀 업데이트
+    if (existingCells[startIndex + 2]) {
+        existingCells[startIndex + 2].textContent = formatCurrency(calculateTotalAmount(selectedProgram));
+    }
+
+    // 남은 일수 셀 업데이트
+    if (existingCells[startIndex + 3]) {
+        const remainingCell = existingCells[startIndex + 3];
+        const remaining = selectedProgram.remaining_days;
+        remainingCell.textContent = remaining !== undefined && remaining !== null ? `${remaining}일` : '-';
+        remainingCell.style.color = remaining <= 0 ? 'red' : 
+                                  remaining <= 3 ? '#E56736' : '';
+    }
+
+    // 결제 상태 셀 업데이트
+    if (existingCells[startIndex + 4]) {
+        existingCells[startIndex + 4].textContent = formatPaymentStatus(selectedProgram.payment_status);
+    }
+
+    // 등록 날짜 셀 업데이트
+    if (existingCells[startIndex + 5]) {
+        existingCells[startIndex + 5].textContent = formatDate(selectedProgram.start_date) || '-';
+    }
+
+    // 수정 버튼 셀 업데이트
+    if (existingCells[startIndex + 6]) {
+        existingCells[startIndex + 6].innerHTML = `<button onclick="location.href='회원정보수정.html?id=${selectedProgram.id}'" class="btn-primary">수정</button>`;
+    }
+}
  
 function formatSubscription(program) {
     if (!program) return '-';
