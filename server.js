@@ -482,6 +482,8 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         await connection.beginTransaction();
         
         const enrollmentId = req.params.id;
+        console.log('Request body:', req.body);  // 요청 데이터 확인
+        console.log('is_extension value:', req.body.is_extension);  // is_extension 값 확인
         
         const [enrollment] = await connection.execute(
             'SELECT e.member_id, e.remaining_days, e.total_amount, e.original_amount, e.program_id, p.classes_per_week ' +
@@ -498,7 +500,6 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         const memberId = enrollment[0].member_id;
         const currentRemainingDays = enrollment[0].remaining_days || 0;
         const currentTotalAmount = enrollment[0].total_amount || 0;
-        const currentOriginalAmount = enrollment[0].original_amount || currentTotalAmount; // 기존 original_amount가 없으면 total_amount 사용
         
         const { 
             program_id, 
@@ -508,6 +509,8 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             total_classes,
             is_extension
         } = req.body;
+
+        console.log('Logic path:', is_extension ? '연장 로직' : '신규 추가 로직');  // 어떤 로직이 실행되는지 확인
 
         if (!is_extension) {
             const [existingEnrollment] = await connection.execute(
@@ -547,10 +550,24 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             newAmount = total_classes * program.per_class_price;
         }
 
+        console.log('Calculated amount:', newAmount);  // 계산된 금액 확인
+        console.log('Current state:', {
+            currentRemainingDays,
+            currentTotalAmount,
+            newAmount,
+            newTotalClasses
+        });
+
         if (is_extension) {
+            console.log('Executing extension update...');  // 연장 업데이트 실행 확인
             const finalTotalAmount = currentTotalAmount + newAmount;
             const finalRemainingDays = currentRemainingDays + newTotalClasses;
             
+            console.log('Extension values:', {
+                finalRemainingDays,
+                finalTotalAmount
+            });
+
             await connection.execute(
                 `UPDATE enrollments 
                 SET remaining_days = ?,
@@ -563,6 +580,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
                 ]
             );
         } else {
+            console.log('Executing new enrollment insert...');  // 신규 등록 실행 확인
             await connection.execute(
                 'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount, original_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
@@ -596,7 +614,6 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         connection.release();
     }
 });
-
 app.get('/api/members/enrollment/:id', authenticateToken, async (req, res) => {
     try {
         const enrollmentId = req.params.id;
