@@ -22,7 +22,10 @@ async function loadMembers() {
     }
 }
 
+let memberData = [];
+
 function updateTable(members) {
+    memberData = members;
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
     
@@ -195,6 +198,14 @@ function appendProgramDetails(row, program) {
     const programSelect = programCell.querySelector('select');
     if (programSelect) {
         programSelect.value = selectedProgram.id;
+        
+        programSelect.onchange = function(e) {
+            const programs = memberData.programs;
+            const selected = programs.find(p => p.id.toString() === e.target.value);
+            if (selected) {
+                updateProgramDetails(row, selected);
+            }
+        };
     }
     
     if (existingCells[startIndex + 1]) {
