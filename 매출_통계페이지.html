@@ -65,7 +65,8 @@
       background-color: #333;
       text-decoration: none; /* hover 시에도 밑줄 제거 유지 */
     }
-    .sidebar ul li.active {
+    .sidebar ul li.active,
+    .sidebar ul li.active a {
       background-color: #000000;
       text-decoration: none; /* hover 시에도 밑줄 제거 유지 */
     }
@@ -81,6 +82,8 @@
     color: white;
     text-decoration: none;
     display: block; /* li 전체 영역이 클릭 가능하도록 */
+    margin: -15px -20px;
+    padding: 15px 20px;
     }
 
     .sidebar ul li a:hover {
@@ -172,7 +175,11 @@
 <div class = "container">
   <div class="sidebar">
     <ul>
-      <li class="active"><img src="image/Home.png" width="25" height="25"> Home</li>
+      <li>
+        <a href="홈페이지.html">
+          <img src="image/Home.png" width="25" height="25"> Home
+        </a>
+      </li>
       <li>
         <a href="출석부.html">
           <img src="image/출석체크.png" width="30" height="30">  출석부
@@ -193,7 +200,7 @@
           <img src="image/선생님.png" width="30" height="30">  선생님
         </a>
       </li>
-      <li>
+      <li class="active">
         <a href="매출_통계페이지.html">
           <img src="image/매출.png" width="30" height="30">  매출
         </a>
