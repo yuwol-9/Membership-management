@@ -187,21 +187,20 @@ function appendProgramDetails(row, program) {
     row.appendChild(addClassCell);
  }
 
-function updateProgramDetails(row, selectedProgram) {
+ function updateProgramDetails(row, selectedProgram) {
     const existingCells = row.cells;
-    const startIndex = 6; // 프로그램 정보가 시작되는 셀의 인덱스
+    const startIndex = 6;
     
-    // 프로그램 이름 셀 업데이트
-    if (existingCells[startIndex]) {
-        existingCells[startIndex].textContent = selectedProgram.name || '-';
+    const programCell = existingCells[startIndex];
+    const programSelect = programCell.querySelector('select');
+    if (programSelect) {
+        programSelect.value = selectedProgram.id;
     }
-
-    // 구독 정보 셀 업데이트
+    
     if (existingCells[startIndex + 1]) {
         existingCells[startIndex + 1].textContent = formatSubscription(selectedProgram);
     }
 
-    // 결제 금액 셀 업데이트
     if (existingCells[startIndex + 2]) {
         existingCells[startIndex + 2].textContent = formatCurrency(calculateTotalAmount(selectedProgram));
     }
