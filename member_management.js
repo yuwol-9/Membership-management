@@ -231,6 +231,41 @@ function showMemberInfo(member) {
     document.querySelector('.member-info-modal').style.display = 'block';
 }
 
+async function handleModalEdit() {
+    try {
+        const memberData = {
+            name: document.getElementById('modal-name').value,
+            phone: document.getElementById('modal-phone').value,
+            birthdate: document.getElementById('modal-birthdate').value,
+            age: document.getElementById('modal-age').value,
+            gender: document.getElementById('modal-gender').value,
+            address: document.getElementById('modal-address').value
+        };
+
+        await API.updateMember(currentMemberId, memberData);
+        alert('회원 정보가 성공적으로 수정되었습니다.');
+        closeModal();
+        await loadMembers();
+    } catch (error) {
+        console.error('회원 정보 수정 실패:', error);
+        alert(error.message || '회원 정보 수정에 실패했습니다.');
+    }
+}
+
+async function handleModalDelete() {
+    if (confirm('정말로 이 회원을 삭제하시겠습니까?')) {
+        try {
+            await API.deleteMember(currentMemberId);
+            alert('회원이 성공적으로 삭제되었습니다.');
+            closeModal();
+            await loadMembers();
+        } catch (error) {
+            console.error('회원 삭제 실패:', error);
+            alert(error.message || '회원 삭제에 실패했습니다.');
+        }
+    }
+}
+
 function closeModal() {
     document.querySelector('.modal-overlay').style.display = 'none';
     document.querySelector('.member-info-modal').style.display = 'none';

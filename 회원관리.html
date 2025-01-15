@@ -252,6 +252,40 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
+    .button-container {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .modal-edit {
+        background-color: #E56736;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    .modal-delete {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    .member-info-modal input,
+    .member-info-modal select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
     .btn-primary {
       background-color: #E56736;
       color: white;
@@ -391,7 +425,11 @@
             <label>주소</label>
             <span id="modal-address"></span>
         </div>
-        <button class="modal-close" onclick="closeModal()">닫기</button>
+        <div class="button-container">
+          <button class="modal-edit" onclick="handleModalEdit()">수정</button>
+          <button class="modal-delete" onclick="handleModalDelete()">삭제</button>
+          <button class="modal-close" onclick="closeModal()">닫기</button>
+      </div>
     </div>
   <div class="box">
 
