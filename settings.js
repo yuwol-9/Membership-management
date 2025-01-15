@@ -13,15 +13,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // 현재 비밀번호 확인
-            await API.verifyPassword(currentPassword);
+            const verifyResponse = await fetch(`${API.API_BASE_URL}/verify-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API.getToken()}`
+                },
+                body: JSON.stringify({ current_password: currentPassword })
+            });
+
+            if (!verifyResponse.ok) {
+                const data = await verifyResponse.json();
+                throw new Error(data.message || '현재 비밀번호가 올바르지 않습니다.');
+            }
 
             // 아이디 변경
-            await API.changeUsername(currentPassword, newUsername);
+            const response = await fetch(`${API.API_BASE_URL}/change-username`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API.getToken()}`
+                },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_username: newUsername
+                })
+            });
+
+            const data = await response.json();
             
+            if (!response.ok) {
+                throw new Error(data.message || '아이디 변경에 실패했습니다.');
+            }
+
             alert('아이디가 성공적으로 변경되었습니다. 다시 로그인해주세요.');
             API.logout();
         } catch (error) {
-            usernameError.textContent = error.message || '현재 비밀번호가 올바르지 않습니다.';
+            usernameError.textContent = error.message;
             usernameError.style.display = 'block';
         }
     });
@@ -44,11 +72,39 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 현재 비밀번호 확인
-            await API.verifyPassword(currentPassword);
+            const verifyResponse = await fetch(`${API.API_BASE_URL}/verify-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API.getToken()}`
+                },
+                body: JSON.stringify({ current_password: currentPassword })
+            });
+
+            if (!verifyResponse.ok) {
+                const data = await verifyResponse.json();
+                throw new Error(data.message || '현재 비밀번호가 올바르지 않습니다.');
+            }
 
             // 비밀번호 변경
-            await API.changePassword(currentPassword, newPassword);
+            const response = await fetch(`${API.API_BASE_URL}/change-password`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API.getToken()}`
+                },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+
+            const data = await response.json();
             
+            if (!response.ok) {
+                throw new Error(data.message || '비밀번호 변경에 실패했습니다.');
+            }
+
             alert('비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.');
             API.logout();
         } catch (error) {
@@ -57,3 +113,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// 비밀번호 표시/숨김 토글 함수
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.nextElementSibling;
+    const img = button.querySelector('img');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        img.src = 'image/eye-slash.png';
+    } else {
+        input.type = 'password';
+        img.src = 'image/eye.png';
+    }
+}
