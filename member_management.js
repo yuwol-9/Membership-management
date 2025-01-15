@@ -145,7 +145,7 @@ function appendProgramDetails(row, program) {
     const editCell = document.createElement('td');
     const editButton = document.createElement('button');
     editButton.className = 'btn-primary';
-    editButton.textContent = '수정/연장';
+    editButton.textContent = '수정 / 연장';
     editButton.addEventListener('click', (e) => {
         e.stopPropagation();
         location.href = `회원수업수정.html?id=${program.id}`;
@@ -275,8 +275,13 @@ async function handleModalEdit() {
             alert('주소를 입력해주세요.');
             return;
         }
+        
+        const enrollments = await API.apiCall(`/members/${currentMemberId}/basic`);
+        if (!enrollments) {
+            throw new Error('회원의 등록 정보를 찾을 수 없습니다.');
+        }
 
-        await API.updateMember(currentMemberId, memberData);
+        await API.updateMember(enrollments.id, memberData);
         alert('회원 정보가 성공적으로 수정되었습니다.');
         closeModal();
         await loadMembers();
@@ -289,7 +294,12 @@ async function handleModalEdit() {
 async function handleModalDelete() {
     if (confirm('정말로 이 회원을 삭제하시겠습니까?')) {
         try {
-            await API.deleteMember(currentMemberId);
+            const [enrollments] = await API.apiCall(`/members/${currentMemberId}/basic`);
+            if (!enrollments) {
+                throw new Error('회원의 등록 정보를 찾을 수 없습니다.');
+            }
+
+            await API.deleteMember(enrollments.id);
             alert('회원이 성공적으로 삭제되었습니다.');
             closeModal();
             await loadMembers();
