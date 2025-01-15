@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// 회원 데이터 로드
+// 회원 데이터 가져오기
 async function loadMembers() {
     try {
         console.log('loadMembers 함수 실행');
