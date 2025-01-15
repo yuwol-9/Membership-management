@@ -148,7 +148,7 @@ function appendProgramDetails(row, program) {
     editButton.textContent = '수정/연장';
     editButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        location.href = `회원정보수정.html?id=${program.id}`;
+        location.href = `회원수업수정.html?id=${program.id}`;
     });
     editCell.appendChild(editButton);
     row.appendChild(editCell);
@@ -206,7 +206,7 @@ function appendProgramDetails(row, program) {
     if (existingCells[startIndex + 6]) {
         const modifyButton = existingCells[startIndex + 6].querySelector('button');
         if (modifyButton) {
-            modifyButton.onclick = () => location.href = `회원정보수정.html?id=${selectedProgram.id}`;
+            modifyButton.onclick = () => location.href = `회원수업수정.html?id=${selectedProgram.id}`;
         }
     }
 
@@ -489,7 +489,7 @@ function setupMemberEditButton() {
     const editButton = document.querySelector('.member button:last-child');
     if (editButton) {
         editButton.addEventListener('click', () => {
-            window.location.href = '회원정보수정.html';
+            window.location.href = '회원수업수정.html';
         });
     }
 }

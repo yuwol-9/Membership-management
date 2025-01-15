@@ -18,15 +18,8 @@ async function initializeForm() {
         const urlParams = new URLSearchParams(window.location.search);
         const memberId = urlParams.get('id');
         
-        if (memberId) {
-            const memberData = await API.getMember(memberId);
-            if (memberData) {
-                fillMemberData(memberData);
-            } else {
-                throw new Error('회원 정보를 찾을 수 없습니다.');
-            }
-        } else {
-            throw new Error('회원 ID가 제공되지 않았습니다.');
+        if (!memberID) {
+            throw new Error('회원 ID가 제공되지 않았습니다.')
         }
     } catch (error) {
         console.error('초기화 실패:', error);
@@ -44,26 +37,6 @@ function updateProgramSelect() {
         option.textContent = prog.name;
         programSelect.appendChild(option);
     });
-}
-
-function fillMemberData(memberData) {
-    document.getElementById('name').value = memberData.name || '';
-    document.getElementById('name').disabled = true;
-
-    document.getElementById('phone').value = memberData.phone || '';
-    document.getElementById('phone').disabled = true;
-
-    document.getElementById('birthdate').value = memberData.birthdate ? memberData.birthdate.split('T')[0] : '';
-    document.getElementById('birthdate').disabled = true;
-
-    document.getElementById('age').value = memberData.age || '';
-    document.getElementById('age').disabled = true;
-
-    document.getElementById('gender').value = memberData.gender || '';
-    document.getElementById('gender').disabled = true;
-
-    document.getElementById('address').value = memberData.address || '';
-    document.getElementById('address').disabled = true;
 }
 
 function updateProgramSelection() {
@@ -212,26 +185,4 @@ function setupEventListeners() {
     if (addProgramButton) {
         addProgramButton.addEventListener('click', addProgram);
     }
-
-    // 생년월일 변경 시 나이 자동 계산
-    const birthdateInput = document.getElementById('birthdate');
-    if (birthdateInput) {
-        birthdateInput.addEventListener('change', function() {
-            const age = calculateAge(this.value);
-            document.getElementById('age').value = age;
-        });
-    }
-}
-
-function calculateAge(birthdate) {
-  const today = new Date();
-  const birthDate = new Date(birthdate);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-  }
-  
-  return age;
 }
