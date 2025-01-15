@@ -38,35 +38,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadPrograms() {
     try {
         const programs = await API.getPrograms();
-        const programContainer = document.getElementById('program-items');
+        const programDropdown = document.getElementById('program-dropdown');
         
-        if (!programContainer) {
-            console.error('프로그램 컨테이너를 찾을 수 없습니다.');
+        if (!programDropdown) {
+            console.error('프로그램 드롭다운 메뉴를 찾을 수 없습니다.');
             return;
         }
         
-        programContainer.innerHTML = '';
+        programDropdown.innerHTML = '<option value="">프로그램 선택</option>';
         
         if (programs && programs.length > 0) {
             programs.forEach(program => {
-                const div = document.createElement('div');
-                div.className = 'program-item';
-                div.textContent = program.name;
-                div.setAttribute('data-program-id', program.id);
-                div.onclick = () => selectProgram(program);
-                programContainer.appendChild(div);
+                const option = document.createElement('option');
+                option.value = program.id;
+                option.textContent = program.name;
+                programDropdown.appendChild(option);
             });
 
-            // 첫 번째 프로그램을 기본 선택
             selectedProgramId = programs[0].id;
-            const firstProgram = document.querySelector('.program-item');
-            if (firstProgram) {
-                firstProgram.classList.add('selected');
-            }
+            programDropdown.value = selectedProgramId;
             
             await loadAttendanceData();
         } else {
-            programContainer.innerHTML = '<div class="no-programs">등록된 프로그램이 없습니다.</div>';
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "등록된 프로그램이 없습니다";
+            programDropdown.appendChild(option);
         }
     } catch (error) {
         console.error('프로그램 목록 로드 실패:', error);
