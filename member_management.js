@@ -276,7 +276,26 @@ async function handleModalEdit() {
             return;
         }
 
-        await API.updateMember(currentMemberId, memberData);
+        const member = await API.getMember(currentMemberId);
+        if (!member || !member.programs) {
+            throw new Error('회원 수업 정보를 찾을 수 없습니다.');
+        }
+
+        const program = member.programs[0];
+        if (!program) {
+            throw new Error('수업 정보를 찾을 수 없습니다.');
+        }
+
+        const updateData = {
+            ...memberData,
+            program_id: program.id,
+            payment_status: program.payment_status,
+            start_date: program.start_date,
+            duration_months: program.duration_months,
+            total_classes: program.total_classes
+        };
+
+        await API.updateMember(currentMemberId, updateData);
         alert('회원 정보가 성공적으로 수정되었습니다.');
         closeModal();
         await loadMembers();
@@ -289,15 +308,20 @@ async function handleModalEdit() {
 async function handleModalDelete() {
     if (confirm('정말로 이 회원을 삭제하시겠습니까?')) {
         try {
-            const [enrollments] = await API.apiCall(`/members/${currentMemberId}/basic`);
-            if (!enrollments) {
-                throw new Error('회원의 등록 정보를 찾을 수 없습니다.');
+            const member = await API.getMember(currentMemberId);
+            if (!member) {
+                throw new Error('회원 정보를 찾을 수 없습니다.');
             }
 
-            await API.deleteMember(currentMemberId);
-            alert('회원이 성공적으로 삭제되었습니다.');
-            closeModal();
-            await loadMembers();
+            if (member.programs && member.programs.length > 0) {
+                const enrollmentId = member.programs[0].id;
+                await API.deleteMember(enrollmentId);
+                alert('회원이 성공적으로 삭제되었습니다.');
+                closeModal();
+                await loadMembers();
+            } else {
+                throw new Error('회원의 수업 정보를 찾을 수 없습니다.');
+            }
         } catch (error) {
             console.error('회원 삭제 실패:', error);
             alert(error.message || '회원 삭제에 실패했습니다.');
