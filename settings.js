@@ -123,8 +123,10 @@ function togglePasswordVisibility(inputId) {
     if (input.type === 'password') {
         input.type = 'text';
         img.src = 'image/eye-slash.png';
+        img.alt = '비밀번호 숨기기';
     } else {
         input.type = 'password';
         img.src = 'image/eye.png';
+        img.alt = '비밀번호 보기';
     }
 }
