@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+        }
+        .header-container {
+            width: 100%;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        .brand-header {
+            background-color: #1a1a1a;
+            padding: 10px 0;
+            text-align: center;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px 24px;
+            background-color: white;
+        }
+        .sidebar {
+            top: 70px; /* 헤더 높이만큼 아래로 */
+            height: 100vh;
+            width: 250px;
+            background-color: #222;
+            color: white;
+            padding: 20px 0;
+            height : 100vh;
+        }
+        .sidebar ul {
+            list-style: none;
+        }
+        .sidebar ul li {
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid #333;
+            color: white;
+            text-decoration: none; /* 밑줄 제거 */
+        }
+        .sidebar ul li:hover {
+            background-color: #333;
+            text-decoration: none; /* hover 시에도 밑줄 제거 유지 */
+        }
+        .sidebar ul li.active,
+        .sidebar ul li.active a {
+            background-color: #000000;
+            text-decoration: none; /* hover 시에도 밑줄 제거 유지 */
+        }
+        .sidebar ul li span {
+            margin-left: 10px;
+        }
+        .sidebar img {
+            margin-right: 20px;
+            vertical-align: middle; /* 기본적으로 이미지를 텍스트의 중간에 맞추기 */
+            margin-bottom: 3px; /* 이미지를 더 아래로 이동 */
+        }
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block; /* li 전체 영역이 클릭 가능하도록 */
+            margin: -15px -20px;
+            padding: 15px 20px;
+        }
+
+        .sidebar ul li a:hover {
+        text-decoration: none;
+        }
+        .container {
+            display: flex;
+        }
+        .settings-box {
+            width: 800px;
+            margin: auto;
+            margin-top: 50px;
+            margin-left: 100px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        .settings-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #E56736;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #d55825;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <div class="brand-header">
+            <a href="홈페이지.html">
+                <img src="image/로고_white.png" width="200" height="30">
+            </a>
+        </div>
+        <div class="nav-header">
+            <h1>설정</h1>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <ul>
+              <li>
+                <a href="홈페이지.html">
+                  <img src="image/Home.png" width="25" height="25"> Home
+                </a>
+              </li>
+              <li>
+                <a href="출석부.html">
+                  <img src="image/출석체크.png" width="30" height="30">  출석부
+                </a>
+              </li>
+              <li class="active">
+                <a href="회원관리.html">
+                  <img src="image/회원관리.png" width="30" height="30">  회원 관리
+                </a>
+              </li>
+              <li>
+                <a href="수업관리.html">
+                  <img src="image/스케쥴.png" width="30" height="30">  수업 관리
+                </a>
+              </li>
+              <li>
+                <a href="선생님관리.html">
+                  <img src="image/선생님.png" width="30" height="30">  선생님
+                </a>
+              </li>
+              <li>
+                <a href="매출_통계페이지.html">
+                  <img src="image/매출.png" width="30" height="30">  매출
+                </a>
+              </li>
+              <li class="active">
+                <a href="설정.html">
+                  <img src="image/설정.png" width="30" height="30">  설정
+                </a>
+              </li>
+            </ul>
+          </div>
+        <div class="settings-box">
+            <div class="settings-section">
+                <h2>아이디 변경</h2>
+                <form id="username-form">
+                    <div class="form-group">
+                        <label>현재 비밀번호</label>
+                        <input type="password" id="current-password-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>새 아이디</label>
+                        <input type="text" id="new-username" required>
+                    </div>
+                    <button type="submit">아이디 변경</button>
+                    <div class="error-message" id="username-error"></div>
+                </form>
+            </div>
+            <div class="settings-section">
+                <h2>비밀번호 변경</h2>
+                <form id="password-form">
+                    <div class="form-group">
+                        <label>현재 비밀번호</label>
+                        <input type="password" id="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>새 비밀번호</label>
+                        <input type="password" id="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>새 비밀번호 확인</label>
+                        <input type="password" id="confirm-password" required>
+                    </div>
+                    <button type="submit">비밀번호 변경</button>
+                    <div class="error-message" id="password-error"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="api.js"></script>
+    <script src="settings.js"></script>
+</body>
+</html>

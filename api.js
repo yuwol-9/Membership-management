@@ -101,6 +101,33 @@ const API = {
         }
     },
 
+    verifyPassword: async (currentPassword) => {
+        return API.apiCall('/verify-password', {
+            method: 'POST',
+            body: JSON.stringify({ current_password: currentPassword })
+        });
+    },
+    
+    changePassword: async (currentPassword, newPassword) => {
+        return API.apiCall('/change-password', {
+            method: 'PUT',
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword
+            })
+        });
+    },
+    
+    changeUsername: async (currentPassword, newUsername) => {
+        return API.apiCall('/change-username', {
+            method: 'PUT',
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_username: newUsername
+            })
+        });
+    },
+
     // Member APIs
     getMembers: async () => {
         try {

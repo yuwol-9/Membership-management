@@ -187,6 +187,105 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// 비밀번호 검증 API
+app.post('/api/verify-password', authenticateToken, async (req, res) => {
+    try {
+        const { current_password } = req.body;
+        
+        const [users] = await pool.execute(
+            'SELECT password FROM admin WHERE id = ?',
+            [req.user.id]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        const validPassword = await bcrypt.compare(current_password, users[0].password);
+        if (!validPassword) {
+            return res.status(401).json({ message: '현재 비밀번호가 올바르지 않습니다.' });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('비밀번호 검증 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 비밀번호 변경 API
+app.put('/api/change-password', authenticateToken, async (req, res) => {
+    try {
+        const { current_password, new_password } = req.body;
+        
+        const [users] = await pool.execute(
+            'SELECT password FROM admin WHERE id = ?',
+            [req.user.id]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        const validPassword = await bcrypt.compare(current_password, users[0].password);
+        if (!validPassword) {
+            return res.status(401).json({ message: '현재 비밀번호가 올바르지 않습니다.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(new_password, 10);
+        await pool.execute(
+            'UPDATE admin SET password = ? WHERE id = ?',
+            [hashedPassword, req.user.id]
+        );
+
+        res.json({ success: true, message: '비밀번호가 성공적으로 변경되었습니다.' });
+    } catch (err) {
+        console.error('비밀번호 변경 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 아이디 변경 API
+app.put('/api/change-username', authenticateToken, async (req, res) => {
+    try {
+        const { current_password, new_username } = req.body;
+        
+        const [users] = await pool.execute(
+            'SELECT password FROM admin WHERE id = ?',
+            [req.user.id]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        const validPassword = await bcrypt.compare(current_password, users[0].password);
+        if (!validPassword) {
+            return res.status(401).json({ message: '현재 비밀번호가 올바르지 않습니다.' });
+        }
+
+        // 새 아이디 중복 확인
+        const [existingUser] = await pool.execute(
+            'SELECT id FROM admin WHERE username = ? AND id != ?',
+            [new_username, req.user.id]
+        );
+
+        if (existingUser.length > 0) {
+            return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
+        }
+
+        await pool.execute(
+            'UPDATE admin SET username = ? WHERE id = ?',
+            [new_username, req.user.id]
+        );
+
+        res.json({ success: true, message: '아이디가 성공적으로 변경되었습니다.' });
+    } catch (err) {
+        console.error('아이디 변경 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 // Member APIs
 app.post('/api/members', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
