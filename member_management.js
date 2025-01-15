@@ -248,12 +248,12 @@ async function handleModalEdit() {
         }
 
         const formData = {
-            name: document.getElementById('name').value,
-            gender: document.getElementById('gender').value,
-            birthdate: document.getElementById('birthdate').value,
-            age: document.getElementById('age').value,
-            address: document.getElementById('address').value,
-            phone: document.getElementById('phone').value,
+            name: document.getElementById('modal-name').value,
+            gender: document.getElementById('modal-gender').value,
+            birthdate: document.getElementById('modal-birthdate').value,
+            age: document.getElementById('modal-age').value,
+            address: document.getElementById('modal-address').value,
+            phone: document.getElementById('modal-phone').value,
         };
 
         if (!formData.name) {
