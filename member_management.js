@@ -219,13 +219,23 @@ function appendProgramDetails(row, program) {
     }
 }
 
+let currentMemberId = null;
 function showMemberInfo(member) {
-    document.getElementById('modal-name').textContent = member.name || '-';
-    document.getElementById('modal-phone').textContent = member.phone || '-';
-    document.getElementById('modal-birthdate').textContent = formatDate(member.birthdate) || '-';
-    document.getElementById('modal-age').textContent = member.age || '-';
-    document.getElementById('modal-gender').textContent = formatGender(member.gender) || '-';
-    document.getElementById('modal-address').textContent = member.address || '-';
+    currentMemberId = member.id;
+    
+    const nameInput = document.getElementById('modal-name');
+    const phoneInput = document.getElementById('modal-phone');
+    const birthdateInput = document.getElementById('modal-birthdate');
+    const ageInput = document.getElementById('modal-age');
+    const genderInput = document.getElementById('modal-gender');
+    const addressInput = document.getElementById('modal-address');
+    
+    nameInput.value = member.name || '';
+    phoneInput.value = member.phone || '';
+    birthdateInput.value = member.birthdate ? member.birthdate.split('T')[0] : '';
+    ageInput.value = member.age || '';
+    genderInput.value = member.gender || '';
+    addressInput.value = member.address || '';
     
     document.querySelector('.modal-overlay').style.display = 'block';
     document.querySelector('.member-info-modal').style.display = 'block';
@@ -269,7 +279,21 @@ async function handleModalDelete() {
 function closeModal() {
     document.querySelector('.modal-overlay').style.display = 'none';
     document.querySelector('.member-info-modal').style.display = 'none';
+    currentMemberId = null;
 }
+
+document.getElementById('modal-birthdate').addEventListener('change', function() {
+    const birthdate = new Date(this.value);
+    const today = new Date();
+    let age = today.getFullYear() - birthdate.getFullYear();
+    const monthDiff = today.getMonth() - birthdate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) {
+        age--;
+    }
+    
+    document.getElementById('modal-age').value = age;
+});
 
 function setupTooltip(element, text) {
     element.addEventListener('mouseover', (e) => {

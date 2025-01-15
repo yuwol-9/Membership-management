@@ -400,37 +400,41 @@
 
     <div class="modal-overlay"></div>
     <div class="member-info-modal">
-        <h2>회원 기본 정보</h2>
-        <div class="member-info-field">
-            <label>이름</label>
-            <span id="modal-name"></span>
-        </div>
-        <div class="member-info-field">
-            <label>연락처</label>
-            <span id="modal-phone"></span>
-        </div>
-        <div class="member-info-field">
-            <label>생년월일</label>
-            <span id="modal-birthdate"></span>
-        </div>
-        <div class="member-info-field">
-            <label>나이</label>
-            <span id="modal-age"></span>
-        </div>
-        <div class="member-info-field">
-            <label>성별</label>
-            <span id="modal-gender"></span>
-        </div>
-        <div class="member-info-field">
-            <label>주소</label>
-            <span id="modal-address"></span>
-        </div>
-        <div class="button-container">
+      <h2>회원 기본 정보</h2>
+      <div class="member-info-field">
+          <label>이름</label>
+          <input type="text" id="modal-name">
+      </div>
+      <div class="member-info-field">
+          <label>연락처</label>
+          <input type="text" id="modal-phone">
+      </div>
+      <div class="member-info-field">
+          <label>생년월일</label>
+          <input type="date" id="modal-birthdate">
+      </div>
+      <div class="member-info-field">
+          <label>나이</label>
+          <input type="number" id="modal-age">
+      </div>
+      <div class="member-info-field">
+          <label>성별</label>
+          <select id="modal-gender">
+              <option value="">선택하세요</option>
+              <option value="male">남성</option>
+              <option value="female">여성</option>
+          </select>
+      </div>
+      <div class="member-info-field">
+          <label>주소</label>
+          <input type="text" id="modal-address">
+      </div>
+      <div class="button-container">
           <button class="modal-edit" onclick="handleModalEdit()">수정</button>
           <button class="modal-delete" onclick="handleModalDelete()">삭제</button>
           <button class="modal-close" onclick="closeModal()">닫기</button>
       </div>
-    </div>
+  </div>
   <div class="box">
 
     <h1>회원 관리</h1>
