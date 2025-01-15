@@ -276,14 +276,30 @@ async function handleModalEdit() {
             return;
         }
 
-        const programSelect = document.querySelector('.program-select');
-        const selectedEnrollmentId = programSelect ? programSelect.value : null;
+        const programs = document.querySelector('.program-select');
+        const selectedEnrollmentId = programs ? programs.value : null;
+        const selectedProgram = programs ? 
+            Array.from(programs.options).find(option => option.value === programs.value) : null;
 
-        if (!selectedEnrollmentId) {
+        if (!selectedEnrollmentId || !selectedProgram) {
             throw new Error('수업 정보를 찾을 수 없습니다.');
         }
 
-        await API.updateMember(selectedEnrollmentId, memberData);
+        const member = await API.getMember(selectedEnrollmentId);
+        if (!member) {
+            throw new Error('회원의 수업 정보를 찾을 수 없습니다.');
+        }
+
+        const updateData = {
+            ...memberData,
+            program_id: member.program_id || null,
+            payment_status: member.payment_status || 'unpaid',
+            start_date: member.start_date || new Date().toISOString().split('T')[0],
+            duration_months: member.duration_months || null,
+            total_classes: member.total_classes || null
+        };
+
+        await API.updateMember(selectedEnrollmentId, updateData);
         alert('회원 정보가 성공적으로 수정되었습니다.');
         closeModal();
         await loadMembers();
