@@ -79,10 +79,13 @@ async function selectProgram(program) {
     // 선택된 프로그램의 출석 데이터 로드
     await loadAttendanceData();
 } */
-async function toggleSidebar() { /*깃 수정사항 */ 
+
+/* 메뉴를 누르면 사이드바가 나타나게 하고 싶을떄
+async function toggleSidebar() { 
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('active');
     }
+*/
 
 async function loadAttendanceData() {
     try {
@@ -261,4 +264,58 @@ function formatDate(date) {
 function setupEventListeners() {
     document.getElementById('year').addEventListener('change', loadAttendanceData);
     document.getElementById('month').addEventListener('change', loadAttendanceData);
+}
+
+function updateTableHeader(daysInMonth) {
+    const thead = document.querySelector('.attendance-table thead');
+    thead.innerHTML = '';
+
+    // 날짜 행
+    const dateRow = document.createElement('tr');
+
+    // 요일 행
+    const dayRow = document.createElement('tr');
+
+    // 첫 번째 열: "회원 이름"
+    const nameHeader = document.createElement('th');
+    nameHeader.rowSpan = 2; // 두 행을 병합
+    nameHeader.textContent = '회원 이름';
+    dateRow.appendChild(nameHeader);
+
+    // 날짜와 요일 열 추가
+    for (let i = 1; i <= daysInMonth; i++) {
+        const year = document.getElementById('year').value;
+        const month = document.getElementById('month').value;
+
+        // 현재 날짜 객체 생성
+        const currentDate = new Date(year, parseInt(month), i);
+        const weekday = currentDate.getDay(); // 요일 (0: 일요일, 6: 토요일)
+
+        // 날짜 열
+        const dateTh = document.createElement('th');
+        dateTh.textContent = `${i}일`;
+        dateTh.className = weekday === 0 ? 'sunday' : weekday === 6 ? 'saturday' : ''; // 일요일 빨간색, 토요일 파란색
+        dateRow.appendChild(dateTh);
+
+        // 요일 열
+        const dayTh = document.createElement('th');
+        dayTh.textContent = ['일', '월', '화', '수', '목', '금', '토'][weekday]; // 요일 배열로 변환
+        dayTh.className = weekday === 0 ? 'sunday' : weekday === 6 ? 'saturday' : ''; // 일요일 빨간색, 토요일 파란색
+        dayRow.appendChild(dayTh);
+    }
+
+    // 마지막 열: "출석 횟수"와 "남은 일수"
+    const attendanceHeader = document.createElement('th');
+    attendanceHeader.rowSpan = 2;
+    attendanceHeader.textContent = '출석 횟수';
+    dateRow.appendChild(attendanceHeader);
+
+    const remainingHeader = document.createElement('th');
+    remainingHeader.rowSpan = 2;
+    remainingHeader.textContent = '남은 일수';
+    dateRow.appendChild(remainingHeader);
+
+    // 테이블 헤더에 행 추가
+    thead.appendChild(dateRow);
+    thead.appendChild(dayRow);
 }
