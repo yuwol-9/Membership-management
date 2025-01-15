@@ -251,6 +251,30 @@ async function handleModalEdit() {
             gender: document.getElementById('modal-gender').value,
             address: document.getElementById('modal-address').value
         };
+        if (!memberData.name) {
+            alert('이름을 입력해주세요.');
+            return;
+        }
+        if (!memberData.phone) {
+            alert('전화번호를 입력해주세요.');
+            return;
+        }
+        if (!memberData.birthdate) {
+            alert('생일을 입력해주세요.');
+            return;
+        }
+        if (!memberData.age) {
+            alert('나이을 입력해주세요.');
+            return;
+        }
+        if (!memberData.gender) {
+            alert('성별을 골라주세요.');
+            return;
+        }
+        if (!memberData.address) {
+            alert('주소를 입력해주세요.');
+            return;
+        }
 
         await API.updateMember(currentMemberId, memberData);
         alert('회원 정보가 성공적으로 수정되었습니다.');
