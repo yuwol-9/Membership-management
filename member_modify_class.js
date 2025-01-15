@@ -44,15 +44,6 @@ function updateProgramSelect() {
 }
 
 function fillMemberData(memberData) {
-    console.log('Member Data:', memberData); // 디버깅을 위한 로그
-
-    // 기본 정보 채우기
-    document.getElementById('name').value = memberData.name || '';
-    document.getElementById('phone').value = memberData.phone || '';
-    document.getElementById('birthdate').value = memberData.birthdate ? memberData.birthdate.split('T')[0] : '';
-    document.getElementById('age').value = memberData.age || '';
-    document.getElementById('gender').value = memberData.gender || '';
-    document.getElementById('address').value = memberData.address || '';
     const programSelect = document.getElementById('program');
     programSelect.innerHTML = `<option value="${memberData.program_id}">${memberData.program_name}</option>`;
     programSelect.value = memberData.program_id;
@@ -166,7 +157,7 @@ function calculateAmount() {
     
     if (subscriptionType.value === 'month') {
         totalAmount = quantity * program.monthly_price;
-        const totalClasses = quantity * 4 * program.classes_per_week; // 한 달을 4주로 계산
+        const totalClasses = quantity * 4 * program.classes_per_week;
         subscriptionInput.setAttribute('data-total-classes', totalClasses);
     } else {
         totalAmount = quantity * program.per_class_price;
@@ -179,7 +170,6 @@ function calculateAmount() {
 
 async function updateMember(event) {
     event.preventDefault();
-    
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const memberId = urlParams.get('id');
@@ -191,12 +181,6 @@ async function updateMember(event) {
         }
 
         const formData = {
-            name: document.getElementById('name').value,
-            gender: document.getElementById('gender').value,
-            birthdate: document.getElementById('birthdate').value,
-            age: document.getElementById('age').value,
-            address: document.getElementById('address').value,
-            phone: document.getElementById('phone').value,
             program_id: document.getElementById('program').value,
             start_date: document.getElementById('start_date').value,
             payment_status: selectedPaymentStatus,
@@ -205,12 +189,6 @@ async function updateMember(event) {
         };
 
         const missingFields = [];
-        if (!formData.name) missingFields.push('이름');
-        if (!formData.gender) missingFields.push('성별');
-        if (!formData.birthdate) missingFields.push('생년월일');
-        if (!formData.age) missingFields.push('나이');
-        if (!formData.address) missingFields.push('주소');
-        if (!formData.phone) missingFields.push('전화번호');
         if (!formData.program_id) {
             alert('수업을 선택해주세요.');
             return;
@@ -236,44 +214,21 @@ async function updateMember(event) {
             formData.total_classes = parseInt(subscriptionInput.value);
         }
 
-        // 디버깅을 위한 로그
-        console.log('Sending update request with data:', formData);
-
         const response = await API.updateMember(memberId, formData);
         
         if (response.success) {
-            alert('회원 정보가 성공적으로 수정되었습니다.');
+            alert('수업 정보가 성공적으로 수정되었습니다.');
             window.location.href = '/회원관리.html';
         } else {
-            throw new Error(response.message || '회원 정보 수정에 실패했습니다.');
+            throw new Error(response.message || '수업 정보 수정에 실패했습니다.');
         }
     } catch (error) {
-        console.error('회원 정보 수정 실패:', error);
-        alert(error.message || '회원 정보 수정에 실패했습니다. 다시 시도해주세요.');
+        console.error('수업 정보 수정 실패:', error);
+        alert(error.message || '수업 정보 수정에 실패했습니다. 다시 시도해주세요.');
     }
 }
 
-async function deleteMember() {
-    if (confirm('정말로 이 회원을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const enrollmentId = urlParams.get('id');
-            
-            if (!enrollmentId) {
-                throw new Error('회원 ID를 찾을 수 없습니다.');
-            }
-
-            await API.deleteMember(enrollmentId);
-            alert('회원이 성공적으로 삭제되었습니다.');
-            window.location.href = '/회원관리.html';
-        } catch (error) {
-            console.error('회원 삭제 실패:', error);
-            alert('회원 삭제에 실패했습니다: ' + error.message);
-        }
-    }
-}
-
-async function addProgram() {
+async function extendProgram() {
   try {
       const urlParams = new URLSearchParams(window.location.search);
       const memberId = urlParams.get('id');
@@ -339,49 +294,15 @@ async function deleteEnrollment() {
 }
 
 function setupEventListeners() {
-    // 수정 폼 제출 이벤트
-    const editForm = document.getElementById('edit-form');
-    if (editForm) {
-        editForm.addEventListener('submit', updateMember);
-    }
-
-    // 회원 삭제 버튼 이벤트
-    const deleteButton = document.getElementById('delete-member-btn');
-    if (deleteButton) {
-        deleteButton.addEventListener('click', deleteMember);
-    }
-
-    // 수업 삭제 버튼 이벤트 (이전의 수업 추가 버튼을 변경)
+    // 수업 삭제 버튼 이벤트
     const deleteEnrollmentButton = document.getElementById('delete-enrollment-btn');
     if (deleteEnrollmentButton) {
         deleteEnrollmentButton.addEventListener('click', deleteEnrollment);
     }
 
-    // 수업 추가 버튼 이벤트
-    const addProgramButton = document.getElementById('add-program-btn');
+    // 수업 연장 버튼 이벤트
+    const addProgramButton = document.getElementById('extend-program-btn');
     if (addProgramButton) {
-        addProgramButton.addEventListener('click', addProgram);
+        addProgramButton.addEventListener('click', extendProgram);
     }
-
-    // 생년월일 변경 시 나이 자동 계산
-    const birthdateInput = document.getElementById('birthdate');
-    if (birthdateInput) {
-        birthdateInput.addEventListener('change', function() {
-            const age = calculateAge(this.value);
-            document.getElementById('age').value = age;
-        });
-    }
-}
-
-function calculateAge(birthdate) {
-  const today = new Date();
-  const birthDate = new Date(birthdate);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-  }
-  
-  return age;
 }
