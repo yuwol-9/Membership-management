@@ -243,67 +243,57 @@ function showMemberInfo(member) {
 
 async function handleModalEdit() {
     try {
-        const memberData = {
-            name: document.getElementById('modal-name').value,
-            phone: document.getElementById('modal-phone').value,
-            birthdate: document.getElementById('modal-birthdate').value,
-            age: document.getElementById('modal-age').value,
-            gender: document.getElementById('modal-gender').value,
-            address: document.getElementById('modal-address').value
+        const urlParams = new URLSearchParams(window.location.search);
+        const memberId = urlParams.get('id');
+        if (!memberId) {
+            throw new Error('회원 ID를 찾을 수 없습니다.');
+        }
+
+        const formData = {
+            name: document.getElementById('name').value,
+            gender: document.getElementById('gender').value,
+            birthdate: document.getElementById('birthdate').value,
+            age: document.getElementById('age').value,
+            address: document.getElementById('address').value,
+            phone: document.getElementById('phone').value,
         };
-        if (!memberData.name) {
+
+        if (!formData.name) {
             alert('이름을 입력해주세요.');
             return;
         }
-        if (!memberData.phone) {
+        if (!formData.phone) {
             alert('전화번호를 입력해주세요.');
             return;
         }
-        if (!memberData.birthdate) {
+        if (!formData.birthdate) {
             alert('생일을 입력해주세요.');
             return;
         }
-        if (!memberData.age) {
+        if (!formData.age) {
             alert('나이을 입력해주세요.');
             return;
         }
-        if (!memberData.gender) {
+        if (!formData.gender) {
             alert('성별을 골라주세요.');
             return;
         }
-        if (!memberData.address) {
+        if (!formData.address) {
             alert('주소를 입력해주세요.');
             return;
         }
 
-        const programs = document.querySelector('.program-select');
-        const selectedEnrollmentId = programs ? programs.value : null;
-        const enrollmentData = await API.getMember(selectedEnrollmentId);
+        const response = await API.updateMember(memberId, formData);
         
-        if (!enrollmentData) {
-            throw new Error('수업 정보를 찾을 수 없습니다.');
+        if (response.success) {
+            alert('회원 정보가 성공적으로 수정되었습니다.');
+            window.location.href = '/회원관리.html';
+        } else {
+            throw new Error(response.message || '회원 정보 수정에 실패했습니다.');
         }
-
-        const startDate = enrollmentData.start_date ? 
-        new Date(enrollmentData.start_date).toISOString().split('T')[0] : 
-        new Date().toISOString().split('T')[0];
-
-        const updateData = {
-            ...memberData,
-            program_id: member.program_id || null,
-            payment_status: member.payment_status || 'unpaid',
-            start_date: member.start_date || new Date().toISOString().split('T')[0],
-            duration_months: member.duration_months || null,
-            total_classes: member.total_classes || null
-        };
-
-        await API.updateMember(selectedEnrollmentId, updateData);
-        alert('회원 정보가 성공적으로 수정되었습니다.');
-        closeModal();
-        await loadMembers();
     } catch (error) {
         console.error('회원 정보 수정 실패:', error);
-        alert(error.message || '회원 정보 수정에 실패했습니다.');
+        alert(error.message || '회원 정보 수정에 실패했습니다. 다시 시도해주세요.');
     }
 }
 
