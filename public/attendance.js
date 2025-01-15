@@ -1,16 +1,15 @@
+// 전역 변수로 현재 선택된 프로그램 ID 관리
+let selectedProgramId = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // 연도 선택 옵션 설정
         const yearSelect = document.getElementById('year');
-        const monthSelect = document.getElementById('month');
         const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth(); // 0-indexed
-        
-        // 2024년부터 시작하도록 수정
         const startYear = 2024;
         const endYear = 2028;
         
-        yearSelect.innerHTML = ''; // 기존 옵션 제거
+        yearSelect.innerHTML = '';
         
         for (let year = startYear; year <= endYear; year++) {
             const option = document.createElement('option');
@@ -18,27 +17,81 @@ document.addEventListener('DOMContentLoaded', async () => {
             option.textContent = `${year}년`;
             yearSelect.appendChild(option);
             
-            // 현재 연도를 기본값으로 설정
             if (year === currentYear) {
                 option.selected = true;
             }
         }
-        monthSelect.value = currentMonth;
-        
-        await loadAttendanceData();
+
+        // 프로그램 목록을 먼저 로드하고 첫 번째 프로그램 선택
+        await loadPrograms();
         setupEventListeners();
+        
     } catch (error) {
-        console.error('출석 데이터 로드 실패:', error);
-        API.handleApiError(error);
+        console.error('초기화 실패:', error);
+        alert('데이터 로드에 실패했습니다.');
     }
 });
+
+async function loadPrograms() {
+    try {
+        const programs = await API.getPrograms(); // API로부터 프로그램 데이터 가져오기
+        const programDropdown = document.getElementById('program-dropdown');
+        programDropdown.innerHTML = ''; // 드롭다운 초기화
+
+        if (programs && programs.length > 0) {
+            programs.forEach(program => {
+                const option = document.createElement('option');
+                option.value = program.id;
+                option.textContent = program.name;
+                programDropdown.appendChild(option);
+            });
+
+            // 첫 번째 프로그램 선택
+            selectedProgramId = programs[0].id;
+            programDropdown.value = selectedProgramId;
+
+            // 선택된 프로그램의 출석 데이터 로드
+            await loadAttendanceData();
+        }
+    } catch (error) {
+        console.error('프로그램 목록 로드 실패:', error);
+        throw error;
+    }
+}
+// 드롭다운에서 프로그램 선택 이벤트 처리
+document.getElementById('program-dropdown').addEventListener('change', async (e) => {
+    selectedProgramId = e.target.value; // 선택된 프로그램 ID 업데이트
+    await loadAttendanceData(); // 선택된 프로그램에 맞는 데이터 로드
+});
+/* 드롭다운으로 변경해서 더이상 불필요한 함수
+async function selectProgram(program) {
+    selectedProgramId = program.id;
+    
+    // UI 업데이트
+    document.querySelectorAll('.program-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    const selectedItem = document.querySelector(`[data-program-id="${program.id}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
+    }
+    
+    // 선택된 프로그램의 출석 데이터 로드
+    await loadAttendanceData();
+} */
+async function toggleSidebar() { /*깃 수정사항 */ 
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('active');
+    }
 
 async function loadAttendanceData() {
     try {
         const month = document.getElementById('month').value;
         const year = document.getElementById('year').value;
         
+        // 프로그램 ID를 포함하여 데이터 요청
         const attendanceData = await API.getAttendanceList({
+            program_id: selectedProgramId,
             month: parseInt(month) + 1,
             year: year
         });
@@ -46,7 +99,7 @@ async function loadAttendanceData() {
         updateAttendanceTable(attendanceData);
     } catch (error) {
         console.error('출석 데이터 로드 실패:', error);
-        throw error;
+        alert('출석 데이터를 불러오는데 실패했습니다.');
     }
 }
 
@@ -62,17 +115,19 @@ function updateAttendanceTable(data) {
 
     Object.entries(memberAttendance).forEach(([memberName, attendance]) => {
         const tr = document.createElement('tr');
+        const checkboxes = []; // 회원별 체크박스 배열 추가
         
         const tdName = document.createElement('td');
         tdName.textContent = memberName;
         tr.appendChild(tdName);
 
+        // 날짜별 체크박스 생성
         for (let day = 1; day <= daysInMonth; day++) {
             const td = document.createElement('td');
             const currentDate = new Date(year, month, day);
-            const dayOfWeek = currentDate.getDay();
-
-            if (dayOfWeek === 0) {
+            const formattedDate = formatDate(currentDate);
+            
+            if (currentDate.getDay() === 0) {
                 td.classList.add('sunday');
                 tr.appendChild(td);
                 continue;
@@ -80,33 +135,69 @@ function updateAttendanceTable(data) {
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.checked = attendance.dates.includes(day);
             
-            // 남은 일수가 0이면 체크박스 비활성화
-            if (attendance.remaining_days <= 0 && !checkbox.checked) {
+            const isAttended = attendance.dates.some(date => 
+                formatDate(new Date(date)) === formattedDate
+            );
+            checkbox.checked = isAttended;
+
+            // 남은 횟수가 0이고 체크되지 않은 경우 비활성화
+            if (attendance.remaining_days <= 0 && !isAttended) {
                 checkbox.disabled = true;
+                checkbox.title = '남은 수업 일수가 없습니다';
             }
 
-            checkbox.addEventListener('change', async () => {
-                // 체크 시도할 때 남은 일수 확인
-                if (checkbox.checked && attendance.remaining_days <= 0) {
-                    checkbox.checked = false;
-                    alert('남은 수업 일수가 없습니다.');
-                    return;
-                }
+            checkboxes.push(checkbox); // 체크박스 배열에 추가
 
+            checkbox.addEventListener('change', async (e) => {
                 try {
-                    await API.checkAttendance({
+                    if (!attendance.enrollment_id) {
+                        throw new Error('수강 정보를 찾을 수 없습니다.');
+                    }
+
+                    const attendanceData = {
                         enrollment_id: attendance.enrollment_id,
-                        attendance_date: formatDate(currentDate),
+                        attendance_date: formattedDate,
                         is_present: checkbox.checked
-                    });
+                    };
+
+                    const response = await API.checkAttendance(attendanceData);
                     
-                    await loadAttendanceData();
+                    // 출석 상태에 따라 남은 일수 업데이트
+                    if (checkbox.checked) {
+                        attendance.dates.push(formattedDate);
+                        attendance.remaining_days--;
+                    } else {
+                        attendance.dates = attendance.dates.filter(date => 
+                            formatDate(new Date(date)) !== formattedDate
+                        );
+                        attendance.remaining_days++;
+                    }
+
+                    // 출석 횟수와 남은 일수 업데이트
+                    const countCell = tr.querySelector('td:nth-last-child(2)');
+                    const remainingCell = tr.querySelector('td:nth-last-child(1)');
+                    
+                    countCell.textContent = attendance.dates.length;
+                    remainingCell.textContent = attendance.remaining_days;
+
+                    // 남은 일수가 0이 되면 모든 미체크 체크박스 비활성화
+                    checkboxes.forEach(cb => {
+                        if (attendance.remaining_days <= 0) {
+                            cb.disabled = !cb.checked;
+                            cb.title = cb.disabled ? '남은 수업 일수가 없습니다' : '';
+                            remainingCell.style.color = 'red';
+                        } else {
+                            cb.disabled = false;
+                            cb.title = '';
+                            remainingCell.style.color = attendance.remaining_days <= 3 ? '#E56736' : '';
+                        }
+                    });
+
                 } catch (error) {
                     console.error('출석 체크 실패:', error);
                     checkbox.checked = !checkbox.checked;
-                    alert(error.message || '출석 처리 중 오류가 발생했습니다');
+                    alert(error.message || '출석 처리 중 오류가 발생했습니다.');
                 }
             });
 
@@ -114,21 +205,21 @@ function updateAttendanceTable(data) {
             tr.appendChild(td);
         }
 
+        // 출석 횟수와 남은 일수 표시
         const tdCount = document.createElement('td');
         tdCount.textContent = attendance.dates.length;
         tr.appendChild(tdCount);
         
         const tdRemaining = document.createElement('td');
-        const remainingDays = Math.max(0, attendance.remaining_days); // 음수 방지
+        const remainingDays = Math.max(0, attendance.remaining_days);
         tdRemaining.textContent = remainingDays;
-        
-        // 남은 일수가 5일 이하면 빨간색으로 표시
-        if (remainingDays <= 5 && remainingDays > 0) {
-            tdRemaining.style.color = '#ff0000';
-            tdRemaining.style.fontWeight = 'bold';
+        if (remainingDays === 0) {
+            tdRemaining.style.color = 'red';
+        } else if (remainingDays <= 3) {
+            tdRemaining.style.color = '#E56736';
         }
-
         tr.appendChild(tdRemaining);
+
         tableBody.appendChild(tr);
     });
 }
@@ -139,7 +230,12 @@ function updateTableHeader(daysInMonth) {
     const headerRow = document.createElement('tr');
     headerRow.innerHTML = `
         <th>회원 이름</th>
-        ${Array.from({length: daysInMonth}, (_, i) => `<th>${i + 1}일</th>`).join('')}
+        ${Array.from({length: daysInMonth}, (_, i) => {
+            const day = new Date(document.getElementById('year').value, 
+                               document.getElementById('month').value, i + 1);
+            const dayClass = day.getDay() === 0 ? 'sunday' : '';
+            return `<th class="${dayClass}">${i + 1}일</th>`;
+        }).join('')}
         <th>출석횟수</th>
         <th>남은일수</th>
     `;
@@ -152,24 +248,14 @@ function groupAttendanceByMember(data) {
             acc[curr.member_name] = {
                 enrollment_id: curr.enrollment_id,
                 remaining_days: curr.remaining_days,
-                dates: []
+                dates: curr.attendance_dates || []
             };
         }
-        
-        if (curr.attendance_date) {
-            const date = new Date(curr.attendance_date);
-            acc[curr.member_name].dates.push(date.getDate());
-        }
-        
         return acc;
     }, {});
 }
-
 function formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 function setupEventListeners() {
