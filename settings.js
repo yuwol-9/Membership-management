@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('아이디가 성공적으로 변경되었습니다. 다시 로그인해주세요.');
             API.logout();
         } catch (error) {
-            usernameError.textContent = error.message;
+            usernameError.textContent = error.message || '현재 비밀번호가 올바르지 않습니다.';
             usernameError.style.display = 'block';
         }
     });

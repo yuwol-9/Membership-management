@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 로컬 스토리지에 저장 (브라우저를 닫아도 유지)
                 localStorage.setItem('token', result.token);
                 localStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('isLoggedIn');
             } else {
                 // 세션 스토리지에 저장 (브라우저를 닫으면 삭제)
                 sessionStorage.setItem('token', result.token);

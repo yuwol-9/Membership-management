@@ -117,12 +117,14 @@ function setupAuthCheck() {
 function setupAuthButtons() {
     const loginBtn = document.querySelector('.login-btn');
     if (loginBtn) {
-        const token = localStorage.getItem('token');
-        if (token) {
+        const token = API.getToken();
+        const isLoggedIn = localStorage.getItem('isLoggedIn') || sessionStorage.getItem('isLoggedIn');
+        
+        if (token && isLoggedIn) {
             loginBtn.textContent = '로그아웃';
             loginBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                localStorage.removeItem('token');
+                API.logout();
                 window.location.href = '로그인.html';
             });
         } else {
