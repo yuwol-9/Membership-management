@@ -145,7 +145,7 @@ function appendProgramDetails(row, program) {
     const editCell = document.createElement('td');
     const editButton = document.createElement('button');
     editButton.className = 'btn-primary';
-    editButton.textContent = '수정 / 연장';
+    editButton.textContent = '연장 / 삭제';
     editButton.addEventListener('click', (e) => {
         e.stopPropagation();
         location.href = `회원수업수정.html?id=${program.id}`;
