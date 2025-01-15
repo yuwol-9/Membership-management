@@ -64,16 +64,33 @@ async function loadPrograms() {
     }
 }
 
-// 드롭다운에서 프로그램 선택 이벤트 처리
-document.getElementById('program-dropdown').addEventListener('change', async (e) => {
-    selectedProgramId = e.target.value; // 선택된 프로그램 ID 업데이트
-    await loadAttendanceData(); // 선택된 프로그램에 맞는 데이터 로드
-});
+//// 드롭다운에서 프로그램 선택 이벤트 처리
+//document.getElementById('program-dropdown').addEventListener('change', async (e) => {
+//    selectedProgramId = e.target.value; // 선택된 프로그램 ID 업데이트
+//    await loadAttendanceData(); // 선택된 프로그램에 맞는 데이터 로드
+//});
+//
+//async function toggleSidebar() { /*깃 수정사항 */ 
+//    const sidebar = document.getElementById('sidebar');
+//    sidebar.classList.toggle('active');
+//}
 
-async function toggleSidebar() { /*깃 수정사항 */ 
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('active');
+async function selectProgram(program) {
+    selectedProgramId = program.id;
+    
+    // UI 업데이트
+    document.querySelectorAll('.program-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    const selectedItem = document.querySelector(`[data-program-id="${program.id}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
+    }
+    
+    // 선택된 프로그램의 출석 데이터 로드
+    await loadAttendanceData();
 }
+
 
 async function loadAttendanceData() {
     try {
