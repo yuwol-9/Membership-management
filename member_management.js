@@ -275,13 +275,8 @@ async function handleModalEdit() {
             alert('주소를 입력해주세요.');
             return;
         }
-        
-        const enrollments = await API.apiCall(`/members/${currentMemberId}/basic`);
-        if (!enrollments) {
-            throw new Error('회원의 등록 정보를 찾을 수 없습니다.');
-        }
 
-        await API.updateMember(enrollments.id, memberData);
+        await API.updateMember(currentMemberId, memberData);
         alert('회원 정보가 성공적으로 수정되었습니다.');
         closeModal();
         await loadMembers();
@@ -299,7 +294,7 @@ async function handleModalDelete() {
                 throw new Error('회원의 등록 정보를 찾을 수 없습니다.');
             }
 
-            await API.deleteMember(enrollments.id);
+            await API.deleteMember(currentMemberId);
             alert('회원이 성공적으로 삭제되었습니다.');
             closeModal();
             await loadMembers();
