@@ -426,6 +426,37 @@ app.get('/api/members/:id/basic', authenticateToken, async (req, res) => {
     }
 });
 
+app.put('/api/members/:id/basic', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const memberId = req.params.id;
+        const { name, gender, age, birthdate, address, phone } = req.body;
+
+        // 회원 기본 정보 업데이트
+        await connection.execute(
+            'UPDATE members SET name = ?, gender = ?, age = ?, birthdate = ?, address = ?, phone = ? WHERE id = ?',
+            [name, gender, age, birthdate, address, phone, memberId]
+        );
+
+        await connection.commit();
+        res.json({ 
+            success: true,
+            message: '회원 정보가 성공적으로 수정되었습니다.'
+        });
+    } catch (err) {
+        await connection.rollback();
+        console.error('회원 정보 수정 중 오류:', err);
+        res.status(400).json({ 
+            success: false,
+            message: err.message || '회원 정보 수정 중 오류가 발생했습니다.'
+        });
+    } finally {
+        connection.release();
+    }
+});
+
 app.put('/api/members/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {

@@ -281,10 +281,11 @@ async function handleModalEdit() {
             return;
         }
 
-        const response = await API.updateMember(currentMemberId, formData);
-        
+        const response = await API.updateMemberBasicInfo(currentMemberId, formData);
+
         if (response.success) {
             alert('회원 정보가 성공적으로 수정되었습니다.');
+            await loadMembers();
             window.location.href = '/회원관리.html';
         } else {
             throw new Error(response.message || '회원 정보 수정에 실패했습니다.');

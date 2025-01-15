@@ -153,6 +153,13 @@ const API = {
         });
     },
 
+    updateMemberBasicInfo: async (id, memberData) => {
+        return API.apiCall(`/members/${id}/basic`, {
+            method: 'PUT',
+            body: JSON.stringify(memberData)
+        });
+    },
+
     deleteMember: async (enrollmentId) => {
         return API.apiCall(`/members/enrollment/${enrollmentId}`, {
             method: 'DELETE'
