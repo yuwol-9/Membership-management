@@ -18,7 +18,7 @@ async function initializeForm() {
         const urlParams = new URLSearchParams(window.location.search);
         const memberId = urlParams.get('id');
         
-        if (!memberID) {
+        if (!memberId) {
             throw new Error('회원 ID가 제공되지 않았습니다.')
         }
     } catch (error) {
