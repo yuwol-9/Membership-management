@@ -120,13 +120,16 @@ function togglePasswordVisibility(inputId) {
     const button = input.nextElementSibling;
     const img = button.querySelector('img');
     
+    const eyeIcon = '/image/eye.png';
+    const eyeSlashIcon = '/image/eye-slash.png';
+    
     if (input.type === 'password') {
         input.type = 'text';
-        img.src = 'image/eye-slash.png';
+        img.src = eyeSlashIcon;
         img.alt = '비밀번호 숨기기';
     } else {
         input.type = 'password';
-        img.src = 'image/eye.png';
+        img.src = eyeIcon;
         img.alt = '비밀번호 보기';
     }
 }
