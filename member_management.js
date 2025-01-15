@@ -278,17 +278,15 @@ async function handleModalEdit() {
 
         const programs = document.querySelector('.program-select');
         const selectedEnrollmentId = programs ? programs.value : null;
-        const selectedProgram = programs ? 
-            Array.from(programs.options).find(option => option.value === programs.value) : null;
-
-        if (!selectedEnrollmentId || !selectedProgram) {
+        const enrollmentData = await API.getMember(selectedEnrollmentId);
+        
+        if (!enrollmentData) {
             throw new Error('수업 정보를 찾을 수 없습니다.');
         }
 
-        const member = await API.getMember(selectedEnrollmentId);
-        if (!member) {
-            throw new Error('회원의 수업 정보를 찾을 수 없습니다.');
-        }
+        const startDate = enrollmentData.start_date ? 
+        new Date(enrollmentData.start_date).toISOString().split('T')[0] : 
+        new Date().toISOString().split('T')[0];
 
         const updateData = {
             ...memberData,
@@ -312,20 +310,17 @@ async function handleModalEdit() {
 async function handleModalDelete() {
     if (confirm('정말로 이 회원을 삭제하시겠습니까?')) {
         try {
-            const member = await API.getMember(currentMemberId);
-            if (!member) {
-                throw new Error('회원 정보를 찾을 수 없습니다.');
+            const programSelect = document.querySelector('.program-select');
+            const selectedEnrollmentId = programSelect ? programSelect.value : null;
+
+            if (!selectedEnrollmentId) {
+                throw new Error('수업 정보를 찾을 수 없습니다.');
             }
 
-            if (member.programs && member.programs.length > 0) {
-                const enrollmentId = member.programs[0].id;
-                await API.deleteMember(enrollmentId);
-                alert('회원이 성공적으로 삭제되었습니다.');
-                closeModal();
-                await loadMembers();
-            } else {
-                throw new Error('회원의 수업 정보를 찾을 수 없습니다.');
-            }
+            await API.deleteMember(selectedEnrollmentId);
+            alert('회원이 성공적으로 삭제되었습니다.');
+            closeModal();
+            await loadMembers();
         } catch (error) {
             console.error('회원 삭제 실패:', error);
             alert(error.message || '회원 삭제에 실패했습니다.');
