@@ -301,6 +301,32 @@ app.get('/api/members', authenticateToken, async (req, res) => {
     }
 });
 
+// Member Basic Info API
+app.get('/api/members/:id/basic', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT 
+                m.name,
+                m.phone,
+                m.birthdate,
+                m.age,
+                m.gender,
+                m.address
+            FROM members m
+            WHERE m.id = ?
+        `, [req.params.id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: '회원을 찾을 수 없습니다.' });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('회원 기본 정보 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 app.put('/api/members/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {

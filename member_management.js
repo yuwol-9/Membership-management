@@ -4,6 +4,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('API 객체 확인:', API);
         await loadMembers();
         setupEventListeners();
+
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const memberInfoModal = document.querySelector('.member-info-modal');
+        
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', closeModal);
+        }
+        
+        if (memberInfoModal) {
+            memberInfoModal.addEventListener('click', (e) => e.stopPropagation());
+        }
     } catch (error) {
         console.error('회원 데이터 로드 실패:', error);
         API.handleApiError(error);
@@ -21,7 +32,6 @@ async function loadMembers() {
         throw error;
     }
 }
-
 function updateTable(members) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
@@ -48,67 +58,27 @@ function updateTable(members) {
             tooltipText = `${lowestDaysProgram.name} 수업의 남은 일수가 ${lowestDaysProgram.remaining_days}회입니다.`;
         }
         
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') {
+                return;
+            }
+            showMemberInfo(member);
+        });
+
         if (tooltipText) {
             tr.style.position = 'relative';
-            tr.style.cursor = 'pointer';
-
-            tr.addEventListener('mouseover', (e) => {
-                // Remove any existing tooltips
-                const existingTooltip = document.querySelector('.tooltip');
-                if (existingTooltip) {
-                    existingTooltip.remove();
-                }
-
-                const tooltip = document.createElement('div');
-                tooltip.className = 'tooltip';
-                tooltip.textContent = tooltipText;
-                tooltip.style.position = 'absolute';
-                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-                tooltip.style.color = 'white';
-                tooltip.style.padding = '8px 12px';
-                tooltip.style.borderRadius = '4px';
-                tooltip.style.fontSize = '14px';
-                tooltip.style.whiteSpace = 'nowrap';
-                tooltip.style.zIndex = '1000';
-                
-                // Position the tooltip near the cursor
-                const rect = tr.getBoundingClientRect();
-                const scrollTop = window.scrollY;
-                tooltip.style.top = (e.clientY - rect.top + 20) + 'px';
-                tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-                
-                tr.appendChild(tooltip);
-            });
-            
-            tr.addEventListener('mousemove', (e) => {
-                const tooltip = tr.querySelector('.tooltip');
-                if (tooltip) {
-                    const rect = tr.getBoundingClientRect();
-                    tooltip.style.top = (e.clientY - rect.top + 20) + 'px';
-                    tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-                }
-            });
-
-            tr.addEventListener('mouseout', () => {
-                const tooltip = tr.querySelector('.tooltip');
-                if (tooltip) {
-                    tooltip.remove();
-                }
-            });
+            setupTooltip(tr, tooltipText);
         }
 
         const nameCell = document.createElement('td');
         nameCell.style.color = nameColor;
         nameCell.textContent = member.name || '-';
         tr.appendChild(nameCell);
-        
-        tr.innerHTML += `
-            <td>${member.phone || '-'}</td>
-            <td>${formatDate(member.birthdate) || '-'}</td>
-            <td>${member.age || '-'}</td>
-            <td>${formatGender(member.gender) || '-'}</td>
-            <td>${member.address || '-'}</td>
-        `;
+
+        const phoneCell = document.createElement('td');
+        phoneCell.textContent = member.phone || '-';
+        tr.appendChild(phoneCell);
         
         const programCell = document.createElement('td');
         
@@ -124,6 +94,7 @@ function updateTable(members) {
             });
             
             select.addEventListener('change', (e) => {
+                e.stopPropagation();
                 const selectedProgram = programs.find(p => p.id === parseInt(e.target.value));
                 updateProgramDetails(tr, selectedProgram);
             });
@@ -144,52 +115,59 @@ function updateTable(members) {
 }
 
 function appendProgramDetails(row, program) {
-   const remaining = program.remaining_days;
-   const remainingDisplay = remaining !== undefined && remaining !== null ? `${remaining}일` : '-';
-   const remainingColor = remaining <= 0 ? 'red' : 
-                         remaining <= 3 ? '#E56736' : '';
-    // 구독 정보 셀
+    const remaining = program.remaining_days;
+    const remainingDisplay = remaining !== undefined && remaining !== null ? `${remaining}일` : '-';
+    const remainingColor = remaining <= 0 ? 'red' : 
+                          remaining <= 3 ? '#E56736' : '';
+    
     const subscriptionCell = document.createElement('td');
-    const subscriptionDisplay = formatSubscription(program);
-    subscriptionCell.textContent = subscriptionDisplay;
+    subscriptionCell.textContent = formatSubscription(program);
     row.appendChild(subscriptionCell);
  
-    // 총액 셀
     const amountCell = document.createElement('td');
     const displayAmount = program.original_amount || calculateAmount(program);
     amountCell.textContent = formatCurrency(displayAmount);
     row.appendChild(amountCell);
     
-    // 남은 일수 셀
     const remainingCell = document.createElement('td');
     remainingCell.textContent = remainingDisplay;
     remainingCell.style.color = remainingColor;
     row.appendChild(remainingCell);
  
-    // 결제 상태 셀
     const paymentCell = document.createElement('td');
     paymentCell.textContent = formatPaymentStatus(program.payment_status);
     row.appendChild(paymentCell);
  
-    // 등록 날짜 셀
     const dateCell = document.createElement('td');
     dateCell.textContent = formatDate(program.start_date) || '-';
     row.appendChild(dateCell);
  
-    // 수정 버튼 셀
-    const actionCell = document.createElement('td');
-    actionCell.innerHTML = `<button onclick="location.href='회원정보수정.html?id=${program.id}'" class="btn-primary">수정/연장</button>`;
-    row.appendChild(actionCell);
+    const editCell = document.createElement('td');
+    const editButton = document.createElement('button');
+    editButton.className = 'btn-primary';
+    editButton.textContent = '수정/연장';
+    editButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        location.href = `회원정보수정.html?id=${program.id}`;
+    });
+    editCell.appendChild(editButton);
+    row.appendChild(editCell);
 
-    // 수업 추가 버튼 셀
-    const addClassCell = document.createElement('td');
-    addClassCell.innerHTML = `<button onclick="location.href='회원수업추가.html?id=${program.id}'" class="btn-primary">추가</button>`;
-    row.appendChild(addClassCell);
- }
+    const addCell = document.createElement('td');
+    const addButton = document.createElement('button');
+    addButton.className = 'btn-primary';
+    addButton.textContent = '추가';
+    addButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        location.href = `회원수업추가.html?id=${program.id}`;
+    });
+    addCell.appendChild(addButton);
+    row.appendChild(addCell);
+}
 
  function updateProgramDetails(row, selectedProgram) {
     const existingCells = row.cells;
-    const startIndex = 6;
+    const startIndex = 2;
     
     const programCell = existingCells[startIndex];
     const programSelect = programCell.querySelector('select');
@@ -219,7 +197,7 @@ function appendProgramDetails(row, program) {
         existingCells[startIndex + 4].textContent = formatPaymentStatus(selectedProgram.payment_status);
     }
 
-    // 등록 날짜 셀 업데이트
+    // 회원 등록일 셀 업데이트
     if (existingCells[startIndex + 5]) {
         existingCells[startIndex + 5].textContent = formatDate(selectedProgram.start_date) || '-';
     }
@@ -239,6 +217,66 @@ function appendProgramDetails(row, program) {
             addButton.onclick = () => location.href = `회원수업추가.html?id=${selectedProgram.id}`;
         }
     }
+}
+
+function showMemberInfo(member) {
+    document.getElementById('modal-name').textContent = member.name || '-';
+    document.getElementById('modal-phone').textContent = member.phone || '-';
+    document.getElementById('modal-birthdate').textContent = formatDate(member.birthdate) || '-';
+    document.getElementById('modal-age').textContent = member.age || '-';
+    document.getElementById('modal-gender').textContent = formatGender(member.gender) || '-';
+    document.getElementById('modal-address').textContent = member.address || '-';
+    
+    document.querySelector('.modal-overlay').style.display = 'block';
+    document.querySelector('.member-info-modal').style.display = 'block';
+}
+
+function closeModal() {
+    document.querySelector('.modal-overlay').style.display = 'none';
+    document.querySelector('.member-info-modal').style.display = 'none';
+}
+
+function setupTooltip(element, text) {
+    element.addEventListener('mouseover', (e) => {
+        const existingTooltip = document.querySelector('.tooltip');
+        if (existingTooltip) {
+            existingTooltip.remove();
+        }
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.textContent = text;
+        tooltip.style.position = 'absolute';
+        tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        tooltip.style.color = 'white';
+        tooltip.style.padding = '8px 12px';
+        tooltip.style.borderRadius = '4px';
+        tooltip.style.fontSize = '14px';
+        tooltip.style.whiteSpace = 'nowrap';
+        tooltip.style.zIndex = '1000';
+        
+        const rect = element.getBoundingClientRect();
+        tooltip.style.top = (e.clientY - rect.top + 20) + 'px';
+        tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+        
+        element.appendChild(tooltip);
+    });
+
+    element.addEventListener('mousemove', (e) => {
+        const tooltip = element.querySelector('.tooltip');
+        if (tooltip) {
+            const rect = element.getBoundingClientRect();
+            tooltip.style.top = (e.clientY - rect.top + 20) + 'px';
+            tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+        }
+    });
+
+    element.addEventListener('mouseout', () => {
+        const tooltip = element.querySelector('.tooltip');
+        if (tooltip) {
+            tooltip.remove();
+        }
+    });
 }
  
 function formatSubscription(program) {

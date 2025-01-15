@@ -142,6 +142,16 @@ const API = {
         }
     },
 
+    getMemberBasicInfo: async (id) => {
+        try {
+            const response = await API.apiCall(`/members/${id}/basic`);
+            return response;
+        } catch (error) {
+            console.error('회원 기본 정보 조회 실패:', error);
+            throw error;
+        }
+    },
+
     addMemberProgram: async (enrollmentId, programData) => {
         try {
             return await API.apiCall(`/members/enrollment/${enrollmentId}/programs`, {

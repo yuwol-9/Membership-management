@@ -154,6 +154,70 @@
     .member button:hover {
       background-color: #E56736
     }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    .member-info-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1001;
+        width: 450px;
+    }
+
+    .member-info-modal h2 {
+        color: #E56736;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .member-info-field {
+        margin-bottom: 15px;
+    }
+
+    .member-info-field label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    .member-info-field span {
+        display: block;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+
+    .modal-close {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .modal-close:hover {
+        background-color: #5a6268;
+    }
 
     table {
       width: 100%;
@@ -233,7 +297,7 @@
     .program-select:hover {
         border-color: #36B4E5; 
         background-color: #ffffff; 
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
     .program-select option {
         text-align: left; 
@@ -299,6 +363,36 @@
         </li>
       </ul>
     </div>
+
+    <div class="modal-overlay"></div>
+    <div class="member-info-modal">
+        <h2>회원 기본 정보</h2>
+        <div class="member-info-field">
+            <label>이름</label>
+            <span id="modal-name"></span>
+        </div>
+        <div class="member-info-field">
+            <label>연락처</label>
+            <span id="modal-phone"></span>
+        </div>
+        <div class="member-info-field">
+            <label>생년월일</label>
+            <span id="modal-birthdate"></span>
+        </div>
+        <div class="member-info-field">
+            <label>나이</label>
+            <span id="modal-age"></span>
+        </div>
+        <div class="member-info-field">
+            <label>성별</label>
+            <span id="modal-gender"></span>
+        </div>
+        <div class="member-info-field">
+            <label>주소</label>
+            <span id="modal-address"></span>
+        </div>
+        <button class="modal-close" onclick="closeModal()">닫기</button>
+    </div>
   <div class="box">
 
     <h1>회원 관리</h1>
@@ -315,17 +409,13 @@
         <tr>
           <th>이름</th>
           <th>연락처</th>
-          <th>생년월일</th>
-          <th>나이</th>
-          <th>성별</th>
-          <th>주소</th>
           <th>수강 정보</th>
           <th>수강 기간</th>
           <th>결제 금액</th>
           <th>남은 횟수</th>
           <th>결제 상태</th>
-          <th>등록 날짜</th>
-          <th>회원정보</th>
+          <th>회원 등록일</th>
+          <th>회원정보/연장</th>
           <th>수업</th>
         </tr>
       </thead>
