@@ -29,19 +29,83 @@ function updateTable(members) {
     members.forEach(member => {
         const tr = document.createElement('tr');
         
-        // 기본 정보 셀 생성
-        const basicInfo = `
-            <td style="${member.remaining_days == 0 ? 'color: red;' : member.remaining_days <= 3 ? 'color: #E56736;' : ''}">${member.name || '-'}</td>
+        const programs = member.programs || [];
+        const lowDaysProgram = programs.find(p => p.remaining_days <= 3);
+        const zeroDaysProgram = programs.find(p => p.remaining_days === 0);
+        
+        let nameColor = '';
+        let tooltipText = '';
+        
+        if (zeroDaysProgram) {
+            nameColor = 'red';
+            tooltipText = `${zeroDaysProgram.name} 수업의 결제일입니다.`;
+        } else if (lowDaysProgram) {
+            nameColor = '#E56736';
+            tooltipText = `${lowDaysProgram.name} 수업의 남은 일수가 ${lowDaysProgram.remaining_days}회입니다.`;
+        }
+        
+        if (tooltipText) {
+            tr.style.position = 'relative';
+            tr.style.cursor = 'pointer';
+
+            tr.addEventListener('mouseover', (e) => {
+                // Remove any existing tooltips
+                const existingTooltip = document.querySelector('.tooltip');
+                if (existingTooltip) {
+                    existingTooltip.remove();
+                }
+
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = tooltipText;
+                tooltip.style.position = 'absolute';
+                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                tooltip.style.color = 'white';
+                tooltip.style.padding = '8px 12px';
+                tooltip.style.borderRadius = '4px';
+                tooltip.style.fontSize = '14px';
+                tooltip.style.whiteSpace = 'nowrap';
+                tooltip.style.zIndex = '1000';
+                
+                // Position the tooltip near the cursor
+                const rect = tr.getBoundingClientRect();
+                const scrollTop = window.scrollY;
+                tooltip.style.top = (e.clientY - rect.top + 20) + 'px';
+                tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+                
+                tr.appendChild(tooltip);
+            });
+            
+            tr.addEventListener('mousemove', (e) => {
+                const tooltip = tr.querySelector('.tooltip');
+                if (tooltip) {
+                    const rect = tr.getBoundingClientRect();
+                    tooltip.style.top = (e.clientY - rect.top + 20) + 'px';
+                    tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+                }
+            });
+
+            tr.addEventListener('mouseout', () => {
+                const tooltip = tr.querySelector('.tooltip');
+                if (tooltip) {
+                    tooltip.remove();
+                }
+            });
+        }
+
+        const nameCell = document.createElement('td');
+        nameCell.style.color = nameColor;
+        nameCell.textContent = member.name || '-';
+        tr.appendChild(nameCell);
+        
+        tr.innerHTML += `
             <td>${member.phone || '-'}</td>
             <td>${formatDate(member.birthdate) || '-'}</td>
             <td>${member.age || '-'}</td>
             <td>${formatGender(member.gender) || '-'}</td>
             <td>${member.address || '-'}</td>
         `;
-        tr.innerHTML = basicInfo;
- 
-        // 프로그램 정보 셀 생성
-        const programs = member.programs || [];
+        
         const programCell = document.createElement('td');
         
         if (programs.length > 1) {
@@ -68,7 +132,6 @@ function updateTable(members) {
         }
         tr.appendChild(programCell);
  
-        // 초기 프로그램 상세 정보 표시
         const initialProgram = programs[0] || {};
         appendProgramDetails(tr, initialProgram);
  
@@ -180,8 +243,8 @@ function setupEventListeners() {
 
 function setupSearchFunction() {
     const searchInput = document.querySelector('.search-bar input');
-    const searchButton = document.querySelector('.search-bar .search-button'); // 검색 버튼
-    const showAllButton = document.querySelector('.search-bar .show-all-button'); // 모두 보기 버튼
+    const showAllButton = document.querySelector('.search-bar .show-all-button');
+    const searchButton = document.querySelector('.search-bar .search-button');
 
     if (searchInput && searchButton) {
         searchButton.addEventListener('click', () => {
@@ -238,7 +301,7 @@ function sortMembers(members, type) {
             break;
         case '결제 상태':
             members.sort((a, b) => {
-                const statusOrder = { 'paid': 0, 'unpaid': 1 };
+                const statusOrder = { 'paid': 1, 'unpaid': 0 };
                 return statusOrder[a.payment_status] - statusOrder[b.payment_status];
             });
             break;
