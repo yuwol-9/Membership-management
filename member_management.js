@@ -243,9 +243,7 @@ function showMemberInfo(member) {
 
 async function handleModalEdit() {
     try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const memberId = urlParams.get('id');
-        if (!memberId) {
+        if (!currentMemberId) {
             throw new Error('회원 ID를 찾을 수 없습니다.');
         }
 
@@ -283,7 +281,7 @@ async function handleModalEdit() {
             return;
         }
 
-        const response = await API.updateMember(memberId, formData);
+        const response = await API.updateMember(currentMemberId, formData);
         
         if (response.success) {
             alert('회원 정보가 성공적으로 수정되었습니다.');
