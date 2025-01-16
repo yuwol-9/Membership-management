@@ -325,23 +325,31 @@ async function showMemberInfo(member) {
     const genderInput = document.getElementById('modal-gender');
     const addressInput = document.getElementById('modal-address');
     const paymentLogContainer = document.getElementById('modal-payment-logs');
-    
-    nameInput.value = member.name || '';
-    phoneInput.value = member.phone || '';
-    birthdateInput.value = member.birthdate ? member.birthdate.split('T')[0] : '';
-    ageInput.value = member.age || '';
-    genderInput.value = member.gender || '';
-    addressInput.value = member.address || '';
 
+    nameInput.value = '';
+    phoneInput.value = '';
+    birthdateInput.value = '';
+    ageInput.value = '';
+    genderInput.value = '';
+    addressInput.value = '';
+    paymentLogContainer.innerHTML = '<div class="loading">로딩 중...</div>'
+    
     const modalHeader = document.querySelector('.member-info-modal .modal-header');
     const hideButton = document.createElement('button');
     hideButton.className = 'hide-member-btn';
     hideButton.textContent = member.hidden ? '회원 보이기' : '회원 숨김';
     hideButton.onclick = () => toggleMemberVisibility(member.id, !member.hidden);
     modalHeader.appendChild(hideButton);
-    
+
     document.querySelector('.modal-overlay').style.display = 'block';
     document.querySelector('.member-info-modal').style.display = 'block';
+
+    nameInput.value = member.name || '';
+    phoneInput.value = member.phone || '';
+    birthdateInput.value = member.birthdate ? member.birthdate.split('T')[0] : '';
+    ageInput.value = member.age || '';
+    genderInput.value = member.gender || '';
+    addressInput.value = member.address || '';
     
     try {
         const paymentLogs = await API.getMemberPaymentLogs(member.id);
@@ -353,10 +361,9 @@ async function showMemberInfo(member) {
         paymentLogContainer.style.borderTop = '1px solid #ccc';
         paymentLogContainer.style.padding = '10px 0';
         
-        // 결제 로그 HTML 생성
-        paymentLogContainer.innerHTML = `
+         paymentLogContainer.innerHTML = `
             <h4 style="margin: 0 0 10px 0;">결제 로그</h4>
-            ${paymentLogs.map(log => `
+            ${paymentLogs.length > 0 ? paymentLogs.map(log => `
                 <div style="margin-bottom: 8px; font-size: 14px;">
                     <div style="color: #666;">
                         ${new Date(log.payment_date).toLocaleDateString('ko-KR')} 
@@ -368,15 +375,14 @@ async function showMemberInfo(member) {
                         ${new Intl.NumberFormat('ko-KR').format(log.amount)}원
                     </div>
                 </div>
-            `).join('')}
+            `).join('') : '<div style="color: #666;">결제 내역이 없습니다.</div>'}
         `;
     } catch (error) {
         console.error('결제 로그 로드 실패:', error);
-        paymentLogContainer.innerHTML = '<p style="color: red;">결제 로그를 불러오는데 실패했습니다.</p>';
+        if (currentMemberId === member.id) {
+            paymentLogContainer.innerHTML = '<p style="color: red;">결제 로그를 불러오는데 실패했습니다.</p>';
+        }
     }
-    
-    document.querySelector('.modal-overlay').style.display = 'block';
-    document.querySelector('.member-info-modal').style.display = 'block';
 }
 
 async function handleModalEdit() {
