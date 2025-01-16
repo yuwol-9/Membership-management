@@ -25,10 +25,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 let showingHiddenMembers = false;
 // 회원 데이터 가져오기
-async function loadMembers() {
+async function loadMembers(showHidden = false) {
     try {
-        console.log('loadMembers 함수 실행');
-        const members = await API.getMembers();
+        console.log('loadMembers 함수 실행, showHidden:', showHidden);
+        const members = await API.getMembers(showHidden);
         updateTable(members);
         updateCards(members);
     } catch (error) {
@@ -560,7 +560,7 @@ function setupEventListeners() {
     if (toggleButton) {
         toggleButton.addEventListener('click', async () => {
             showingHiddenMembers = !showingHiddenMembers;
-            toggleButton.textContent = showingHiddenMembers ? '일반 회원 목록' : '숨긴 회원 목록';
+            toggleButton.textContent = showingHiddenMembers ? '일반 회원 목록 보기' : '숨긴 회원 목록 보기';
             await loadMembers(showingHiddenMembers);
         });
     }

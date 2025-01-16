@@ -381,7 +381,7 @@ app.get('/api/members', authenticateToken, async (req, res) => {
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id
-            WHERE ${includeHidden ? 'hidden = TRUE' : 'hidden = FALSE'}
+            WHERE ${includeHidden ? 'm.hidden = TRUE' : 'm.hidden = FALSE OR m.hidden IS NULL'}
             GROUP BY m.id, m.created_at
             ORDER BY m.created_at DESC
         `);
