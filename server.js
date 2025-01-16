@@ -756,7 +756,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         }
 
         const [programs] = await connection.execute(
-            'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
+            'SELECT name, monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
             [program_id]
         );
 
