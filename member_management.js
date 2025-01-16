@@ -315,7 +315,7 @@ function appendProgramDetails(row, program) {
 }
 
 let currentMemberId = null;
-function showMemberInfo(member) {
+async function showMemberInfo(member) {
     currentMemberId = member.id;
     
     const nameInput = document.getElementById('modal-name');
@@ -324,20 +324,7 @@ function showMemberInfo(member) {
     const ageInput = document.getElementById('modal-age');
     const genderInput = document.getElementById('modal-gender');
     const addressInput = document.getElementById('modal-address');
-    
-    const existingHideButton = document.querySelector('.hide-member-btn');
-    if (existingHideButton) {
-        existingHideButton.remove();
-    }
-    
-    const modalHeader = document.querySelector('.modal-header');
-    if (modalHeader) {
-        const hideButton = document.createElement('button');
-        hideButton.className = 'hide-member-btn';
-        hideButton.textContent = member.hidden ? '회원 보이기' : '회원 숨김';
-        hideButton.onclick = () => toggleMemberVisibility(member.id, !member.hidden);
-        modalHeader.appendChild(hideButton);
-    }
+    const paymentLogContainer = document.getElementById('modal-payment-logs');
     
     nameInput.value = member.name || '';
     phoneInput.value = member.phone || '';
@@ -345,6 +332,38 @@ function showMemberInfo(member) {
     ageInput.value = member.age || '';
     genderInput.value = member.gender || '';
     addressInput.value = member.address || '';
+    
+    try {
+        const paymentLogs = await API.getMemberPaymentLogs(member.id);
+        
+        // 결제 로그 컨테이너 스타일 설정
+        paymentLogContainer.style.maxHeight = '150px';
+        paymentLogContainer.style.overflowY = 'auto';
+        paymentLogContainer.style.marginTop = '10px';
+        paymentLogContainer.style.borderTop = '1px solid #ccc';
+        paymentLogContainer.style.padding = '10px 0';
+        
+        // 결제 로그 HTML 생성
+        paymentLogContainer.innerHTML = `
+            <h4 style="margin: 0 0 10px 0;">결제 로그</h4>
+            ${paymentLogs.map(log => `
+                <div style="margin-bottom: 8px; font-size: 14px;">
+                    <div style="color: #666;">
+                        ${new Date(log.payment_date).toLocaleDateString('ko-KR')} 
+                        ${log.is_extension ? '[연장]' : ''}
+                    </div>
+                    <div>
+                        ${log.program_name} 
+                        ${log.duration_months ? `${log.duration_months}개월` : `${log.total_classes}회`}
+                        ${new Intl.NumberFormat('ko-KR').format(log.amount)}원
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    } catch (error) {
+        console.error('결제 로그 로드 실패:', error);
+        paymentLogContainer.innerHTML = '<p style="color: red;">결제 로그를 불러오는데 실패했습니다.</p>';
+    }
     
     document.querySelector('.modal-overlay').style.display = 'block';
     document.querySelector('.member-info-modal').style.display = 'block';

@@ -344,6 +344,23 @@ app.post('/api/members', authenticateToken, async (req, res) => {
             ]
         );
 
+        const [programName] = await connection.execute(
+            'SELECT name FROM programs WHERE id = ?',
+            [program_id]
+        );
+        
+        await connection.execute(
+            'INSERT INTO payment_logs (enrollment_id, program_name, duration_months, total_classes, amount, is_extension) VALUES (?, ?, ?, ?, ?, ?)',
+            [
+                enrollmentResult.insertId,
+                programName[0].name,
+                duration_months || null,
+                total_classes || null,
+                totalAmount,
+                false
+            ]
+        );
+
         await connection.commit();
         res.status(201).json({
             message: '회원이 성공적으로 등록되었습니다.',
@@ -581,6 +598,30 @@ app.put('/api/members/:id/visibility', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/members/:id/payment-logs', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT 
+                pl.id,
+                pl.payment_date,
+                pl.program_name,
+                pl.duration_months,
+                pl.total_classes,
+                pl.amount,
+                pl.is_extension
+            FROM payment_logs pl
+            JOIN enrollments e ON pl.enrollment_id = e.id
+            WHERE e.member_id = ?
+            ORDER BY pl.payment_date DESC
+        `, [req.params.id]);
+
+        res.json(rows);
+    } catch (err) {
+        console.error('결제 로그 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 app.delete('/api/members/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -766,6 +807,17 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
                     finalRemainingDays,
                     finalTotalAmount,
                     enrollmentId
+                ]
+            );
+            await connection.execute(
+                'INSERT INTO payment_logs (enrollment_id, program_name, duration_months, total_classes, amount, is_extension) VALUES (?, ?, ?, ?, ?, ?)',
+                [
+                    enrollmentId,
+                    program.name,
+                    duration_months || null,
+                    total_classes || null,
+                    newAmount,
+                    true
                 ]
             );
         } else {

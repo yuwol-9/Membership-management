@@ -88,5 +88,19 @@ ALTER TABLE enrollments
 ADD COLUMN original_amount INT NOT NULL DEFAULT 0 AFTER total_amount;
 */
 
+/*
 ALTER TABLE members
 ADD COLUMN hidden BOOLEAN DEFAULT FALSE;
+*/
+
+CREATE TABLE IF NOT EXISTS payment_logs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    enrollment_id INT NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    program_name VARCHAR(100) NOT NULL,
+    duration_months INT,
+    total_classes INT,
+    amount INT NOT NULL,
+    is_extension BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (enrollment_id) REFERENCES enrollments(id) ON DELETE CASCADE
+);

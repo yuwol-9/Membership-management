@@ -167,6 +167,15 @@ const API = {
         });
     },
 
+    getMemberPaymentLogs: async (memberId) => {
+        try {
+            return await API.apiCall(`/members/${memberId}/payment-logs`);
+        } catch (error) {
+            console.error('결제 로그 조회 실패:', error);
+            throw error;
+        }
+    },
+
     deleteMember: async (enrollmentId) => {
         return API.apiCall(`/members/enrollment/${enrollmentId}`, {
             method: 'DELETE'
