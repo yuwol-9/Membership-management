@@ -129,9 +129,9 @@ const API = {
     },
 
     // Member APIs
-    getMembers: async () => {
+    getMembers: async (includeHidden = false) => {
         try {
-            const response = await API.apiCall('/members?includeHidden=false');
+            const response = await API.apiCall(`/members?includeHidden=${includeHidden}`);
             return response;
         } catch (error) {
             console.error('회원 목록 조회 실패:', error);
@@ -228,7 +228,8 @@ const API = {
             const queryString = new URLSearchParams({
                 month: params.month,
                 year: params.year,
-                program_id: params.program_id
+                program_id: params.program_id,
+                includeHidden: 'false'
             }).toString();
             
             const response = await API.apiCall(`/attendance?${queryString}`);

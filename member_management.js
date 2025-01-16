@@ -23,19 +23,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+let showingHiddenMembers = false;
 // 회원 데이터 가져오기
 async function loadMembers() {
     try {
         console.log('loadMembers 함수 실행');
         const members = await API.getMembers();
         updateTable(members);
-        // 카드 UI 업데이트
         updateCards(members);
     } catch (error) {
         console.error('회원 목록 조회 실패:', error);
         throw error;
     }
 }
+
 function updateTable(members) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
@@ -555,6 +556,14 @@ function setupEventListeners() {
     setupSortButtons();
     setupMemberRegistrationButton();
     setupMemberEditButton();
+    const toggleButton = document.getElementById('toggle-hidden-members');
+    if (toggleButton) {
+        toggleButton.addEventListener('click', async () => {
+            showingHiddenMembers = !showingHiddenMembers;
+            toggleButton.textContent = showingHiddenMembers ? '일반 회원 목록' : '숨긴 회원 목록';
+            await loadMembers(showingHiddenMembers);
+        });
+    }
 }
 
 function setupSearchFunction() {

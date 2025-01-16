@@ -381,8 +381,8 @@ app.get('/api/members', authenticateToken, async (req, res) => {
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id
-            WHERE ${includeHidden ? '1=1' : 'm.hidden = FALSE'}
-            GROUP BY m.id
+            WHERE ${includeHidden ? 'hidden = TRUE' : 'hidden = FALSE'}
+            GROUP BY m.id, m.created_at
             ORDER BY m.created_at DESC
         `);
         
@@ -1175,11 +1175,11 @@ app.get('/api/attendance', authenticateToken, async (req, res) => {
             JOIN programs p ON e.program_id = p.id
             LEFT JOIN attendance a ON e.id = a.enrollment_id
             WHERE (? IS NULL OR p.id = ?)
+            AND m.hidden = FALSE
             GROUP BY m.name, e.id, e.remaining_days, p.name, p.id
             ORDER BY m.name
         `, [program_id, program_id]);
 
-        // 출석 날짜 데이터 처리
         const processedData = rows.map(row => ({
             ...row,
             attendance_dates: row.attendance_dates ? row.attendance_dates.split(',') : [],
