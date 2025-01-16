@@ -740,8 +740,6 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             is_extension
         } = req.body;
 
-        console.log('Logic path:', is_extension ? '연장 로직' : '신규 추가 로직');  // 어떤 로직이 실행되는지 확인
-
         if (!is_extension) {
             const [existingEnrollment] = await connection.execute(
                 'SELECT id FROM enrollments WHERE member_id = ? AND program_id = ?',
@@ -780,23 +778,10 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             newAmount = total_classes * program.per_class_price;
         }
 
-        console.log('Calculated amount:', newAmount);  // 계산된 금액 확인
-        console.log('Current state:', {
-            currentRemainingDays,
-            currentTotalAmount,
-            newAmount,
-            newTotalClasses
-        });
 
         if (is_extension) {
-            console.log('Executing extension update...');  // 연장 업데이트 실행 확인
             const finalTotalAmount = currentTotalAmount + newAmount;
             const finalRemainingDays = currentRemainingDays + newTotalClasses;
-            
-            console.log('Extension values:', {
-                finalRemainingDays,
-                finalTotalAmount
-            });
 
             await connection.execute(
                 `UPDATE enrollments 
@@ -809,6 +794,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
                     enrollmentId
                 ]
             );
+
             await connection.execute(
                 'INSERT INTO payment_logs (enrollment_id, program_name, duration_months, total_classes, amount, is_extension) VALUES (?, ?, ?, ?, ?, ?)',
                 [
@@ -821,7 +807,6 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
                 ]
             );
         } else {
-            console.log('Executing new enrollment insert...');  // 신규 등록 실행 확인
             await connection.execute(
                 'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount, original_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
@@ -834,6 +819,18 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
                     start_date,
                     newAmount,
                     newAmount
+                ]
+            );
+
+            await connection.execute(
+                'INSERT INTO payment_logs (enrollment_id, program_name, duration_months, total_classes, amount, is_extension) VALUES (?, ?, ?, ?, ?, ?)',
+                [
+                    newEnrollment.insertId,
+                    program.name,
+                    duration_months || null,
+                    total_classes || null,
+                    newAmount,
+                    false
                 ]
             );
         }
