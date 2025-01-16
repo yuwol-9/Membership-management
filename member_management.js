@@ -27,6 +27,8 @@ async function loadMembers() {
         console.log('loadMembers 함수 실행');
         const members = await API.getMembers();
         updateTable(members);
+        // 카드 UI 업데이트
+        updateCards(members);
     } catch (error) {
         console.error('회원 목록 조회 실패:', error);
         throw error;
@@ -114,6 +116,86 @@ function updateTable(members) {
     });
 }
 
+function updateCards(members) {
+    const cardContainer = document.querySelector('.card-container');
+    cardContainer.innerHTML = ''; // 기존 카드 초기화
+
+    members.forEach(member => {
+        const programs = member.programs || [];
+        let selectedProgram = programs[0] || {};
+
+        // 카드 생성
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.setAttribute('data-name', member.name.toLowerCase()); // 이름을 소문자로 저장
+        card.style.marginBottom = '20px'; // 카드 간격 추가
+
+        // 카드 내용 컨테이너
+        const cardContent = document.createElement('div');
+        cardContent.className = 'card-content';
+
+        // 카드 내용 업데이트 함수
+        const updateCardContent = (program) => {
+            cardContent.innerHTML = `
+                <h3>${member.name || '-'}</h3>
+                <div style="display: flex; align-items: center;">
+                    <p style="margin: 0; margin-right: 10px;">수강 정보:</p>
+                    <select class="program-select" style="width: auto;">
+                        ${programs.map(p => `<option value="${p.id}" ${p.id === program.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+                    </select>
+                </div>
+                <p>남은 횟수: <span style="color: ${
+                    program.remaining_days <= 0 ? 'red' : 
+                    program.remaining_days <= 3 ? '#E56736' : ''
+                }">${program.remaining_days === undefined ? '-' : `${program.remaining_days}일`}</span></p>
+            `;
+
+            const select = cardContent.querySelector('.program-select');
+            select.addEventListener('change', (e) => {
+                const selectedProgramId = parseInt(e.target.value);
+                selectedProgram = programs.find(p => p.id === selectedProgramId) || {};
+                updateCardContent(selectedProgram);
+            });
+        };
+
+        // 버튼 컨테이너 생성
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '10px';
+        buttonContainer.style.marginTop = '10px';
+
+        // 연장/삭제 버튼
+        const editButton = document.createElement('button');
+        editButton.className = 'btn-plus';
+        editButton.textContent = '연장 / 삭제';
+        editButton.addEventListener('click', () => {
+            location.href = `회원수업수정.html?id=${selectedProgram.id}`;
+        });
+
+        // 수업 추가 버튼
+        const addButton = document.createElement('button');
+        addButton.className = 'btn-plus';
+        addButton.textContent = '수업 추가';
+        addButton.addEventListener('click', () => {
+            location.href = `회원수업추가.html?id=${selectedProgram.id}`;
+        });
+
+        // 버튼 추가
+        buttonContainer.appendChild(editButton);
+        buttonContainer.appendChild(addButton);
+
+        // 초기 카드 내용 설정
+        updateCardContent(selectedProgram);
+
+        // 카드에 요소 추가
+        card.appendChild(cardContent);
+        card.appendChild(buttonContainer);
+        cardContainer.appendChild(card);
+    });
+}
+
+
+
 function appendProgramDetails(row, program) {
     const remaining = program.remaining_days;
     const remainingDisplay = remaining !== undefined && remaining !== null ? `${remaining}일` : '-';
@@ -144,7 +226,7 @@ function appendProgramDetails(row, program) {
  
     const editCell = document.createElement('td');
     const editButton = document.createElement('button');
-    editButton.className = 'btn-primary';
+    editButton.className = 'btn-plus';
     editButton.textContent = '연장 / 삭제';
     editButton.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -155,7 +237,7 @@ function appendProgramDetails(row, program) {
 
     const addCell = document.createElement('td');
     const addButton = document.createElement('button');
-    addButton.className = 'btn-primary';
+    addButton.className = 'btn-plus';
     addButton.textContent = '추가';
     addButton.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -465,14 +547,56 @@ function setupSearchFunction() {
     }
 }
 
+function filterCards(searchTerm) {
+    const cards = document.querySelectorAll('.card');
+    searchTerm = searchTerm.toLowerCase().trim();
+
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        if (name.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
 function performSearch(searchTerm) {
     const rows = document.querySelectorAll('tbody tr');
     searchTerm = searchTerm.toLowerCase().trim();
 
+    // 테이블 필터링
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
         row.style.display = text.includes(searchTerm) ? '' : 'none';
     });
+
+    // 카드 필터링
+    filterCards(searchTerm);
+}
+
+// 검색 이벤트 추가
+const searchInput = document.querySelector('.search-bar input');
+const searchButton = document.querySelector('.search-bar .search-button');
+const showAllButton = document.querySelector('.search-bar .show-all-button');
+
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        performSearch(e.target.value);
+    });
+
+    if (searchButton) {
+        searchButton.addEventListener('click', () => {
+            performSearch(searchInput.value);
+        });
+    }
+
+    if (showAllButton) {
+        showAllButton.addEventListener('click', async () => {
+            searchInput.value = '';
+            await loadMembers();
+        });
+    }
 }
 
 function setupSortButtons() {
@@ -483,6 +607,7 @@ function setupSortButtons() {
             
             sortMembers(members, type);
             updateTable(members);
+            updateCards(members);
         });
     });
 }
@@ -538,3 +663,8 @@ function showErrorMessage(message) {
     console.error(message);
     alert(message);
 }
+
+function toggleSidebar() { /*깃 수정사항 */ 
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('active');
+  }
