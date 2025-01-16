@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         // 연도 선택 옵션 설정
         const yearSelect = document.getElementById('year');
+        if (!yearSelect) {
+            throw new Error('연도 선택 요소를 찾을 수 없습니다.');
+        }
+
         const currentYear = new Date().getFullYear();
         const startYear = 2024;
         const endYear = 2028;
@@ -22,22 +26,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // 프로그램 목록을 먼저 로드하고 첫 번째 프로그램 선택
         await loadPrograms();
         setupEventListeners();
         
     } catch (error) {
         console.error('초기화 실패:', error);
-        alert('데이터 로드에 실패했습니다.');
+        alert('데이터 로드에 실패했습니다: ' + error.message);
     }
 });
 
 async function loadPrograms() {
     try {
-        const programs = await API.getPrograms(); // API로부터 프로그램 데이터 가져오기
+        const programs = await API.getPrograms();
         const programDropdown = document.getElementById('program-dropdown');
-        programDropdown.innerHTML = ''; // 드롭다운 초기화
-
+        
+        if (!programDropdown) {
+            console.error('프로그램 드롭다운 메뉴를 찾을 수 없습니다.');
+            return;
+        }
+        
+        programDropdown.innerHTML = '<option value="">프로그램 선택</option>';
+        
         if (programs && programs.length > 0) {
             programs.forEach(program => {
                 const option = document.createElement('option');
@@ -46,24 +55,34 @@ async function loadPrograms() {
                 programDropdown.appendChild(option);
             });
 
-            // 첫 번째 프로그램 선택
             selectedProgramId = programs[0].id;
             programDropdown.value = selectedProgramId;
-
-            // 선택된 프로그램의 출석 데이터 로드
+            
             await loadAttendanceData();
+        } else {
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "등록된 프로그램이 없습니다";
+            programDropdown.appendChild(option);
         }
     } catch (error) {
         console.error('프로그램 목록 로드 실패:', error);
         throw error;
     }
 }
+
 // 드롭다운에서 프로그램 선택 이벤트 처리
 document.getElementById('program-dropdown').addEventListener('change', async (e) => {
     selectedProgramId = e.target.value; // 선택된 프로그램 ID 업데이트
     await loadAttendanceData(); // 선택된 프로그램에 맞는 데이터 로드
 });
-/* 드롭다운으로 변경해서 더이상 불필요한 함수
+
+async function toggleSidebar() { /*깃 수정사항 */ 
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('active');
+}
+
+/*
 async function selectProgram(program) {
     selectedProgramId = program.id;
     
@@ -78,7 +97,8 @@ async function selectProgram(program) {
     
     // 선택된 프로그램의 출석 데이터 로드
     await loadAttendanceData();
-} */
+}
+*/
 
 /* 메뉴를 누르면 사이드바가 나타나게 하고 싶을떄
 async function toggleSidebar() { 
@@ -86,6 +106,7 @@ async function toggleSidebar() {
       sidebar.classList.toggle('active');
     }
 */
+
 
 async function loadAttendanceData() {
     try {
@@ -227,24 +248,6 @@ function updateAttendanceTable(data) {
     });
 }
 
-function updateTableHeader(daysInMonth) {
-    const thead = document.querySelector('.attendance-table thead');
-    thead.innerHTML = '';
-    const headerRow = document.createElement('tr');
-    headerRow.innerHTML = `
-        <th>회원 이름</th>
-        ${Array.from({length: daysInMonth}, (_, i) => {
-            const day = new Date(document.getElementById('year').value, 
-                               document.getElementById('month').value, i + 1);
-            const dayClass = day.getDay() === 0 ? 'sunday' : '';
-            return `<th class="${dayClass}">${i + 1}일</th>`;
-        }).join('')}
-        <th>출석횟수</th>
-        <th>남은일수</th>
-    `;
-    thead.appendChild(headerRow);
-}
-
 function groupAttendanceByMember(data) {
     return data.reduce((acc, curr) => {
         if (!acc[curr.member_name]) {
@@ -265,7 +268,6 @@ function setupEventListeners() {
     document.getElementById('year').addEventListener('change', loadAttendanceData);
     document.getElementById('month').addEventListener('change', loadAttendanceData);
 }
-
 function updateTableHeader(daysInMonth) {
     const thead = document.querySelector('.attendance-table thead');
     thead.innerHTML = '';

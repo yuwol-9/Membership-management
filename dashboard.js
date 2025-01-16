@@ -1,5 +1,14 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const token = API.getToken();
+    const isLoggedIn = localStorage.getItem('isLoggedIn') || sessionStorage.getItem('isLoggedIn');
+    
+    if (!token || !isLoggedIn) {
+        window.location.href = '로그인.html';
+        return;
+    }
+
     try {
+        // 대시보드 데이터 로드
         const stats = await API.getDashboardStats();
         updateDashboardCards(stats);
         
@@ -9,8 +18,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error('대시보드 통계 로드 실패:', error);
+        if (error.message.includes('인증')) {
+            API.removeToken();
+            window.location.href = '로그인.html';
+            return;
+        }
     }
-    setupAuthCheck();
+
+    // 로그아웃 버튼 기능 설정
+    setupAuthButtons();
 });
 
 function updateDashboardCards(stats) {
@@ -34,7 +50,7 @@ function updateDashboardCards(stats) {
                 }).format(totalRevenue);
                 break;
             case '오늘 스케줄':
-                valueElement.textContent = `${stats.todayAttendance}회 수업`;
+                valueElement.textContent = stats.todayClassName;
                 break;
         }
     });
@@ -94,6 +110,29 @@ function setupAuthCheck() {
             });
         } else {
             loginBtn.textContent = '로그인';
+        }
+    }
+}
+
+function setupAuthButtons() {
+    const loginBtn = document.querySelector('.login-btn');
+    if (loginBtn) {
+        const token = API.getToken();
+        const isLoggedIn = localStorage.getItem('isLoggedIn') || sessionStorage.getItem('isLoggedIn');
+        
+        if (token && isLoggedIn) {
+            loginBtn.textContent = '로그아웃';
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                API.logout();
+                window.location.href = '로그인.html';
+            });
+        } else {
+            loginBtn.textContent = '로그인';
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = '로그인.html';
+            });
         }
     }
 }
