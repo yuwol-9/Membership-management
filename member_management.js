@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (memberInfoModal) {
             memberInfoModal.addEventListener('click', (e) => e.stopPropagation());
         }
+
+        
     } catch (error) {
         console.error('회원 데이터 로드 실패:', error);
         API.handleApiError(error);
@@ -37,8 +39,10 @@ async function loadMembers() {
 function updateTable(members) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
+
+    const paginatedMembers = paginateMembers(members);
     
-    members.forEach(member => {
+    paginatedMembers.forEach(member => {
         const tr = document.createElement('tr');
         
         const programs = member.programs || [];
@@ -114,13 +118,16 @@ function updateTable(members) {
  
         tbody.appendChild(tr);
     });
+    updatePagination(members.length);
 }
 
 function updateCards(members) {
     const cardContainer = document.querySelector('.card-container');
     cardContainer.innerHTML = ''; // 기존 카드 초기화
 
-    members.forEach(member => {
+    const paginatedMembers = paginateMembers(members);
+
+    paginatedMembers.forEach(member => {
         const programs = member.programs || [];
         let selectedProgram = programs[0] || {};
 
@@ -193,6 +200,11 @@ function updateCards(members) {
         cardContainer.appendChild(card);
     });
 }
+
+document.addEventListener('DOMContentLoaded', async () => {
+    handlePaginationButtons();
+    await loadMembers();
+})
 
 
 
@@ -667,4 +679,47 @@ function showErrorMessage(message) {
 function toggleSidebar() { /*깃 수정사항 */ 
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.toggle('active');
-  }
+}
+
+let currentPage = 1;
+const itemsPerPage = 10;
+let totalPages = 1;
+
+function paginateMembers(members) {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return members.slice(start, end);
+}
+
+function updatePagination(totalItems) {
+    totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    const prevButton = document.getElementById('prev-page');
+    const nextButton = document.getElementById('next-page');
+    const currentPageSpan = document.getElementById('current-page');
+
+    prevButton.disabled = currentPage === 1;
+    nextButton.disabled = currentPage === totalPages;
+
+    currentPageSpan.textContent = `${currentPage} / ${totalPages}`;
+}
+
+function handlePaginationButtons() {
+    const prevButton = document.getElementById('prev-page');
+    const nextButton = document.getElementById('next-page');
+
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadMembers(); // 페이지 변경 시 멤버 데이터 다시 로드
+        }
+    });
+
+    nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadMembers();
+        }
+    });
+}
+
