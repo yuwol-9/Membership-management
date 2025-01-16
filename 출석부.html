@@ -4,355 +4,211 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>출석 체크 시스템</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Animate on Scroll (AOS) CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  <!-- Custom CSS -->
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    /* 헤더 컨테이너 */
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+    }
+    .all-container{
+      display:flex;
+    }
+
+    /* 헤더 디자인 */
     .header-container {
-            top: 0;
-            width: 100%; /* 화면 전체 너비 */
-            z-index: 998; /* 다른 요소 위로 나오도록 설정 */
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
+      top: 0;
+      width: 100%;
+      z-index: 998;
+      background-color: #fff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #1a1a1a;
+      padding: 10px 20px;
+    }
+    .brand-header img {
+      max-height: 40px;
+    }
+    .nav-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 1.5rem;
+      font-weight: bold;
+      background-color: #f8f9fa;
+    }
 
-        /* 상단 브랜드 헤더 */
-        .brand-header {
-          display: flex;
-          align-items: center; /* 세로축 가운데 정렬 */
-          justify-content: center; /* 기본적으로 가운데 정렬 */
-          background-color: #1a1a1a; /* 배경색 */
-          padding: 10px 20px;
-          position: relative; /* 메뉴 아이콘을 왼쪽에 고정하기 위해 사용 */
-        }
-
-        /* 네비게이션 헤더 */
-        .nav-header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5px 24px;
-            background-color: white;
-            text-align: center;
-            padding: 10px 0;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        .menu-icon{
-          position: absolute; /* 절대 위치로 왼쪽에 고정 */
-          left: 20px; /* 왼쪽 여백 */
-          font-size: 30px;
-          color: white;
-          cursor: pointer;
-        }
-        
-        .sidebar {
-        top: 70px; /* 헤더 높이만큼 아래로 */
-        height: 100vh;
-        width: 250px;
-        background-color: #222;
-        color: white;
-        padding: 20px 0;
-        height : 100vh;
-        }
-        .sidebar ul {
-          list-style: none;
-          
-        }
-        .sidebar ul li {
-          padding: 15px 20px;
-          cursor: pointer;
-          font-size: 14px;
-          border-bottom: 1px solid #333;
-          color: white;
-          text-decoration: none; /* 밑줄 제거 */
-      
-        }
-        .sidebar ul li:hover {
-          background-color: #333;
-          text-decoration: none; 
-        }
-        .sidebar ul li.active {
-          background-color: #000000;
-          text-decoration: none; 
-        }
-        .sidebar ul li span {
-          margin-left: 10px;
-        }
-        .sidebar img {
-          margin-right: 20px;
-          vertical-align: middle; 
-          margin-bottom: 3px; /* 이미지를 더 아래로 이동 */
-        }
-        .sidebar ul li a {
-          color: white;
-          text-decoration: none;
-          display: block; /* li 전체 영역이 클릭 가능하도록 */
-        }
-
-        .sidebar ul li a:hover {
-          text-decoration: none;
-        }
-
-        body {
-          font-family: 'Arial', sans-serif;
-          background-color: #f5f7fa;
-        }
-        .container{
-          display : flex;
-        }
-
-      .menu-btn {
-          position: fixed;
-          top: 20px;
-          left: 20px;
-          background: none;
-          border: none;
-          cursor: pointer;
-          z-index: 1000;
-          padding: 10px;
-        }
-
-      .menu-btn:hover {
-          background-color: rgba(0, 0, 0, 0.1);
-          border-radius: 5px;
-      }
-
-      h1 {
-        font-size: 24px;
-        color: #000;
-      }
-
-      .attendance-container {
-        height:fit-content;
-        width: 80%;
-        margin: 0 auto;
-        margin-top:50PX;
-        background-color: white;
-        padding: 10px;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      }
-
-      .table-container{
-        position: relative;
-        width: 100%;
-        margin: 0 auto;
-        overflow: auto;
-        border : 0.5px solid #ddd;
-      }
-      
-      .attendance-table {
-        width: 100%;
-        border-collapse: collapse;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        white-space: nowrap;
-        border-radius: 8px;
-      }
-
-      .attendance-table th {
-            background-color: #f8f9fa;
-            padding: 12px 15px;
-            text-align: center;
-            top: 0;
-            z-index: 10;
-      }
+    /* 사이드바 */
+    .sidebar {
+      top: 116px; /* 헤더 높이만큼 아래로 */
+      height: 100vh;
+      width: 250px;
+      background-color: #222;
+      color: white;
+      padding: 20px 0;
+      height : 100vh;
+    }
     
-      .attendance-table td {
-            padding: 12px 15px;
-            text-align: center;
-      }
-
-      .attendance-table tbody tr:nth-child(even) {
-          background-color: #f9f9f9;
-      }
-
-      .attendance-table tbody td input[type="checkbox"] {
-          transform: scale(1.3);
-          accent-color: #3c7df0; /* 체크박스 색상 변경 */
-      }
-
-      .attendance-table thead tr:first-child th:first-child{
-          position: sticky;
-          left: 0;
-          z-index: 15;
-          box-shadow: inset -2px 0 0 #ddd;
-      }
-
-      .attendance-table tbody td:first-child  {
-          position: sticky;
-          left: 0;
-          z-index: 15;
-          box-shadow: inset -2px 0 0 #ddd;
-          background-color: white;
-      }
-      .attendance-table thead tr:nth-last-child(2) th:nth-last-child(2) {
-        position: sticky; 
-        right: 94px; 
-        z-index: 20;
-        box-shadow: inset 2px 0 0 #ddd; 
-        
- 
-      }
-      .attendance-table tbody td:nth-last-child(2){
-        position: sticky; 
-        right: 94px; 
-        background-color: white;
-        z-index: 20;
-        box-shadow: inset 2px 0 0 #ddd; 
-         
-      }
-      .attendance-table thead tr:nth-last-child(2) th:last-child {
-        position: sticky; 
-        right: -1px; 
-        z-index: 30;
-        box-shadow: inset 2px 0 0 #ddd; 
-      }
-
-      .attendance-table tbody td:last-child{
-        position: sticky; 
-        right: -1px; 
-        background-color: white;
-        z-index: 20;
-        box-shadow: inset 2px 0 0 #ddd; 
-      }
-    
-      /* 고정된 열의 짝수 행 배경색 유지 */
-      .attendance-table tbody tr:nth-child(even) td:first-child {
-        background-color: #f9f9f9; 
-      }
-
-      .attendance-table tbody tr:nth-child(even) td:nth-last-child(2),
-      .attendance-table tbody tr:nth-child(even) td:last-child {
-        background-color: #f9f9f9; 
-      }
-
-      /* Program List Styling */
-      .program-list {
-        background-color: #fff;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        align-items: left;
-      }
-
-      .program-dropdown {
-          width: 100%;
-          padding: 10px;
-          font-size: 16px;
-          border: 1px solid #ddd;
-          border-radius: 5px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          background-color: white;
-          transition: all 0.2s ease-in-out;
-      }
-      .program-list label {
-          font-size: 20px;
-          font-weight: bold;
-          margin-bottom: 5px;
-          
-      }
-
-      .program-dropdown:focus {
-          outline: none;
-          border-color: #3b5bdb;
-      }
-
-      .attendance-content {
-          flex: 1;
-          background-color: white;
-      }
-
-      .sunday {
-        background-color: #D6D6D6 !important; /* 진한 회색 배경 */
-        color: #E56736 !important; /* 기본 텍스트 색상 */ 
-        opacity: 1; /* 선명도  */
-        transition: all 0.3s ease; /* 부드러운 효과 */
-        border-left: 2px solid #706e6e !important;
-        border-right: 2px solid #706e6e !important;
-      }
-      .saturday {
-        color: #3b5bdb; /* 기본 텍스트 색상 */ 
-        opacity: 1; /* 선명도  */
-        transition: all 0.3s ease; /* 부드러운 효과 */
-      }
-
-      .holiday {
-        background-color: #f6c6c6; /* 공휴일을 빨간색 계열로 */
-      }
-      .dropdown-container {
-          display: flex;
-          align-items: center; /* 수직 정렬 */
-          gap: 20px; /* 드롭다운 간격 */
-          margin-bottom: 20px; /* 드롭다운과 테이블 간격 */
-      }
-
-      .dropdown-container > div {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-      }
-
-      .selector label {
-          font-size: 14px;
-          font-weight: bold;
-          margin-bottom: 5px;
-      }
-
-      .selector {
-        text-align: left;
-        margin-bottom: 10px;
-        margin-top: 10px;
-      }
-
-      .selector select {
-        padding: 5px;
-        font-size: 16px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        background-color: white;
-        transition: all 0.2s ease-in-out;
-      }
-
-      .remaining-days {
-        font-weight: bold;
-        color: #d9534f;
-        text-align: center;
-      }
-
-      td.warning {
-          color: #ff0000;
-          font-weight: bold;
-      }
-
-      input[type="checkbox"]:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-      }
+    .sidebar ul {
+      list-style: none;
+      padding: 0; /* 기본 패딩 제거 */
   
+    }
+    .sidebar ul li {
+      padding: 15px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #333;
+      margin: 0; /* 추가된 여백 제거 */
+    }
+    .sidebar ul li.active {
+      background-color: #000000;
+    }
+
+    .sidebar ul li:active{
+      background-color: black;
+    }
+    .sidebar ul li a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+    .sidebar ul li img {
+      margin-right: 20px;
+    }
+
+    /* 컨텐츠 영역 */
+    .container {
+      margin-left: 60px;
+      padding: 20px;
+    }
+
+    .attendance-container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.5s ease-in-out;
+      margin-top:50px;
+    }
+
+    /* 드롭다운 디자인 */
+    .program-list label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .program-dropdown {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    /* 테이블 디자인 */
+    .table-container {
+      margin-top: 20px;
+      overflow-x: auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+    .attendance-table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+    }
+    .attendance-table th {
+      background-color: #f8f9fa;
+      text-align: center;
+      padding: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .attendance-table td {
+      padding: 10px;
+      text-align: center;
+    }
+    .attendance-table tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    /* 고정 열 스타일 */
+    .attendance-table thead tr:first-child th:first-child,
+    .attendance-table td:first-child {
+      vertical-align: middle;
+      position: sticky;
+      left: 0;
+      background-color: #f8f9fa;
+      z-index: 11;
+    }
+  
+    .attendance-table thead tr:nth-last-child(2) th:last-child,
+    .attendance-table td:last-child {
+      vertical-align: middle;
+      position: sticky;
+      right: 0;
+      background-color: #f8f9fa;
+      z-index: 11;
+    }
+
+    .attendance-table thead tr:nth-last-child(2) th:nth-last-child(2),
+    .attendance-table td:nth-last-child(2) {
+      vertical-align: middle;
+      position: sticky;
+      right: 93px;
+      background-color: #f8f9fa;
+      z-index: 11;
+    }
+
+    .remaining-days {
+      font-weight: bold;
+      color: #d9534f;
+      text-align: center;
+    }
+    
+    .sunday {
+      color: red !important;
+      background-color: #E7E9EC !important;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
-   <!-- 헤더 컨테이너 -->
-   <div class="header-container">
-    <!-- 브랜드 헤더 -->
+  <!-- 헤더 -->
+  <div class="header-container">
     <div class="brand-header">
-      <!--<span class="menu-icon" onclick="toggleSidebar()">☰</span> 메뉴버튼-->
       <a href="홈페이지.html">
-        <img src="image/로고_white.png" width="200" height="30"> 
+        <img src="image/로고_white.png" alt="로고">
       </a>
     </div>
-    <!-- 네비게이션 헤더 -->
-    <div class="nav-header"> 
-        <h1>출석부</h1>
-    </div>
-</div>
-<div class = "container">
-  <div class="sidebar" id="sidebar">
+    <div class="nav-header">출석 체크 시스템</div>
+  </div>
+<div class= "all-container">
+  <!-- 사이드바 -->
+  <div class="sidebar">
     <ul>
       <li>
         <a href="홈페이지.html">
@@ -361,95 +217,109 @@
       </li>
       <li class="active">
         <a href="출석부.html">
-          <img src="image/출석체크.png" width="30" height="30">  출석부
+          <img src="image/출석체크.png" width="30" height="30"> 출석부
         </a>
       </li>
       <li>
         <a href="회원관리.html">
-          <img src="image/회원관리.png" width="30" height="30">  회원 관리
+          <img src="image/회원관리.png" width="30" height="30"> 회원 관리
         </a>
       </li>
       <li>
         <a href="수업관리.html">
-          <img src="image/스케쥴.png" width="30" height="30">  수업 관리
+          <img src="image/스케쥴.png" width="30" height="30"> 수업 관리
         </a>
       </li>
       <li>
         <a href="선생님관리.html">
-          <img src="image/선생님.png" width="30" height="30">  선생님
+          <img src="image/선생님.png" width="30" height="30"> 선생님 관리
         </a>
       </li>
       <li>
         <a href="매출_통계페이지.html">
-          <img src="image/매출.png" width="30" height="30">  매출
+          <img src="image/매출.png" width="30" height="30"> 매출 통계
         </a>
       </li>
       <li>
         <a href="설정.html">
-          <img src="image/설정.png" width="30" height="30">  설정
+          <img src="image/설정.png" width="30" height="30"> 설정
         </a>
       </li>
     </ul>
   </div>
-  <div class="attendance-container">
-    <!-- 수업 목록 영역 --> 
-    <!-- 출석부 영역 -->
-  
-        <h1 style="text-align: center;">회원 출석 체크</h1>
 
-        <div class="dropdown-container">
-          <div class="program-list">
-              <label for="program-dropdown">수업 목록:</label>
-              <select id="program-dropdown" class="program-dropdown">
-                  <!-- 수업 목록이 동적으로 추가됨 -->
-              </select>
-          </div>
-          <div class = "dayselect">
-          <div class="selector year-selector">
-              <label for="year">년 선택:</label>
-              <select id="year">
-                  <option value="2024">2024년</option>
-                  <option value="2025">2025년</option>
-                  <option value="2026">2026년</option>
-                  <option value="2027">2027년</option>
-                  <option value="2028">2028년</option>
-              </select>
-          </div>
-  
-          <div class="selector month-selector">
-              <label for="month">달 선택:</label>
-              <select id="month">
-                  <option value="0">1월</option>
-                  <option value="1">2월</option>
-                  <option value="2">3월</option>
-                  <option value="3">4월</option>
-                  <option value="4">5월</option>
-                  <option value="5">6월</option>
-                  <option value="6">7월</option>
-                  <option value="7">8월</option>
-                  <option value="8">9월</option>
-                  <option value="9">10월</option>
-                  <option value="10">11월</option>
-                  <option value="11">12월</option>
-              </select>
-          </div>
+  <!-- 컨텐츠 영역 -->
+  <div class="container">
+    <div class="attendance-container" data-aos="fade-up">
+      <h1 class="text-center fw-bold">회원 출석 체크</h1>
+
+      <!-- 드롭다운 영역 -->
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <label for="program-dropdown">수업 목록:</label>
+          <select id="program-dropdown" class="form-select">
+            <!-- 동적으로 추가되는 수업 목록 -->
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="year">년 선택:</label>
+          <select id="year" class="form-select">
+            <option value="2024">2024년</option>
+            <option value="2025">2025년</option>
+            <option value="2026">2026년</option>
+            <option value="2027">2027년</option>
+            <option value="2028">2028년</option>
+            <option value="2029">2029년</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="month">달 선택:</label>
+          <select id="month" class="form-select">
+            <option value="0">1월</option>
+            <option value="1">2월</option>
+            <option value="2">3월</option>
+            <option value="3">4월</option>
+            <option value="4">5월</option>
+            <option value="5">6월</option>
+            <option value="6">7월</option>
+            <option value="7">8월</option>
+            <option value="8">9월</option>
+            <option value="9">10월</option>
+            <option value="10">11월</option>
+            <option value="11">12월</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 테이블 영역 -->
+      <div class="table-container mt-4">
+        <table class="table table-hover attendance-table">
+          <thead>
+            <tr>
+              <th>회원 이름</th>
+              <th>출석일수</th>
+              <th>남은횟수</th>
+              <th>출석 여부</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 동적으로 추가되는 행 -->
+          </tbody>
+        </table>
       </div>
     </div>
-    <div class="table-container">
-        <table class="attendance-table" id="attendance-table">
-            <thead>
-                <tr>
-                    <th>회원 이름</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- 출석 데이터가 동적으로 생성됨 -->
-            </tbody>
-        </table>
-    </div>
-    </div>
+  </div>
+</div>
 
-<script src="api.js"></script>
-<script src="attendance.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- AOS JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    AOS.init();
+  </script>
+  <!-- Custom JS -->
+  <script src="api.js"></script>
+  <script src="attendance.js"></script>
 </body>
 </html>
