@@ -247,8 +247,8 @@ function createClassElement(data) {
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);
 
-    const startPositionMinutes = (startHour - 10) * 110 + startMinute + 80;
-    const durationMinutes = (endHour - startHour) * 108 + (endMinute - startMinute);
+    const startPositionMinutes = (startHour - 10) * 110 + startMinute*108/60 + 80;
+    const durationMinutes = (endHour - startHour) * 108 + (endMinute - startMinute)*108/60;
 
     const formattedStartTime = `${startTime.split(':')[0]}:${startTime.split(':')[1]}`;
     const formattedEndTime = `${endTime.split(':')[0]}:${endTime.split(':')[1]}`;
