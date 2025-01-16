@@ -332,6 +332,16 @@ async function showMemberInfo(member) {
     ageInput.value = member.age || '';
     genderInput.value = member.gender || '';
     addressInput.value = member.address || '';
+
+    const modalHeader = document.querySelector('.member-info-modal .modal-header');
+    const hideButton = document.createElement('button');
+    hideButton.className = 'hide-member-btn';
+    hideButton.textContent = member.hidden ? '회원 보이기' : '회원 숨김';
+    hideButton.onclick = () => toggleMemberVisibility(member.id, !member.hidden);
+    modalHeader.appendChild(hideButton);
+    
+    document.querySelector('.modal-overlay').style.display = 'block';
+    document.querySelector('.member-info-modal').style.display = 'block';
     
     try {
         const paymentLogs = await API.getMemberPaymentLogs(member.id);
