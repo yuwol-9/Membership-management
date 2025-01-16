@@ -825,7 +825,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             await connection.execute(
                 'INSERT INTO payment_logs (enrollment_id, program_name, duration_months, total_classes, amount, is_extension) VALUES (?, ?, ?, ?, ?, ?)',
                 [
-                    newEnrollment.insertId,
+                    enrollmentId,
                     program.name,
                     duration_months || null,
                     total_classes || null,
