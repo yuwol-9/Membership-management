@@ -46,13 +46,12 @@
     }
     /* 사이드바 */
     .sidebar {
-      top: 116px; /* 헤더 높이만큼 아래로 */
-      height: 100vh;
+      height: 120vh;
       width: 250px;
       background-color: #222;
       color: white;
       padding: 20px 0;
-      height : 100vh;
+      position:relative;
     }
     
     .sidebar ul {
@@ -420,6 +419,61 @@
           color: white;
         }
 
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .pagination-button {
+        background: none;
+        border: 1px solid #ddd;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        color: #888;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .pagination-button:disabled {
+        cursor: not-allowed;
+        color: #ccc;
+        border-color: #f0f0f0;
+    }
+
+    .page-numbers {
+        display: flex;
+        gap: 8px;
+    }
+
+    .page-numbers span {
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        color: #555;
+        transition: all 0.3s ease;
+    }
+
+    .page-numbers span.active {
+        font-weight: bold;
+        color: #28a745; /* 활성화된 페이지 색상 */
+    }
+
+    .page-numbers span:hover:not(.active) {
+        background-color: #f0f0f0;
+    }
+
+
+
+
 
     @keyframes fadeIn {
       from {
@@ -679,6 +733,12 @@
       <button class="btn-warning">남은 횟수</button>
       <button class="btn-danger">결제 상태</button>
     </div>
+    <div class="pagination-container">
+      <button id="prev-page" class="pagination-button" disabled>❮</button>
+      <span id="current-page">1 / 1</span> 
+      <button id="next-page" class="pagination-button">❯</button>
+  </div>
+  
   </div>
 </div>
 <!-- Bootstrap JS -->
