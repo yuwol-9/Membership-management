@@ -324,22 +324,26 @@ function showMemberInfo(member) {
     const genderInput = document.getElementById('modal-gender');
     const addressInput = document.getElementById('modal-address');
     
+    const existingHideButton = document.querySelector('.hide-member-btn');
+    if (existingHideButton) {
+        existingHideButton.remove();
+    }
+    
+    const modalHeader = document.querySelector('.modal-header');
+    if (modalHeader) {
+        const hideButton = document.createElement('button');
+        hideButton.className = 'hide-member-btn';
+        hideButton.textContent = member.hidden ? '회원 보이기' : '회원 숨김';
+        hideButton.onclick = () => toggleMemberVisibility(member.id, !member.hidden);
+        modalHeader.appendChild(hideButton);
+    }
+    
     nameInput.value = member.name || '';
     phoneInput.value = member.phone || '';
     birthdateInput.value = member.birthdate ? member.birthdate.split('T')[0] : '';
     ageInput.value = member.age || '';
     genderInput.value = member.gender || '';
     addressInput.value = member.address || '';
-    
-    document.querySelector('.modal-overlay').style.display = 'block';
-    document.querySelector('.member-info-modal').style.display = 'block';
-
-    const modalHeader = document.querySelector('.member-info-modal .modal-header');
-    const hideButton = document.createElement('button');
-    hideButton.className = 'hide-member-btn';
-    hideButton.textContent = member.hidden ? '회원 보이기' : '회원 숨김';
-    hideButton.onclick = () => toggleMemberVisibility(member.id, !member.hidden);
-    modalHeader.appendChild(hideButton);
     
     document.querySelector('.modal-overlay').style.display = 'block';
     document.querySelector('.member-info-modal').style.display = 'block';

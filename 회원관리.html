@@ -204,6 +204,12 @@
         border-radius: 5px;
         border: 1px solid #ddd;
     }
+    .modal-header {
+        position: relative;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
 
     table {
       width: 100%;
@@ -679,7 +685,9 @@
 
     <div class="modal-overlay"></div>
     <div class="member-info-modal">
-      <h2>회원 기본 정보</h2>
+      <div class="modal-header">
+        <h2>회원 기본 정보</h2>
+      </div>
       <div class="member-info-field">
           <label>이름</label>
           <input type="text" id="modal-name">
