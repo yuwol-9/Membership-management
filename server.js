@@ -361,16 +361,10 @@ app.post('/api/members', authenticateToken, async (req, res) => {
 
 app.get('/api/members', authenticateToken, async (req, res) => {
     try {
+        const includeHidden = req.query.includeHidden === 'true';
         const [rows] = await pool.execute(`
             SELECT 
-                m.id,
-                m.name,
-                m.gender,
-                m.age,
-                m.birthdate,
-                m.address,
-                m.phone,
-                m.created_at,
+                m.*,
                 JSON_ARRAYAGG(
                     JSON_OBJECT(
                         'id', e.id,
@@ -381,15 +375,14 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                         'payment_status', e.payment_status,
                         'start_date', e.start_date,
                         'total_amount', e.total_amount,
-                        'original_amount', e.original_amount,
-                        'monthly_price', p.monthly_price,
-                        'per_class_price', p.per_class_price
+                        'original_amount', e.original_amount
                     )
                 ) as programs
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id
-            GROUP BY m.id, m.created_at
+            WHERE ${includeHidden ? '1=1' : 'm.hidden = FALSE'}
+            GROUP BY m.id
             ORDER BY m.created_at DESC
         `);
         
@@ -552,6 +545,36 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
         res.status(400).json({ 
             success: false,
             message: err.message || '회원 정보 수정 중 오류가 발생했습니다.'
+        });
+    } finally {
+        connection.release();
+    }
+});
+
+app.put('/api/members/:id/visibility', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        
+        const { id } = req.params;
+        const { hidden } = req.body;
+        
+        await connection.execute(
+            'UPDATE members SET hidden = ? WHERE id = ?',
+            [hidden, id]
+        );
+        
+        await connection.commit();
+        res.json({
+            success: true,
+            message: hidden ? '회원이 숨김 처리되었습니다.' : '회원이 다시 표시됩니다.'
+        });
+    } catch (err) {
+        await connection.rollback();
+        console.error('회원 숨김 처리 중 오류:', err);
+        res.status(500).json({
+            success: false,
+            message: '회원 숨김 처리 중 오류가 발생했습니다.'
         });
     } finally {
         connection.release();

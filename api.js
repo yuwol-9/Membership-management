@@ -131,12 +131,19 @@ const API = {
     // Member APIs
     getMembers: async () => {
         try {
-            const response = await API.apiCall('/members');
+            const response = await API.apiCall('/members?includeHidden=false');
             return response;
         } catch (error) {
             console.error('회원 목록 조회 실패:', error);
             throw error;
         }
+    },
+
+    updateMemberVisibility: async (memberId, hidden) => {
+        return API.apiCall(`/members/${memberId}/visibility`, {
+            method: 'PUT',
+            body: JSON.stringify({ hidden })
+        });
     },
 
     createMember: async (memberData) => {

@@ -333,6 +333,16 @@ function showMemberInfo(member) {
     
     document.querySelector('.modal-overlay').style.display = 'block';
     document.querySelector('.member-info-modal').style.display = 'block';
+
+    const modalHeader = document.querySelector('.member-info-modal .modal-header');
+    const hideButton = document.createElement('button');
+    hideButton.className = 'hide-member-btn';
+    hideButton.textContent = member.hidden ? '회원 보이기' : '회원 숨김';
+    hideButton.onclick = () => toggleMemberVisibility(member.id, !member.hidden);
+    modalHeader.appendChild(hideButton);
+    
+    document.querySelector('.modal-overlay').style.display = 'block';
+    document.querySelector('.member-info-modal').style.display = 'block';
 }
 
 async function handleModalEdit() {
@@ -414,6 +424,18 @@ function closeModal() {
     document.querySelector('.modal-overlay').style.display = 'none';
     document.querySelector('.member-info-modal').style.display = 'none';
     currentMemberId = null;
+}
+
+async function toggleMemberVisibility(memberId, hidden) {
+    try {
+        await API.updateMemberVisibility(memberId, hidden);
+        alert(hidden ? '회원이 숨김 처리되었습니다.' : '회원이 다시 표시됩니다.');
+        closeModal();
+        await loadMembers();
+    } catch (error) {
+        console.error('회원 숨김 처리 실패:', error);
+        alert('회원 숨김 처리에 실패했습니다.');
+    }
 }
 
 document.getElementById('modal-birthdate').addEventListener('change', function() {

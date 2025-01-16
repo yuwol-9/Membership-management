@@ -85,3 +85,6 @@ CREATE TABLE IF NOT EXISTS attendance (
 
 ALTER TABLE enrollments 
 ADD COLUMN original_amount INT NOT NULL DEFAULT 0 AFTER total_amount;
+
+ALTER TABLE members
+ADD COLUMN hidden BOOLEAN DEFAULT FALSE;
