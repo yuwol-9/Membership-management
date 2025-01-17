@@ -23,19 +23,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+let showingHiddenMembers = false;
 // 회원 데이터 가져오기
-async function loadMembers() {
+async function loadMembers(showHidden = false) {
     try {
-        console.log('loadMembers 함수 실행');
-        const members = await API.getMembers();
+        console.log('loadMembers 함수 실행, showHidden:', showHidden);
+        const members = await API.getMembers(showHidden);
         updateTable(members);
-        // 카드 UI 업데이트
         updateCards(members);
     } catch (error) {
         console.error('회원 목록 조회 실패:', error);
         throw error;
     }
 }
+
 function updateTable(members) {
     const tbody = document.querySelector('tbody');
     tbody.innerHTML = '';
@@ -314,7 +315,7 @@ function appendProgramDetails(row, program) {
 }
 
 let currentMemberId = null;
-function showMemberInfo(member) {
+async function showMemberInfo(member) {
     currentMemberId = member.id;
     
     const nameInput = document.getElementById('modal-name');
@@ -323,7 +324,26 @@ function showMemberInfo(member) {
     const ageInput = document.getElementById('modal-age');
     const genderInput = document.getElementById('modal-gender');
     const addressInput = document.getElementById('modal-address');
+    const paymentLogContainer = document.getElementById('modal-payment-logs');
+
+    nameInput.value = '';
+    phoneInput.value = '';
+    birthdateInput.value = '';
+    ageInput.value = '';
+    genderInput.value = '';
+    addressInput.value = '';
+    paymentLogContainer.innerHTML = '<div class="loading">로딩 중...</div>'
     
+    const modalHeader = document.querySelector('.member-info-modal .modal-header');
+    const hideButton = document.createElement('button');
+    hideButton.className = 'hide-member-btn';
+    hideButton.textContent = member.hidden ? '회원 보이기' : '회원 숨김';
+    hideButton.onclick = () => toggleMemberVisibility(member.id, !member.hidden);
+    modalHeader.appendChild(hideButton);
+
+    document.querySelector('.modal-overlay').style.display = 'block';
+    document.querySelector('.member-info-modal').style.display = 'block';
+
     nameInput.value = member.name || '';
     phoneInput.value = member.phone || '';
     birthdateInput.value = member.birthdate ? member.birthdate.split('T')[0] : '';
@@ -331,8 +351,38 @@ function showMemberInfo(member) {
     genderInput.value = member.gender || '';
     addressInput.value = member.address || '';
     
-    document.querySelector('.modal-overlay').style.display = 'block';
-    document.querySelector('.member-info-modal').style.display = 'block';
+    try {
+        const paymentLogs = await API.getMemberPaymentLogs(member.id);
+        
+        // 결제 로그 컨테이너 스타일 설정
+        paymentLogContainer.style.maxHeight = '150px';
+        paymentLogContainer.style.overflowY = 'auto';
+        paymentLogContainer.style.marginTop = '10px';
+        paymentLogContainer.style.borderTop = '1px solid #ccc';
+        paymentLogContainer.style.padding = '10px 0';
+        
+         paymentLogContainer.innerHTML = `
+            <h4 style="margin: 0 0 10px 0;">결제 로그</h4>
+            ${paymentLogs.length > 0 ? paymentLogs.map(log => `
+                <div style="margin-bottom: 8px; font-size: 14px;">
+                    <div style="color: #666;">
+                        ${new Date(log.payment_date).toLocaleDateString('ko-KR')} 
+                        ${log.is_extension ? '[연장]' : ''}
+                    </div>
+                    <div>
+                        ${log.program_name} 
+                        ${log.duration_months ? `${log.duration_months}개월` : `${log.total_classes}회`}
+                        ${new Intl.NumberFormat('ko-KR').format(log.amount)}원
+                    </div>
+                </div>
+            `).join('') : '<div style="color: #666;">결제 내역이 없습니다.</div>'}
+        `;
+    } catch (error) {
+        console.error('결제 로그 로드 실패:', error);
+        if (currentMemberId === member.id) {
+            paymentLogContainer.innerHTML = '<p style="color: red;">결제 로그를 불러오는데 실패했습니다.</p>';
+        }
+    }
 }
 
 async function handleModalEdit() {
@@ -402,7 +452,7 @@ async function handleModalDelete() {
             await API.deleteMember(selectedEnrollmentId);
             alert('회원이 성공적으로 삭제되었습니다.');
             closeModal();
-            await loadMembers();
+            await loadMembers(showingHiddenMembers);
         } catch (error) {
             console.error('회원 삭제 실패:', error);
             alert(error.message || '회원 삭제에 실패했습니다.');
@@ -414,6 +464,18 @@ function closeModal() {
     document.querySelector('.modal-overlay').style.display = 'none';
     document.querySelector('.member-info-modal').style.display = 'none';
     currentMemberId = null;
+}
+
+async function toggleMemberVisibility(memberId, hidden) {
+    try {
+        await API.updateMemberVisibility(memberId, hidden);
+        alert(hidden ? '회원이 숨김 처리되었습니다.' : '회원이 다시 표시됩니다.');
+        closeModal();
+        await loadMembers();
+    } catch (error) {
+        console.error('회원 숨김 처리 실패:', error);
+        alert('회원 숨김 처리에 실패했습니다.');
+    }
 }
 
 document.getElementById('modal-birthdate').addEventListener('change', function() {
@@ -529,6 +591,14 @@ function setupEventListeners() {
     setupSortButtons();
     setupMemberRegistrationButton();
     setupMemberEditButton();
+    const toggleButton = document.getElementById('toggle-hidden-members');
+    if (toggleButton) {
+        toggleButton.addEventListener('click', async () => {
+            showingHiddenMembers = !showingHiddenMembers;
+            toggleButton.textContent = showingHiddenMembers ? '일반 회원 목록 보기' : '숨긴 회원 목록 보기';
+            await loadMembers(showingHiddenMembers);
+        });
+    }
 }
 
 function setupSearchFunction() {

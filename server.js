@@ -344,6 +344,23 @@ app.post('/api/members', authenticateToken, async (req, res) => {
             ]
         );
 
+        const [programName] = await connection.execute(
+            'SELECT name FROM programs WHERE id = ?',
+            [program_id]
+        );
+        
+        await connection.execute(
+            'INSERT INTO payment_logs (enrollment_id, program_name, duration_months, total_classes, amount, is_extension) VALUES (?, ?, ?, ?, ?, ?)',
+            [
+                enrollmentResult.insertId,
+                programName[0].name,
+                duration_months || null,
+                total_classes || null,
+                totalAmount,
+                false
+            ]
+        );
+
         await connection.commit();
         res.status(201).json({
             message: '회원이 성공적으로 등록되었습니다.',
@@ -361,16 +378,10 @@ app.post('/api/members', authenticateToken, async (req, res) => {
 
 app.get('/api/members', authenticateToken, async (req, res) => {
     try {
+        const includeHidden = req.query.includeHidden === 'true';
         const [rows] = await pool.execute(`
             SELECT 
-                m.id,
-                m.name,
-                m.gender,
-                m.age,
-                m.birthdate,
-                m.address,
-                m.phone,
-                m.created_at,
+                m.*,
                 JSON_ARRAYAGG(
                     JSON_OBJECT(
                         'id', e.id,
@@ -381,14 +392,13 @@ app.get('/api/members', authenticateToken, async (req, res) => {
                         'payment_status', e.payment_status,
                         'start_date', e.start_date,
                         'total_amount', e.total_amount,
-                        'original_amount', e.original_amount,
-                        'monthly_price', p.monthly_price,
-                        'per_class_price', p.per_class_price
+                        'original_amount', e.original_amount
                     )
                 ) as programs
             FROM members m
             LEFT JOIN enrollments e ON m.id = e.member_id
             LEFT JOIN programs p ON e.program_id = p.id
+            WHERE ${includeHidden ? 'm.hidden = TRUE' : 'm.hidden = FALSE OR m.hidden IS NULL'}
             GROUP BY m.id, m.created_at
             ORDER BY m.created_at DESC
         `);
@@ -558,6 +568,60 @@ app.put('/api/members/:id', authenticateToken, async (req, res) => {
     }
 });
 
+app.put('/api/members/:id/visibility', authenticateToken, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        
+        const { id } = req.params;
+        const { hidden } = req.body;
+        
+        await connection.execute(
+            'UPDATE members SET hidden = ? WHERE id = ?',
+            [hidden, id]
+        );
+        
+        await connection.commit();
+        res.json({
+            success: true,
+            message: hidden ? '회원이 숨김 처리되었습니다.' : '회원이 다시 표시됩니다.'
+        });
+    } catch (err) {
+        await connection.rollback();
+        console.error('회원 숨김 처리 중 오류:', err);
+        res.status(500).json({
+            success: false,
+            message: '회원 숨김 처리 중 오류가 발생했습니다.'
+        });
+    } finally {
+        connection.release();
+    }
+});
+
+app.get('/api/members/:id/payment-logs', authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT 
+                pl.id,
+                pl.payment_date,
+                pl.program_name,
+                pl.duration_months,
+                pl.total_classes,
+                pl.amount,
+                pl.is_extension
+            FROM payment_logs pl
+            JOIN enrollments e ON pl.enrollment_id = e.id
+            WHERE e.member_id = ?
+            ORDER BY pl.payment_date DESC
+        `, [req.params.id]);
+
+        res.json(rows);
+    } catch (err) {
+        console.error('결제 로그 조회 에러:', err);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 app.delete('/api/members/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -676,8 +740,6 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             is_extension
         } = req.body;
 
-        console.log('Logic path:', is_extension ? '연장 로직' : '신규 추가 로직');  // 어떤 로직이 실행되는지 확인
-
         if (!is_extension) {
             const [existingEnrollment] = await connection.execute(
                 'SELECT id FROM enrollments WHERE member_id = ? AND program_id = ?',
@@ -694,7 +756,7 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
         }
 
         const [programs] = await connection.execute(
-            'SELECT monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
+            'SELECT name, monthly_price, per_class_price, classes_per_week FROM programs WHERE id = ?',
             [program_id]
         );
 
@@ -716,23 +778,10 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
             newAmount = total_classes * program.per_class_price;
         }
 
-        console.log('Calculated amount:', newAmount);  // 계산된 금액 확인
-        console.log('Current state:', {
-            currentRemainingDays,
-            currentTotalAmount,
-            newAmount,
-            newTotalClasses
-        });
 
         if (is_extension) {
-            console.log('Executing extension update...');  // 연장 업데이트 실행 확인
             const finalTotalAmount = currentTotalAmount + newAmount;
             const finalRemainingDays = currentRemainingDays + newTotalClasses;
-            
-            console.log('Extension values:', {
-                finalRemainingDays,
-                finalTotalAmount
-            });
 
             await connection.execute(
                 `UPDATE enrollments 
@@ -745,8 +794,19 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
                     enrollmentId
                 ]
             );
+
+            await connection.execute(
+                'INSERT INTO payment_logs (enrollment_id, program_name, duration_months, total_classes, amount, is_extension) VALUES (?, ?, ?, ?, ?, ?)',
+                [
+                    enrollmentId,
+                    program.name,
+                    duration_months || null,
+                    total_classes || null,
+                    newAmount,
+                    true
+                ]
+            );
         } else {
-            console.log('Executing new enrollment insert...');  // 신규 등록 실행 확인
             await connection.execute(
                 'INSERT INTO enrollments (member_id, program_id, duration_months, total_classes, remaining_days, payment_status, start_date, total_amount, original_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
@@ -759,6 +819,18 @@ app.post('/api/members/enrollment/:id/programs', authenticateToken, async (req, 
                     start_date,
                     newAmount,
                     newAmount
+                ]
+            );
+
+            await connection.execute(
+                'INSERT INTO payment_logs (enrollment_id, program_name, duration_months, total_classes, amount, is_extension) VALUES (?, ?, ?, ?, ?, ?)',
+                [
+                    enrollmentId,
+                    program.name,
+                    duration_months || null,
+                    total_classes || null,
+                    newAmount,
+                    false
                 ]
             );
         }
@@ -1152,11 +1224,11 @@ app.get('/api/attendance', authenticateToken, async (req, res) => {
             JOIN programs p ON e.program_id = p.id
             LEFT JOIN attendance a ON e.id = a.enrollment_id
             WHERE (? IS NULL OR p.id = ?)
+            AND m.hidden = FALSE
             GROUP BY m.name, e.id, e.remaining_days, p.name, p.id
             ORDER BY m.name
         `, [program_id, program_id]);
 
-        // 출석 날짜 데이터 처리
         const processedData = rows.map(row => ({
             ...row,
             attendance_dates: row.attendance_dates ? row.attendance_dates.split(',') : [],

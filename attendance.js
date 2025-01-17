@@ -117,7 +117,8 @@ async function loadAttendanceData() {
         const attendanceData = await API.getAttendanceList({
             program_id: selectedProgramId,
             month: parseInt(month) + 1,
-            year: year
+            year: year,
+            includeHidden: false
         });
         
         updateAttendanceTable(attendanceData);
