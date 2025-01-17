@@ -108,19 +108,6 @@
       margin-top:50px;
     }
 
-    /* 드롭다운 디자인 */
-    .program-list label {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    .program-dropdown {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-
     /* 테이블 디자인 */
     .table-container {
       margin-top: 20px;
@@ -190,6 +177,13 @@
       background-color: #E7E9EC !important;
     }
 
+    .menu-icon {
+        display: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: white;
+    }
+
     .pagination {
         display: flex;
         justify-content: center;
@@ -240,6 +234,94 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    @media (max-width: 500px) { /*깃 수정사항*/
+      .menu-icon {
+        display: block;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: -100%;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        padding: 50px 20px;
+        overflow-y: auto;
+        z-index: 1000;
+        transition: top 0.3s ease;
+      }
+
+      .sidebar.active {
+        top: 52px;
+      }
+
+      .header-container {
+        justify-content: space-between;
+      }
+      .brand-header {
+        align-items: flex-start;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .brand-header img {
+        margin-top:10px;
+        width: 100px;
+        height: 20px;
+      }
+      .nav-header {
+      display: none;
+    }
+
+      .container {
+        margin-left: 0px;
+        padding: 20px;
+      }
+
+      .attendance-table td,
+      .attendance-table th {
+        padding: 8px; /* 좁은 화면에서 패딩을 줄임 */
+        font-size: 12px; /* 글자 크기 줄이기 */
+      }
+      /* 오른쪽 두 번째 고정 열의 위치도 적절히 조정 */
+      .attendance-table thead tr:nth-last-child(2) th:nth-last-child(2),
+      .attendance-table td:nth-last-child(2) {
+        right: 40px; 
+      }
+
+      /* 스크롤 처리 */
+      .attendance-table {
+        overflow-x: auto; /* 가로 스크롤을 활성화 */
+        display: block;
+        white-space: nowrap;
+      }
+
+      /* 전체 테이블의 크기 조정 */
+      .attendance-table thead th,
+      .attendance-table td {
+        min-width: 40px; /* 최소 크기 설정 */
+      }
+      .attendance-container {
+        margin-top:5vh;
+      }
+      .container h1 {
+        font-size: 18px !important;
+        text-align: left !important;
+      }
+      .form-select {
+        font-size: 0.875rem;  /* 모바일에서 폰트 크기 줄이기 */
+      }
+
+      .form-select-sm {
+        font-size: 0.75rem;  /* 모바일에서 더욱 작은 폰트 크기 적용 */
+      }
+      label {
+        font-size: 0.875rem; /* 모바일에서 폰트 크기 줄이기 */
+      }
+    
+    }
   </style>
 </head>
 <body>
@@ -249,12 +331,13 @@
       <a href="홈페이지.html">
         <img src="image/로고_white.png" alt="로고">
       </a>
+      <span class="menu-icon" onclick="toggleSidebar()">☰</span>
     </div>
     <div class="nav-header">출석 체크 시스템</div>
   </div>
 <div class= "all-container">
   <!-- 사이드바 -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <ul>
       <li>
         <a href="홈페이지.html">

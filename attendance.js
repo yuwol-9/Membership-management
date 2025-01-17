@@ -299,7 +299,7 @@ function updateTableHeader(daysInMonth) {
     // 첫 번째 열: "회원 이름"
     const nameHeader = document.createElement('th');
     nameHeader.rowSpan = 2; // 두 행을 병합
-    nameHeader.textContent = '회원 이름';
+    nameHeader.textContent = screenWidth < 500 ? '회원' : '회원 이름';  
     dateRow.appendChild(nameHeader);
 
     // 날짜와 요일 열 추가
@@ -327,12 +327,12 @@ function updateTableHeader(daysInMonth) {
     // 마지막 열: "출석 횟수"와 "남은 일수"
     const attendanceHeader = document.createElement('th');
     attendanceHeader.rowSpan = 2;
-    attendanceHeader.textContent = '출석 횟수';
+    attendanceHeader.textContent = screenWidth < 500 ? '출석' : '출석 횟수';
     dateRow.appendChild(attendanceHeader);
 
     const remainingHeader = document.createElement('th');
     remainingHeader.rowSpan = 2;
-    remainingHeader.textContent = '남은 일수';
+    remainingHeader.textContent = screenWidth < 500 ? '잔여' : '남은 횟수';
     dateRow.appendChild(remainingHeader);
 
     // 테이블 헤더에 행 추가
