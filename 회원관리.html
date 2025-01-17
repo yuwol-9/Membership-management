@@ -440,57 +440,52 @@
           color: white;
         }
 
-    .pagination-container {
+    .pagination {
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 10px;
-        margin-top: 20px;
+        gap: 5px;
+        margin: 20px 0;
     }
 
-    .pagination-button {
-        background: none;
-        border: 1px solid #ddd;
+    .page-btn {
+        padding: 8px 8px;
+        border: 1px solid white;
+        background: white;
+        cursor: pointer;
         border-radius: 50%;
-        width: 30px;
-        height: 30px;
+        width: 35px;
+        height: 35px;
         display: flex;
         justify-content: center;
         align-items: center;
-        cursor: pointer;
-        color: #888;
-        font-size: 16px;
-        transition: all 0.3s ease;
     }
 
-    .pagination-button:disabled {
-        cursor: not-allowed;
-        color: #ccc;
-        border-color: #f0f0f0;
+    .page-btn:hover:not([disabled]) {
+        background: #f0f0f0;
     }
 
-    .page-numbers {
-        display: flex;
-        gap: 8px;
-    }
-
-    .page-numbers span {
-        cursor: pointer;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 14px;
-        color: #555;
-        transition: all 0.3s ease;
-    }
-
-    .page-numbers span.active {
+    .page-btn.active {
+        background: #cfcfcf;
         font-weight: bold;
-        color: #28a745; /* 활성화된 페이지 색상 */
     }
 
-    .page-numbers span:hover:not(.active) {
-        background-color: #f0f0f0;
+    .pagemove-btn{
+      padding: 8px 8px;
+        border: 1px solid white;
+        background: white;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
+    .pagemove-btn:hover {
+        background: #f0f0f0;
+    }
+
     .header-buttons {
         position: absolute;
         top: -10px;
@@ -782,11 +777,7 @@
       <button class="btn-warning">남은 횟수</button>
       <button class="btn-danger">결제 상태</button>
     </div>
-    <div class="pagination-container">
-      <button id="prev-page" class="pagination-button" disabled>❮</button>
-      <span id="current-page">1 / 1</span> 
-      <button id="next-page" class="pagination-button">❯</button>
-  </div>
+    <div class="pagination"></div>
   
   </div>
 </div>

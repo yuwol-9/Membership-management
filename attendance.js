@@ -112,21 +112,31 @@ async function loadAttendanceData() {
     try {
         const month = document.getElementById('month').value;
         const year = document.getElementById('year').value;
-        
-        // 프로그램 ID를 포함하여 데이터 요청
+     
         const attendanceData = await API.getAttendanceList({
             program_id: selectedProgramId,
             month: parseInt(month) + 1,
             year: year,
             includeHidden: false
         });
-        
+
+        console.log('출석 데이터:', attendanceData);  // 데이터 확인용 로그
+
+        if (!attendanceData || attendanceData.length === 0) {
+            alert('출석 데이터가 없습니다.');
+            return;
+        }
+
+        // 데이터 길이를 기준으로 페이지네이션 업데이트
+        updatePagination(attendanceData.length);
+
         updateAttendanceTable(attendanceData);
     } catch (error) {
         console.error('출석 데이터 로드 실패:', error);
         alert('출석 데이터를 불러오는데 실패했습니다.');
     }
 }
+
 
 function updateAttendanceTable(data) {
     const tableBody = document.querySelector('.attendance-table tbody');
@@ -135,9 +145,14 @@ function updateAttendanceTable(data) {
     const daysInMonth = new Date(year, parseInt(month) + 1, 0).getDate();
 
     updateTableHeader(daysInMonth);
-    const memberAttendance = groupAttendanceByMember(data);
-    tableBody.innerHTML = '';
 
+    const paginatedData = paginateAttendance(data);  // 페이지당 데이터 잘라서 표시
+
+    const memberAttendance = groupAttendanceByMember(paginatedData);  // 그룹화된 데이터를 사용
+    
+    tableBody.innerHTML = '';  // 테이블 내용 초기화
+
+    // 회원별 출석 데이터를 테이블에 추가
     Object.entries(memberAttendance).forEach(([memberName, attendance]) => {
         const tr = document.createElement('tr');
         const checkboxes = []; // 회원별 체크박스 배열 추가
@@ -247,6 +262,8 @@ function updateAttendanceTable(data) {
 
         tableBody.appendChild(tr);
     });
+
+    updatePagination(data.length);  // 페이지네이션 업데이트
 }
 
 function groupAttendanceByMember(data) {
@@ -321,4 +338,85 @@ function updateTableHeader(daysInMonth) {
     // 테이블 헤더에 행 추가
     thead.appendChild(dateRow);
     thead.appendChild(dayRow);
+}
+
+
+
+let currentPage = 1;
+let totalPages = 1;
+const PAGE_GROUP_SIZE = 5;
+const table = document.querySelector('.attendance-container'); // 테이블 요소
+const screenWidth = table.offsetWidth;  // 테이블의 실제 보이는 너비
+let itemsPerPage = screenWidth < 500 ? 7 : 10;  // 화면이 500px보다 작으면 7개, 그렇지 않으면 10개
+
+// 화면 크기가 변경될 때마다 itemsPerPage를 갱신
+window.addEventListener('resize', () => {
+    itemsPerPage = window.innerWidth < 500 ? 7 : 10;
+    updatePagination(totalItems);  // 페이지네이션 갱신
+    loadMembers();  // 새로 고침하여 데이터 로드
+})
+
+// 출석부 페이지네이션 관련 함수
+function paginateAttendance(attendanceData) {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return attendanceData.slice(start, end);
+}
+
+function updatePagination(totalItems) {
+    totalPages = Math.ceil(totalItems / itemsPerPage);  // 페이지 개수 계산
+    const paginationContainer = document.querySelector('.pagination');
+    if (!paginationContainer) return;
+
+    const currentGroup = Math.ceil(currentPage / PAGE_GROUP_SIZE);
+    const startPage = Math.max(1, (currentGroup - 1) * PAGE_GROUP_SIZE + 1);
+    const endPage = Math.min(totalPages, startPage + PAGE_GROUP_SIZE - 1);
+
+    let html = `
+        <button id="prev-page" class="page-btn" ${currentPage === 1 ? 'disabled' : ''}>
+            <svg class="arrow-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    `;
+
+    for (let i = startPage; i <= endPage; i++) {
+        html += `
+            <button class="page-btn ${i === currentPage ? 'active' : ''}" 
+                    data-page="${i}">
+                ${i}
+            </button>
+        `;
+    }
+
+    html += `
+        <button id="next-page" class="page-btn" ${currentPage === totalPages ? 'disabled' : ''}>
+            <svg class="arrow-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    `;
+
+    paginationContainer.innerHTML = html;
+    setupPaginationEventListeners();
+}
+
+function setupPaginationEventListeners() {
+    const paginationContainer = document.querySelector('.pagination');
+    
+    paginationContainer.addEventListener('click', async (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        if (button.id === 'prev-page' && currentPage > 1) {
+            currentPage--;
+            await loadAttendanceData();
+        } else if (button.id === 'next-page' && currentPage < totalPages) {
+            currentPage++;
+            await loadAttendanceData();
+        } else if (button.dataset.page) {
+            currentPage = parseInt(button.dataset.page);
+            await loadAttendanceData();
+        }
+    });
 }

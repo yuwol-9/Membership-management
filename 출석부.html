@@ -174,7 +174,7 @@
     .attendance-table td:nth-last-child(2) {
       vertical-align: middle;
       position: sticky;
-      right: 93px;
+      right: 92px;
       background-color: #f8f9fa;
       z-index: 11;
     }
@@ -188,6 +188,52 @@
     .sunday {
       color: red !important;
       background-color: #E7E9EC !important;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        margin: 20px 0;
+    }
+
+    .page-btn {
+        padding: 8px 8px;
+        border: 1px solid white;
+        background: white;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .page-btn:hover:not([disabled]) {
+        background: #f0f0f0;
+    }
+
+    .page-btn.active {
+        background: #cfcfcf;
+        font-weight: bold;
+    }
+
+    .pagemove-btn{
+      padding: 8px 8px;
+        border: 1px solid white;
+        background: white;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .pagemove-btn:hover {
+        background: #f0f0f0;
     }
 
     @keyframes fadeIn {
@@ -307,6 +353,7 @@
           </tbody>
         </table>
       </div>
+      <div class="pagination"></div>
     </div>
   </div>
 </div>

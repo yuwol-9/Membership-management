@@ -202,11 +202,6 @@ function updateCards(members) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    handlePaginationButtons();
-    await loadMembers();
-})
-
 
 
 function appendProgramDetails(row, program) {
@@ -752,8 +747,16 @@ function toggleSidebar() { /*깃 수정사항 */
 }
 
 let currentPage = 1;
-const itemsPerPage = 10;
 let totalPages = 1;
+const PAGE_GROUP_SIZE = 5;
+let itemsPerPage = window.innerWidth < 500 ? 7 : 10;  // 화면이 500px보다 작으면 7개, 그렇지 않으면 10개
+
+// 화면 크기가 변경될 때마다 itemsPerPage를 갱신
+window.addEventListener('resize', () => {
+    itemsPerPage = window.innerWidth < 500 ? 7 : 10;
+    updatePagination(totalItems);  // 페이지네이션 갱신
+    loadMembers();  // 새로 고침하여 데이터 로드
+});
 
 function paginateMembers(members) {
     const start = (currentPage - 1) * itemsPerPage;
@@ -761,35 +764,88 @@ function paginateMembers(members) {
     return members.slice(start, end);
 }
 
-function updatePagination(totalItems) {
-    totalPages = Math.ceil(totalItems / itemsPerPage);
+function getNextGroupPage() {
+    // 현재 페이지가 속한 그룹의 첫 번째 페이지를 구합니다.
+    const currentGroup = Math.ceil(currentPage / PAGE_GROUP_SIZE);
+    console.log("현재 그룹:", currentGroup);
+    const nextGroupFirstPage = (currentGroup) * PAGE_GROUP_SIZE + 1;
+    
 
-    const prevButton = document.getElementById('prev-page');
-    const nextButton = document.getElementById('next-page');
-    const currentPageSpan = document.getElementById('current-page');
-
-    prevButton.disabled = currentPage === 1;
-    nextButton.disabled = currentPage === totalPages;
-
-    currentPageSpan.textContent = `${currentPage} / ${totalPages}`;
+    // 총 페이지 수보다 큰 페이지로 가는 것을 방지합니다.
+    return nextGroupFirstPage <= totalPages ? nextGroupFirstPage : totalPages;
 }
 
-function handlePaginationButtons() {
-    const prevButton = document.getElementById('prev-page');
-    const nextButton = document.getElementById('next-page');
+function getPrevGroupPage() {
+    // 현재 페이지가 속한 그룹의 첫 번째 페이지를 구합니다.
+    const currentGroup = Math.ceil(currentPage / PAGE_GROUP_SIZE);
+    const prevGroupFirstPage = (currentGroup - 2) * PAGE_GROUP_SIZE + 1;
 
-    prevButton.addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            loadMembers(); // 페이지 변경 시 멤버 데이터 다시 로드
-        }
-    });
+    // 첫 번째 페이지보다 작은 페이지로 가는 것을 방지합니다.
+    return prevGroupFirstPage > 0 ? prevGroupFirstPage : 1;
+}
 
-    nextButton.addEventListener('click', () => {
-        if (currentPage < totalPages) {
-            currentPage++;
-            loadMembers();
+function updatePagination(totalItems) {
+    totalPages = Math.ceil(totalItems / itemsPerPage);
+    const paginationContainer = document.querySelector('.pagination');
+    if (!paginationContainer) return;
+
+    const currentGroup = Math.ceil(currentPage / PAGE_GROUP_SIZE);
+    const startPage = Math.max(1, (currentGroup - 1) * PAGE_GROUP_SIZE + 1);
+    const endPage = Math.min(totalPages, startPage + PAGE_GROUP_SIZE - 1);
+
+    let html = `
+        <button id="prev-page" class="page-btn" ${currentPage === 1 ? 'disabled' : ''}>
+            <svg class="arrow-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    `;
+
+    for (let i = startPage; i <= endPage; i++) {
+        html += `
+            <button class="page-btn ${i === currentPage ? 'active' : ''}" 
+                    data-page="${i}">
+                ${i}
+            </button>
+        `;
+    }
+
+    html += `
+        <button id="next-page" class="page-btn" ${currentPage === totalPages ? 'disabled' : ''}>
+            <svg class="arrow-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    `;
+
+    paginationContainer.innerHTML = html;
+    setupPaginationEventListeners();
+    console.log("현재 그룹:", currentGroup);
+}
+
+let isLoading = false;  // 로딩 중 여부를 확인하는 변수
+
+function setupPaginationEventListeners() {
+    const paginationContainer = document.querySelector('.pagination');
+    
+    paginationContainer.addEventListener('click', async (e) => {
+        const button = e.target.closest('button');
+        if (!button || isLoading) return;  // 로딩 중이라면 이벤트를 무시
+
+        isLoading = true;  // 로딩 시작
+        
+        if (button.id === 'prev-page' && currentPage > 1) {
+            currentPage = getPrevGroupPage();
+            await loadMembers();
+        } else if (button.id === 'next-page' && currentPage < totalPages) {
+            currentPage = getNextGroupPage();
+            await loadMembers();
+        } else if (button.dataset.page) {
+            currentPage = parseInt(button.dataset.page);
+            await loadMembers();
         }
+
+        isLoading = false;  // 로딩 끝
     });
 }
 
