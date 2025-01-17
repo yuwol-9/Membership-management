@@ -15,14 +15,12 @@
         body {
             background-color: #f9fafc;
             color: #333d4b;
-            min-width: 1000px;
+            min-width: 300px;
         }
         .all-container {
             height: 120px;
             display: flex;
             align-items: center;
-
-
         }
         .logo-container {
             max-width: 300px;
@@ -104,30 +102,20 @@
             display: grid;
             grid-template-columns: 80px repeat(7, 1fr);
             gap: 16px;
-            overflow-x: auto;
             padding-bottom: 16px;
-
+            padding-top: 30px; 
           }
         
-        .schedule .time-column {
-          padding-top: 30px; 
-          gap: 10px;
-          }
-        
-
-        .time-column {
+        .time-column-full {
             display: flex;
             flex-direction: column;
             gap: 50px;
+            padding-top: 30px; 
+            gap: 10px;
         }
-
-        .time-slot {
-            height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: #4e5968;
+        .time-column-short {
+            display: none;
+            flex-direction: column;
         }
 
         .day {
@@ -146,6 +134,7 @@
             min-height: 20px;
             position: relative;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
         }
         
 
@@ -187,7 +176,6 @@
         }
 
         .class .content {
-
             flex-grow: 1; /* 나머지 공간 차지 */
             border-radius: 5px;
             display: flex;
@@ -195,6 +183,7 @@
             justify-content: center;
             align-items: center;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1;
         }
 
         .class .name {
@@ -553,6 +542,253 @@
             font-size: 14px;
             color: #666;
             }
+
+            .time-slot{
+                height: 100px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                color: #4e5968;
+            }
+
+            .day-short {
+                display: none;
+            }
+
+            .day-full {
+                display: block;
+            }
+
+            /* 반응형 디자인 */
+        @media (max-width: 1000px) {
+            .schedule {
+                margin-top:5vh;
+                margin-bottom: 70px;
+                display: grid;
+                width:100%;
+                grid-template-columns: 30px repeat(6, minmax(0, 1fr));
+                border:2px solid #e0e0e0;
+                border-radius: 8px;;
+                gap: 0;
+                padding: 5px;
+                background-color: #ffffff;
+                
+            }
+            .day-short {
+                display: block;
+            }
+            
+            .day-full {
+                display: none;
+            }
+
+            .time-column-full {
+                display: none;  /* 모바일에서는 시간 칼럼 숨김 */
+            }
+            .time-column-short {
+                display: flex;  
+            }
+
+            .day {
+                width: 100%; /* 컨테이너가 전체 너비를 차지 */
+                min-width:10px;
+                padding: 0px;
+                margin:0;
+                background-color: #ffffff;
+                border-radius: 0;
+            }
+            .day-0 {
+                width: 100%; /* 컨테이너가 전체 너비를 차지 */
+                min-width:40px;
+                padding: 0px;
+                background-color: #ffffff;
+                border-radius: 0;
+            }
+            .day h2 {
+                font-size: 18px;
+                font-weight: 600;
+                text-align: center;
+                padding: 8px 0;
+                margin:0;
+                border-bottom: 2px solid #f0f0f0;
+            }
+  
+            /* 버튼 컨테이너 스타일링 */
+            #add-class-btn {
+                position: absolute;
+                top: 0;
+                left: -10px; /* 오른쪽에서의 거리 */
+                width:100px;
+                background-color: #FF6347;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+            .add-class{
+                margin : 0px;
+            }
+            #add-class-btn:hover {
+                background-color: #FF4500;
+            }
+
+            #delete-class-btn {
+                position: absolute;
+                top: 0;
+                right: -10px; /* 오른쪽에서의 거리 */
+                width:100px;
+                background-color: #FFA500;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+
+            #delete-class-btn:hover {
+                background-color: #FF8C00;
+            }
+
+            .container {
+                position: relative; /* 자식 요소에서 absolute 위치를 사용할 수 있도록 설정 */
+                margin-left:0;
+                padding:10px;
+            }
+
+            #reset-classes-btn {
+                position: absolute; /* 부모인 .container를 기준으로 위치 지정 */
+                bottom: -10px; /* 부모 컨테이너의 하단에서 10px 아래 */
+                right: -10px; /* 오른쪽에서 10px 간격 */
+                width: 100px;
+                background-color: #FF0000;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+
+            #reset-classes-btn:hover {
+                background-color: #CC0000;
+            }
+
+            /* 로고와 타이틀 영역 */
+            .all-container {
+                padding: 10px;
+                height: auto;
+            }
+
+            .logo-container {
+                padding: 10px;
+                margin: 0;
+            }
+
+            .logo-container img {
+                width: 180px;
+                height: auto;
+            }
+
+            .title-container {
+                margin: 10px auto;
+                padding: 0;
+            }
+
+            .title {
+                font-size: 20px;
+                padding: 8px 16px;
+                
+            }
+            .title-input {
+                font-size: 20px;
+                padding: 8px 16px;
+                width:140px;
+                height:43
+            }
+
+            .class {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            left:0;
+            position: absolute;
+            overflow: hidden;
+            cursor: pointer; /* 클릭 가능함을 표시 */
+            transition: transform 0.2s ease; /* 호버 효과를 부드럽게 */
+        }
+
+        .class:hover {
+        transform: scale(1.02); /* 호버 시 살짝 커지는 효과 */
+        }
+
+        .class .time {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #D9D9D9;
+            border-radius: 5px;
+            color: #000;
+            font-size: 13px; /* 적당한 글자 크기 */
+            font-weight: bold;
+            text-align: center;
+            height: 0px; /* 고정 높이 */
+            flex-shrink: 0; /* 고정 높이 유지 */
+        }
+
+        .class .content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .class .name {
+            color: white;
+            font-size: 14px; /* 적당한 글자 크기 */
+            font-weight: 700;
+            text-align: center;
+            word-break: keep-all;
+            white-space: pre-wrap; /* 줄바꿈 반영 */
+        }
+
+        .class .details {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px; /* 적당한 글자 크기 */
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .class .instructor {
+            display: none;
+            height:0;
+            flex-shrink: 0; /* 고정 높이 유지 */
+        }
+
+        /* 각 시간대마다 선을 그을 수 있도록 설정 */
+        .time-slot-line {
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            border-top: 1px solid #ddd;
+            height: 1px;
+            z-index:0;
+            
+        }
+
+        .day-short {
+            display: block;
+        }
+
+        .day-full {
+            display: none;
+        }
+        }
     </style>
 </head>
 <body>
@@ -569,7 +805,7 @@
     </div>
     <div class="container">
         <div class="schedule">
-            <div class="time-column">
+            <div class="time-column-full">
                 <div class="time-slot">10:00</div>
                 <div class="time-slot">11:00</div>
                 <div class="time-slot">12:00</div>
@@ -584,37 +820,71 @@
                 <div class="time-slot">21:00</div>
                 <div class="time-slot">22:00</div>
             </div>
+            <div class="time-column-short">
+                <div class="time-slot">10</div>
+                <div class="time-slot">11</div>
+                <div class="time-slot">12</div>
+                <div class="time-slot">1</div>
+                <div class="time-slot">2</div>
+                <div class="time-slot">3</div>
+                <div class="time-slot">4</div>
+                <div class="time-slot">5</div>
+                <div class="time-slot">6</div>
+                <div class="time-slot">7</div>
+                <div class="time-slot">8</div>
+                <div class="time-slot">9</div>
+                <div class="time-slot">10</div>
+            </div>
             <div class="day">
-                <h2>Monday</h2>
+                <h2>
+                    <span class="day-full">Monday</span>
+                    <span class="day-short">Monday</span>
+                </h2>
                 <div class="classes"></div>
             </div>
             <div class="day">
-                <h2>Tuesday</h2>
+                <h2>
+                    <span class="day-full">Tuesday</span>
+                    <span class="day-short">Tue</span>
+                </h2>
                 <div class="classes"></div>
             </div>
             <div class="day">
-                <h2>Wednesday</h2>
+                <h2>
+                    <span class="day-full">Wednesday</span>
+                    <span class="day-short">Wed</span>
+                </h2>
                 <div class="classes"></div>
             </div>
             <div class="day">
-                <h2>Thursday</h2>
+                <h2>
+                    <span class="day-full">Thursday</span>
+                    <span class="day-short">Thu</span>
+                </h2>
                 <div class="classes"></div>
             </div>
             <div class="day">
-                <h2>Friday</h2>
+                <h2>
+                    <span class="day-full">Friday</span>
+                    <span class="day-short">Fri</span>
+                </h2>
                 <div class="classes"></div>
             </div>
             <div class="day">
-                <h2>Saturday</h2>
+                <h2>
+                    <span class="day-full">Saturday</span>
+                    <span class="day-short">Sat</span>
+                </h2>
                 <div class="classes"></div>
             </div>
             <div class="add-class">
                 <div>
-              <button id="add-class-btn" onclick="openModal()">수업 추가</button>
-              <button id="delete-class-btn" onclick="toggleDeleteMode()">수업 삭제</button>
-              <button id="reset-classes-btn" onclick="resetClasses()">초기화</button>
+                <button id="add-class-btn" onclick="openModal()">수업 추가</button>
+                <button id="delete-class-btn" onclick="toggleDeleteMode()">수업 삭제</button>
+                <button id="reset-classes-btn" onclick="resetClasses()">초기화</button>
+                </div>
           </div>
-        </div>
+           
 
         <div class="modal" id="class-modal">
             <div>

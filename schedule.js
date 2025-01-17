@@ -102,14 +102,13 @@ function addTimeSelection() {
 
     newSelection.innerHTML = `
         <label for="day-${timeSelectionCount}">요일</label>
-        <select id="day-${timeSelectionCount}">
+        <select id="day-${timeSelectionCount}" onchange="updateDayText(this)">
             <option value="Monday">Monday</option>
             <option value="Tuesday">Tuesday</option>
             <option value="Wednesday">Wednesday</option>
             <option value="Thursday">Thursday</option>
             <option value="Friday">Friday</option>
             <option value="Saturday">Saturday</option>
-            <option value="Sunday">Sunday</option>
         </select>
 
         <label for="start-time-period-${timeSelectionCount}">시작 시간</label>
@@ -183,6 +182,41 @@ function setupInitialTimeSelection() {
         </div>
     `;
 }
+// 화면 크기가 1000px 미만일 때 요일을 짧게 표시하는 함수
+function updateDayText(selectElement) {
+    if (window.innerWidth <= 1000) {
+        const dayText = selectElement.value;
+        let shortDay = dayText;
+
+        switch (dayText) {
+            case 'Monday': shortDay = 'Mon'; break;
+            case 'Tuesday': shortDay = 'Tue'; break;
+            case 'Wednesday': shortDay = 'Wed'; break;
+            case 'Thursday': shortDay = 'Thu'; break;
+            case 'Friday': shortDay = 'Fri'; break;
+            case 'Saturday': shortDay = 'Sat'; break;
+        }
+
+        // '요일'을 shortDay로 변경
+        selectElement.options[selectElement.selectedIndex].text = shortDay;
+        selectElement.value = shortDay;  // 실제 value도 변경
+    }
+}
+
+// 축약형 요일을 전체 요일 이름으로 변환하는 함수
+function getFullDayName(shortDay) {
+    switch(shortDay) {
+        case 'Mon': return 'Monday';
+        case 'Tue': return 'Tuesday';
+        case 'Wed': return 'Wednesday';
+        case 'Thu': return 'Thursday';
+        case 'Fri': return 'Friday';
+        case 'Sat': return 'Saturday';
+        case 'Sun': return 'Sunday';
+        default: return shortDay; // 잘못된 경우는 그대로 반환
+    }
+}
+
 
 function removeTimeSelection(id) {
     const element = document.getElementById(`time-selection-${id}`);
@@ -247,8 +281,18 @@ function createClassElement(data) {
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);
 
-    const startPositionMinutes = (startHour - 10) * 110 + startMinute*108/60 + 80;
-    const durationMinutes = (endHour - startHour) * 108 + (endMinute - startMinute)*108/60;
+    // 화면 크기가 1000px 이하일 때 계산 방식 변경
+    let startPositionMinutes, durationMinutes;
+
+    if (window.innerWidth <= 1000) {
+        // 화면 크기가 1000px 이하일 경우
+        startPositionMinutes = (startHour - 10) * 100 + (startMinute * 100 / 60) + 42;
+        durationMinutes = (endHour - startHour) * 98 + ((endMinute - startMinute) * 98 / 60);
+    } else {
+        // 화면 크기가 1000px 이상일 경우
+        startPositionMinutes = (startHour - 10) * 110 + (startMinute * 108 / 60) + 80;
+        durationMinutes = (endHour - startHour) * 108 + ((endMinute - startMinute) * 108 / 60);
+    }
 
     const formattedStartTime = `${startTime.split(':')[0]}:${startTime.split(':')[1]}`;
     const formattedEndTime = `${endTime.split(':')[0]}:${endTime.split(':')[1]}`;
@@ -843,40 +887,44 @@ async function addClass() {
   
 async function loadPrograms() {
     try {
-      const programs = await API.getPrograms();
-      document.querySelectorAll('.day .classes').forEach(container => {
-        container.innerHTML = '';
-      });
-  
-      programs.forEach(program => {
-        program.classes?.forEach(classInfo => {
-          const dayElements = document.querySelectorAll('.day');
-          dayElements.forEach(dayElement => {
-            const day = dayElement.querySelector('h2').innerText;
-            const classesContainer = dayElement.querySelector('.classes');
-  
-            if (classInfo.day === day) {
-              const classElement = createClassElement({
-                id: program.id,
-                startTime: classInfo.startTime,
-                endTime: classInfo.endTime,
-                className: program.name,
-                details: classInfo.details,
-                instructor: program.instructor_name,
-                color: classInfo.color
-              });
-              classesContainer.appendChild(classElement);
-            }
-          });
+        const programs = await API.getPrograms();
+        document.querySelectorAll('.day .classes').forEach(container => {
+            container.innerHTML = '';
         });
-      });
-      if (deleteMode) {
-        disableDeleteMode();
-      }
+
+        programs.forEach(program => {
+            program.classes?.forEach(classInfo => {
+                const dayElements = document.querySelectorAll('.day');
+                dayElements.forEach(dayElement => {
+                    // 수업에서 저장된 축약형 요일을 전체 요일 이름으로 변환
+                    const fullDayName = getFullDayName(classInfo.day);
+
+                    const dayHeader = dayElement.querySelector('h2');
+                    if (dayHeader && dayHeader.textContent.includes(fullDayName)) {
+                        const classesContainer = dayElement.querySelector('.classes');
+                        const classElement = createClassElement({
+                            id: program.id,
+                            startTime: classInfo.startTime,
+                            endTime: classInfo.endTime,
+                            className: program.name,
+                            details: classInfo.details,
+                            instructor: program.instructor_name,
+                            color: classInfo.color
+                        });
+                        classesContainer.appendChild(classElement);
+                    }
+                });
+            });
+        });
+
+        if (deleteMode) {
+            disableDeleteMode();
+        }
     } catch (error) {
-      console.error('수업 목록 로드 실패:', error);
+        console.error('수업 목록 로드 실패:', error);
     }
-  }
+}
+
 
   function resetForm() {
     document.getElementById('class-name').value = '';
@@ -948,4 +996,33 @@ if (savedData) {
     classData = JSON.parse(savedData);
     renderClasses();
 }
+};
+
+// 1시간 간격으로 선을 그릴 함수
+function drawTimeLines() {
+    // 화면 크기가 1000px 이하일 때만 선을 그린다
+    if (window.innerWidth <= 1000) {
+        const scheduleContainer = document.querySelector('.schedule');  // .schedule을 찾아서
+        const rows = document.querySelectorAll('.time-slot');  // 각 시간대에 해당하는 div들 찾아서
+
+        // 기존 선을 지운다
+        scheduleContainer.querySelectorAll('.time-slot-line').forEach(line => line.remove());
+
+        // 선을 13개까지만 그리도록 제한
+        const totalLines = Math.min(rows.length, 13);  // 13개까지만 선을 그리도록
+
+        for (let i = 0; i < totalLines; i++) {
+            const linePosition = (i + 1) * 100;  // 1시간 간격마다 선 추가
+            const line = document.createElement('div');
+            line.className = 'time-slot-line';
+            line.style.top = `${linePosition +3}px`;  // 각 시간대에 선을 맞춘다.
+            scheduleContainer.appendChild(line);
+        }
+    }
+}
+
+// 화면 로드 시, 그리고 화면 크기 변경 시 선을 그리기
+window.addEventListener('resize', drawTimeLines);  // 화면 크기 변경 시 선을 다시 그리기
+window.onload = () => {
+    drawTimeLines();  // 페이지 로드 시 처음 한번 선을 그리기
 };
