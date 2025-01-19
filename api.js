@@ -176,12 +176,16 @@ const API = {
         }
     },
 
-    deleteMember: async (enrollmentId) => {
-        return API.apiCall(`/members/enrollment/${enrollmentId}`, {
-            method: 'DELETE'
-        });
+    deleteMember: async (memberId) => {
+        try {
+            return await API.apiCall(`/members/${memberId}`, {
+                method: 'DELETE'
+            });
+        } catch (error) {
+            console.error('회원 삭제 실패:', error);
+            throw error;
+        }
     },
-
     getMember: async (id) => {
         try {
             const response = await API.apiCall(`/members/enrollment/${id}`);

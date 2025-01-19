@@ -437,14 +437,11 @@ async function handleModalEdit() {
 async function handleModalDelete() {
     if (confirm('정말로 이 회원을 삭제하시겠습니까?')) {
         try {
-            const programSelect = document.querySelector('.program-select');
-            const selectedEnrollmentId = programSelect ? programSelect.value : null;
-
-            if (!selectedEnrollmentId) {
-                throw new Error('수업 정보를 찾을 수 없습니다.');
+            if (!currentMemberId) {
+                throw new Error('회원 정보를 찾을 수 없습니다.');
             }
 
-            await API.deleteMember(selectedEnrollmentId);
+            await API.deleteMember(currentMemberId);
             alert('회원이 성공적으로 삭제되었습니다.');
             closeModal();
             await loadMembers(showingHiddenMembers);
