@@ -400,23 +400,47 @@ function updatePagination(totalItems) {
     paginationContainer.innerHTML = html;
     setupPaginationEventListeners();
 }
+let isLoading = false;  // 로딩 중 여부를 확인하는 변수
 
 function setupPaginationEventListeners() {
     const paginationContainer = document.querySelector('.pagination');
     
     paginationContainer.addEventListener('click', async (e) => {
         const button = e.target.closest('button');
-        if (!button) return;
+        if (!button || isLoading) return;  // 로딩 중이라면 이벤트를 무시
+
+        isLoading = true;  // 로딩 시작
 
         if (button.id === 'prev-page' && currentPage > 1) {
-            currentPage--;
+            currentPage = getPrevGroupPage();
             await loadAttendanceData();
         } else if (button.id === 'next-page' && currentPage < totalPages) {
-            currentPage++;
+            currentPage = getNextGroupPage();
             await loadAttendanceData();
         } else if (button.dataset.page) {
             currentPage = parseInt(button.dataset.page);
             await loadAttendanceData();
         }
+        isLoading = false;  // 로딩 끝
     });
+}
+
+function getNextGroupPage() {
+    // 현재 페이지가 속한 그룹의 첫 번째 페이지를 구합니다.
+    const currentGroup = Math.ceil(currentPage / PAGE_GROUP_SIZE);
+    console.log("현재 그룹:", currentGroup);
+    const nextGroupFirstPage = (currentGroup) * PAGE_GROUP_SIZE + 1;
+    
+
+    // 총 페이지 수보다 큰 페이지로 가는 것을 방지합니다.
+    return nextGroupFirstPage <= totalPages ? nextGroupFirstPage : totalPages;
+}
+
+function getPrevGroupPage() {
+    // 현재 페이지가 속한 그룹의 첫 번째 페이지를 구합니다.
+    const currentGroup = Math.ceil(currentPage / PAGE_GROUP_SIZE);
+    const prevGroupFirstPage = (currentGroup - 2) * PAGE_GROUP_SIZE + 1;
+
+    // 첫 번째 페이지보다 작은 페이지로 가는 것을 방지합니다.
+    return prevGroupFirstPage > 0 ? prevGroupFirstPage : 1;
 }
