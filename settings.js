@@ -130,3 +130,8 @@ function togglePasswordVisibility(inputId) {
         img.alt = '비밀번호 보기';
     }
 }
+
+function toggleSidebar() { 
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('active');
+}
