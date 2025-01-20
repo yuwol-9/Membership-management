@@ -17,38 +17,59 @@
             color: #333d4b;
             min-width: 300px;
         }
-        .all-container {
-            height: 120px;
-            display: flex;
-            align-items: center;
-        }
-        .logo-container {
-            max-width: 300px;
-            align-items: left;
-            padding: 0 55px;
+        .footer {
+      text-align: center;
+      padding: 10px;
+      background-color: #222;
+      color: white;
 
-            margin-top: 30px;
-        }
+    }
+        /* 헤더 디자인 */
+    .header-container {
+      top: 0;
+      width: 100%;
+      z-index: 998;
+      background-color: #fff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #1a1a1a;
+      padding: 10px 20px;
+    }
+    .brand-header img {
+      max-height: 40px;
+    }
+    .nav-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 1.5rem;
+      font-weight: bold;
+      background-color: #f8f9fa;
+      max-height: 62px;
+    }
 
         .title-container {
-            max-width: 400px; /* 최대 너비를 800px로 제한 */
-            flex-grow: 1;  /* 남은 공간 채우기 */
+            max-width: 250px; 
             text-align: center;
-            margin-left: 420px;  /* 로고 너비만큼 오른쪽 여백 추가 */
-
+            justify-content: center;
 
         }
         .title {
-            font-size: 32px;
+            width:250px;
+            font-size: 24px;
             font-weight: bold;
             color: #333;
             cursor: pointer;
             display: inline-block;
-            padding: 10px 20px;
+            padding: 5px 0px;
             border-radius: 8px;
             transition: box-shadow 0.3s ease, transform 0.2s ease;
             background-color: #9FD3ED;
-            color: white;
 
         }
 
@@ -58,10 +79,10 @@
         }
 
         .title-input {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
-            width: 400px;
-            padding: 10px;
+            width: 250px;
+            padding: 5px;
 
             border: 2px solid #36B4E5;
             border-radius: 8px;
@@ -85,9 +106,7 @@
 
 
         .container {
-            max-width: 1500px;
-            margin: 0 auto;
-            margin-left: 250px;  /* 로고 너비만큼 오른쪽 여백 추가 */
+            display:flex
 
         }
 
@@ -104,6 +123,7 @@
             gap: 16px;
             padding-bottom: 16px;
             padding-top: 30px; 
+            width:85%;
           }
         
         .time-column-full {
@@ -123,6 +143,7 @@
             border-radius: 16px;
             padding: 16px;
             min-height: 720px;
+            max-height: 1450px;
             position: relative;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
@@ -559,9 +580,57 @@
             .day-full {
                 display: block;
             }
+            .menu-icon {
+                display: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: white;
+                }
+
+            /* 사이드바 */
+            .sidebar {
+            height: 170vh;
+            width: 250px;
+            background-color: #222;
+            color: white;
+            padding: 20px 0;
+            position:relative;
+            }
+            
+            .sidebar ul {
+            list-style: none;
+            padding: 0; /* 기본 패딩 제거 */
+        
+            }
+            .sidebar ul li {
+            padding: 15px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            margin: 0; /* 추가된 여백 제거 */
+            }
+            .sidebar ul li.active {
+            background-color: #000000;
+            }
+
+            .sidebar ul li:active{
+            background-color: black;
+            }
+            .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            }
+            .sidebar ul li img {
+            margin-right: 20px;
+            }
 
             /* 반응형 디자인 */
         @media (max-width: 1000px) {
+            .menu-icon {
+                display: block;
+            }
             .schedule {
                 margin-top:5vh;
                 margin-bottom: 70px;
@@ -680,21 +749,21 @@
                 background-color: #CC0000;
             }
 
-            /* 로고와 타이틀 영역 */
-            .all-container {
-                padding: 10px;
-                height: auto;
+            .header-container {
+                justify-content: space-between;
+                box-shadow: 0 0px 0px;
             }
+            .brand-header {
+                align-items: flex-start;
+                display: flex;
+                justify-content: space-between;
+                }
 
-            .logo-container {
-                padding: 10px;
-                margin: 0;
-            }
-
-            .logo-container img {
-                width: 180px;
-                height: auto;
-            }
+                .brand-header img {
+                    margin-top:10px;
+                    width: 100px;
+                    height: 20px;
+                }
 
             .title-container {
                 margin: 10px auto;
@@ -702,14 +771,15 @@
             }
 
             .title {
-                font-size: 20px;
+                font-size: 16px;
                 padding: 8px 16px;
+                width:120px;
                 
             }
             .title-input {
-                font-size: 20px;
+                font-size: 16px;
                 padding: 8px 16px;
-                width:140px;
+                width:120px;
                 height:43
             }
 
@@ -788,22 +858,97 @@
         .day-full {
             display: none;
         }
+        .sidebar {
+        position: fixed;
+        top: -100%;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        padding: 50px 20px;
+        overflow-y: auto;
+        z-index: 1000;
+        transition: top 0.3s ease;
+      }
+
+      .sidebar.active {
+        top: 52px;
+      }
+
+      .header-container {
+        justify-content: space-between;
+      }
+      .brand-header {
+        align-items: flex-start;
+        display: flex;
+        justify-content: space-between;
+        }
+
+        .brand-header img {
+            margin-top:10px;
+            width: 100px;
+            height: 20px;
+        }
         }
     </style>
 </head>
 <body>
-    <div class="all-container">
-        <div class="logo-container">
-            <a href="홈페이지.html">
-                <img src="image/로고_black.png" width="300" height="50">
-            </a>
+    <div class="header-container">
+        <!-- 브랜드 헤더 -->
+        <div class="brand-header">
+          <a href="홈페이지.html">
+            <img src="image/로고_white.png" alt="로고"> 
+          </a>
+          <span class="menu-icon" onclick="toggleSidebar()">☰</span>
         </div>
+        <!-- 네비게이션 헤더 -->
+        <div class="nav-header">
         <div class="title-container">
             <span id="title" class="title">수업 시간표</span>
             <input id="title-input" class="title-input" type="text" value="수업 시간표">
         </div>
+        </div>
     </div>
     <div class="container">
+        <div class="sidebar" id="sidebar">
+            <ul>
+              <li>
+                <a href="홈페이지.html">
+                  <img src="image/Home.png" width="25" height="25"> Home
+                </a>
+              </li>
+              <li>
+                <a href="출석부.html">
+                  <img src="image/출석체크.png" width="30" height="30">  출석부
+                </a>
+              </li>
+              <li>
+                <a href="회원관리.html">
+                  <img src="image/회원관리.png" width="30" height="30">  회원 관리
+                </a>
+              </li>
+              <li class="active">
+                <a href="수업관리.html">
+                  <img src="image/스케쥴.png" width="30" height="30">  수업 관리
+                </a>
+              </li>
+              <li>
+                <a href="선생님관리.html">
+                  <img src="image/선생님.png" width="30" height="30">  선생님
+                </a>
+              </li>
+              <li>
+                <a href="매출_통계페이지.html">
+                  <img src="image/매출.png" width="30" height="30">  매출
+                </a>
+              </li>
+              <li>
+                <a href="설정.html">
+                  <img src="image/설정.png" width="30" height="30">  설정
+                </a>
+              </li>
+            </ul>
+          </div>
         <div class="schedule">
             <div class="time-column-full">
                 <div class="time-slot">10:00</div>
@@ -1018,7 +1163,11 @@
         <!-- 오버레이 -->
         <div class="overlay" id="modal-overlay"></div>
         <div class="overlay" id="overlay"></div>
-
+    </div>
+    </div>
+        <div class="footer">
+            © Hip Lion Dance Academy
+        </div>
     <script src="api.js"></script>
     <script src="schedule.js"></script>
 </body>

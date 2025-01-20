@@ -21,6 +21,13 @@
       font-family: 'Arial', sans-serif;
       background-color: #f4f4f4;
     }
+    .footer {
+      text-align: center;
+      padding: 10px;
+      background-color: #222;
+      color: white;
+
+    }
     .all-container{
       display:flex;
     }
@@ -37,11 +44,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #1a1a1a;
+      background-color: #000000;
       padding: 10px 20px;
     }
     .brand-header img {
-      max-height: 40px;
+      width:60px;
+      height:60px; 
     }
     .nav-header {
       display: flex;
@@ -56,7 +64,7 @@
     /* 사이드바 */
     .sidebar {
       top: 116px; /* 헤더 높이만큼 아래로 */
-      height: 100vh;
+      height: 120vh;
       width: 250px;
       background-color: #222;
       color: white;
@@ -238,6 +246,7 @@
     @media (max-width: 500px) { /*깃 수정사항*/
       .menu-icon {
         display: block;
+        margin-top:5px;
       }
 
       .sidebar {
@@ -267,9 +276,8 @@
       }
 
       .brand-header img {
-        margin-top:10px;
-        width: 100px;
-        height: 20px;
+        width: 50px;
+        height: 50px;
       }
       .nav-header {
       display: none;
@@ -329,7 +337,7 @@
   <div class="header-container">
     <div class="brand-header">
       <a href="홈페이지.html">
-        <img src="image/로고_white.png" alt="로고">
+        <img src="image/로고_Lion_black.png" width="80" height="80">
       </a>
       <span class="menu-icon" onclick="toggleSidebar()">☰</span>
     </div>
@@ -439,6 +447,10 @@
       <div class="pagination"></div>
     </div>
   </div>
+</div>
+
+<div class="footer">
+  © Hip Lion Dance Academy
 </div>
 
   <!-- Bootstrap JS -->

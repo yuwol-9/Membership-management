@@ -1,3 +1,20 @@
+const TITLE_STORAGE_KEY = "scheduleTitle";
+const DEFAULT_TITLE = "수업 시간표"; 
+// 로컬 스토리지에서 데이터 불러오기
+window.onload = () => {
+    drawTimeLines();  // 페이지 로드 시 처음 한번 선을 그리기
+    const savedData = localStorage.getItem('classData');
+    const savedTitle = localStorage.getItem(TITLE_STORAGE_KEY);
+    if (savedData) {
+        const savedTitle = localStorage.getItem(TITLE_STORAGE_KEY) || DEFAULT_TITLE; // 저장된 값이 없으면 초기값 사용
+        title.textContent = savedTitle; // 저장된 제목으로 설정
+        titleInput.value = savedTitle; // 입력창에도 저장된 제목 표시
+        classData = JSON.parse(savedData);
+        renderClasses();
+    }
+    };
+
+
 const title = document.getElementById('title');
 const titleInput = document.getElementById('title-input');
 
@@ -983,20 +1000,6 @@ classData.forEach(data => {
     }
 });
 }
-const TITLE_STORAGE_KEY = "scheduleTitle";
-const DEFAULT_TITLE = "수업 시간표"; 
-// 로컬 스토리지에서 데이터 불러오기
-window.onload = () => {
-const savedData = localStorage.getItem('classData');
-const savedTitle = localStorage.getItem(TITLE_STORAGE_KEY);
-if (savedData) {
-    const savedTitle = localStorage.getItem(TITLE_STORAGE_KEY) || DEFAULT_TITLE; // 저장된 값이 없으면 초기값 사용
-    title.textContent = savedTitle; // 저장된 제목으로 설정
-    titleInput.value = savedTitle; // 입력창에도 저장된 제목 표시
-    classData = JSON.parse(savedData);
-    renderClasses();
-}
-};
 
 // 1시간 간격으로 선을 그릴 함수
 function drawTimeLines() {
@@ -1023,6 +1026,8 @@ function drawTimeLines() {
 
 // 화면 로드 시, 그리고 화면 크기 변경 시 선을 그리기
 window.addEventListener('resize', drawTimeLines);  // 화면 크기 변경 시 선을 다시 그리기
-window.onload = () => {
-    drawTimeLines();  // 페이지 로드 시 처음 한번 선을 그리기
-};
+
+function toggleSidebar() { 
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('active');
+}
