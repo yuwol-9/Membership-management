@@ -626,7 +626,7 @@ app.delete('/api/members/:id', authenticateToken, async (req, res) => {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-
+m
         const memberId = req.params.id;
         
         const [memberExists] = await connection.execute(
