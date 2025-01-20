@@ -49,54 +49,44 @@
       font-weight: bold;
       background-color: #f8f9fa;
     }
-        .sidebar {
-            top: 70px; /* 헤더 높이만큼 아래로 */
-            height: 100vh;
-            width: 250px;
-            background-color: #222;
-            color: white;
-            padding: 20px 0;
-            height : 100vh;
-        }
-        .sidebar ul {
-            list-style: none;
-        }
-        .sidebar ul li {
-            padding: 15px 20px;
-            cursor: pointer;
-            font-size: 14px;
-            border-bottom: 1px solid #333;
-            color: white;
-            text-decoration: none; /* 밑줄 제거 */
-        }
-        .sidebar ul li:hover {
-            background-color: #333;
-            text-decoration: none; /* hover 시에도 밑줄 제거 유지 */
-        }
-        .sidebar ul li.active,
-        .sidebar ul li.active a {
-            background-color: #000000;
-            text-decoration: none; /* hover 시에도 밑줄 제거 유지 */
-        }
-        .sidebar ul li span {
-            margin-left: 10px;
-        }
-        .sidebar img {
-            margin-right: 20px;
-            vertical-align: middle; /* 기본적으로 이미지를 텍스트의 중간에 맞추기 */
-            margin-bottom: 3px; /* 이미지를 더 아래로 이동 */
-        }
-        .sidebar ul li a {
-            color: white;
-            text-decoration: none;
-            display: block; /* li 전체 영역이 클릭 가능하도록 */
-            margin: -15px -20px;
-            padding: 15px 20px;
-        }
+        /* 사이드바 */
+    .sidebar {
+      height: 120vh;
+      width: 250px;
+      background-color: #222;
+      color: white;
+      padding: 20px 0;
+      position:relative;
+    }
+    
+    .sidebar ul {
+      list-style: none;
+      padding: 0; /* 기본 패딩 제거 */
+  
+    }
+    .sidebar ul li {
+      padding: 15px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #333;
+      margin: 0; /* 추가된 여백 제거 */
+    }
+    .sidebar ul li.active {
+      background-color: #000000;
+    }
 
-        .sidebar ul li a:hover {
-        text-decoration: none;
-        }
+    .sidebar ul li:active{
+      background-color: black;
+    }
+    .sidebar ul li a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+    .sidebar ul li img {
+      margin-right: 20px;
+    }
         .password-input-container {
             position: relative;
             display: flex;
