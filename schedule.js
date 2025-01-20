@@ -1026,3 +1026,8 @@ window.addEventListener('resize', drawTimeLines);  // 화면 크기 변경 시 �
 window.onload = () => {
     drawTimeLines();  // 페이지 로드 시 처음 한번 선을 그리기
 };
+
+function toggleSidebar() { 
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('active');
+}

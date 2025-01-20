@@ -15,6 +15,13 @@
       font-family: 'Arial', sans-serif;
       background-color: #f4f4f4;
     }
+    .footer {
+      text-align: center;
+      padding: 10px;
+      background-color: #222;
+      color: white;
+
+    }
 
     /* 헤더 디자인 */
     .header-container {
@@ -239,6 +246,52 @@
       background-color: #e68a30;
     }
 
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        margin: 20px 0;
+    }
+
+    .page-btn {
+        padding: 8px 8px;
+        border: 1px solid white;
+        background: white;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .page-btn:hover:not([disabled]) {
+        background: #f0f0f0;
+    }
+
+    .page-btn.active {
+        background: #cfcfcf;
+        font-weight: bold;
+    }
+
+    .pagemove-btn{
+      padding: 8px 8px;
+        border: 1px solid white;
+        background: white;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .pagemove-btn:hover {
+        background: #f0f0f0;
+    }
+
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -342,7 +395,7 @@
             <span class="menu-icon" onclick="toggleSidebar()">☰</span>
         </div>
         <div class="nav-header">
-            <h1>선생님 관리</h1>
+            선생님 관리
         </div>
     </div>
     
@@ -409,7 +462,11 @@
                       <!-- JavaScript로 동적으로 채워질 내용 -->
                   </tbody>
               </table>
+              <div class="pagination"></div>
         </div>
+    </div>
+    <div class="footer">
+      © Hip Lion Dance Academy
     </div>
     
     <script src="api.js"></script>
